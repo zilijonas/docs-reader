@@ -1,21 +1,14 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { DETECTION_TYPE_LABELS } from '../../lib/constants';
 import type {
   BoundingBox,
   DetectionSource,
   DetectionStatus,
   DetectionType,
-  ExportJob,
   FilterState,
   ProcessingProgress,
 } from '../../lib/types';
-
-const toggleFilterValue = <T extends string>(list: T[], value: T, fallback: T[]) => {
-  const next = list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
-  return next.length ? next : fallback;
-};
 
 export type SidebarItem = {
   id: string;
@@ -77,8 +70,9 @@ function TypeIcon({ type, size = 14 }: { type: string; size?: number }) {
 }
 
 export function DetectionSidebar({
+  mobileOpen,
+  onClose,
   progress,
-  exportJob,
   warnings,
   error,
   draft,
@@ -95,12 +89,11 @@ export function DetectionSidebar({
   onToggleManualStatus,
   onDeleteManual,
   onJumpToPage,
-  onRejectPage,
-  onClearManualPage,
   items,
 }: {
+  mobileOpen: boolean;
+  onClose: () => void;
   progress: ProcessingProgress | null;
-  exportJob: ExportJob;
   warnings: string[];
   error: string | null;
   draft: string;
@@ -117,12 +110,8 @@ export function DetectionSidebar({
   onToggleManualStatus: (id: string, status: DetectionStatus) => void;
   onDeleteManual: (id: string) => void;
   onJumpToPage: (pageIndex: number) => void;
-  onRejectPage: () => void;
-  onClearManualPage: () => void;
   items: SidebarItem[];
 }) {
-  const statuses: DetectionStatus[] = ['suggested', 'approved', 'rejected'];
-
   const counts = {
     suggested: items.filter((i) => i.status === 'suggested').length,
     approved: items.filter((i) => i.status === 'approved').length,
@@ -144,16 +133,56 @@ export function DetectionSidebar({
 
   return (
     <aside
+      className="review-sidebar"
+      data-open={mobileOpen}
       style={{
         background: 'var(--paper)',
         overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 101px)',
+        height: '100%',
         position: 'sticky',
         top: 101,
       }}
     >
+      <div
+        className="sidebar-mobile-header"
+        style={{
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 20px',
+          borderBottom: '1px solid var(--line)',
+          position: 'sticky',
+          top: 0,
+          background: 'var(--paper)',
+          zIndex: 1,
+        }}
+      >
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+          Review queue
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 30,
+            height: 30,
+            borderRadius: 999,
+            border: '1px solid var(--line)',
+            background: 'var(--surface-1)',
+            color: 'var(--ink)',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+
       {/* Status filter tabs */}
       <div style={{ display: 'flex', padding: '14px 20px 0', gap: 0, borderBottom: '1px solid var(--line)' }}>
         {([

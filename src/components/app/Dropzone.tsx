@@ -20,7 +20,7 @@ export function Dropzone({
   const [hover, setHover] = useState(false);
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '96px 32px 48px' }}>
+    <div className="dropzone-shell" style={{ maxWidth: 920, margin: '0 auto', padding: '96px 32px 48px' }}>
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <span
           style={{
@@ -34,6 +34,7 @@ export function Dropzone({
           Step 01 — Drop a document
         </span>
         <h1
+          className="dropzone-title"
           style={{
             fontFamily: 'var(--serif)',
             fontWeight: 400,
@@ -52,6 +53,7 @@ export function Dropzone({
       </div>
 
       <label
+        className="dropzone-card"
         onDragOver={(e) => { e.preventDefault(); setHover(true); }}
         onDragLeave={() => setHover(false)}
         onDrop={(e) => { e.preventDefault(); setHover(false); onDrop(e); }}

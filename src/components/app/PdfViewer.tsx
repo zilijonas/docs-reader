@@ -54,7 +54,7 @@ export function PdfViewer({
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="pdf-viewer" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {pages.map((page) => (
         <PagePreviewCard
           key={page.pageIndex}
@@ -238,6 +238,7 @@ function PagePreviewCard({
     <div id={id} onClick={onActivate}>
       {/* Page header strip */}
       <div
+        className="pdf-page-header"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -245,7 +246,7 @@ function PagePreviewCard({
           padding: '0 4px 10px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="pdf-page-header-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span
             style={{
               fontFamily: 'var(--mono)',
@@ -281,7 +282,7 @@ function PagePreviewCard({
             {page.lane === 'ocr' ? 'ocr lane' : 'native text'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
+        <div className="pdf-page-header-right" style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
           {pendingCount > 0 ? (
             <span><span style={{ color: 'var(--risk-ink)' }}>●</span> {pendingCount} pending</span>
           ) : (

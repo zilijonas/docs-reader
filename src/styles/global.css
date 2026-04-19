@@ -99,3 +99,481 @@ a {
   white-space: pre;
   cursor: text;
 }
+
+.landing-shell {
+  min-height: 100vh;
+}
+
+.landing-header,
+.landing-header-inner,
+.landing-nav,
+.landing-section,
+.landing-hero-actions,
+.landing-feature-grid,
+.landing-privacy-grid,
+.landing-limits-row,
+.landing-stats,
+.landing-footer-cta {
+  min-width: 0;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+}
+
+.landing-header-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.landing-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.landing-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-feature-card {
+  min-width: 0;
+}
+
+.landing-privacy-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 64px;
+  align-items: flex-start;
+}
+
+.landing-limits-row,
+.landing-footer-cta {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.landing-stats {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.landing-hero-diagram {
+  overflow-x: auto;
+}
+
+.app-shell {
+  background: var(--paper);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.app-header-group,
+.app-header-actions,
+.app-header-doc,
+.app-review-summary {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-header-group {
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1 1 420px;
+}
+
+.app-header-doc {
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.app-header-doc-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-header-actions {
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1 1 320px;
+}
+
+.app-review-summary {
+  gap: 10px;
+  padding: 0 12px;
+  border-right: 1px solid var(--line);
+  min-height: 28px;
+}
+
+.app-mobile-review-trigger,
+.toolbar-mobile-review-trigger,
+.sidebar-mobile-header {
+  display: none !important;
+}
+
+.app-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-viewer-column {
+  padding: 28px 40px 120px;
+  overflow: auto;
+  background: color-mix(in oklab, var(--paper) 96%, var(--ink));
+  border-right: 1px solid var(--line);
+  min-width: 0;
+}
+
+.app-viewer-inner {
+  max-width: min(100%, calc(780px * var(--viewer-zoom, 1)));
+  margin: 0 auto;
+}
+
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.review-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.review-toolbar-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.review-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.pdf-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pdf-page-header-left,
+.pdf-page-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.review-sidebar {
+  background: var(--paper);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: sticky;
+  top: 101px;
+  min-width: 0;
+}
+
+.review-sidebar-backdrop {
+  display: none;
+}
+
+.dropzone-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 96px 32px 48px;
+}
+
+.dropzone-card {
+  display: block;
+}
+
+@media (max-width: 1023px) {
+  .app-mobile-review-trigger,
+  .toolbar-mobile-review-trigger {
+    display: inline-flex !important;
+  }
+
+  .sidebar-mobile-header {
+    display: flex !important;
+  }
+
+  .app-main-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    position: relative;
+  }
+
+  .app-viewer-column {
+    border-right: none !important;
+    padding: 24px 24px 96px !important;
+  }
+
+  .review-sidebar-backdrop[data-open='true'] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.38);
+    backdrop-filter: blur(4px);
+    z-index: 29;
+  }
+
+  .review-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0;
+    width: min(92vw, 420px);
+    max-width: 100%;
+    height: 100dvh !important;
+    border-left: 1px solid var(--line);
+    box-shadow: -16px 0 40px rgba(17, 17, 17, 0.12);
+    z-index: 30;
+    transform: translateX(100%);
+    transition: transform 220ms var(--ease);
+  }
+
+  .review-sidebar[data-open='true'] {
+    transform: translateX(0);
+  }
+
+  .review-toolbar {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-header {
+    padding: 18px 24px !important;
+  }
+
+  .landing-header-inner {
+    align-items: flex-start;
+  }
+
+  .landing-section {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+
+  .landing-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .landing-feature-card:nth-child(2) {
+    border-right: none !important;
+  }
+
+  .landing-feature-card:last-child {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--line);
+  }
+
+  .landing-privacy-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 36px !important;
+  }
+
+  .landing-limits-row,
+  .landing-footer-cta {
+    gap: 24px !important;
+  }
+
+  .landing-stats {
+    gap: 24px !important;
+  }
+
+  .app-header {
+    align-items: flex-start;
+  }
+
+  .app-header-actions {
+    justify-content: flex-start;
+  }
+
+  .app-review-summary {
+    border-right: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-header {
+    padding: 16px 18px !important;
+  }
+
+  .landing-nav {
+    gap: 12px !important;
+    width: 100%;
+  }
+
+  .landing-section {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .landing-hero {
+    padding-top: 56px !important;
+    padding-bottom: 40px !important;
+  }
+
+  .landing-hero-title {
+    font-size: clamp(34px, 12vw, 56px) !important;
+  }
+
+  .landing-hero-copy {
+    font-size: 16px !important;
+  }
+
+  .landing-hero-actions {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .landing-hero-actions > * {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .landing-hero-diagram-card {
+    margin-top: 48px !important;
+    padding: 12px 0 !important;
+  }
+
+  .landing-how-title,
+  .landing-privacy-title,
+  .landing-footer-title {
+    font-size: 34px !important;
+  }
+
+  .landing-feature-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .landing-feature-card {
+    border-right: none !important;
+    border-top: 1px solid var(--line);
+    min-height: 0 !important;
+  }
+
+  .landing-feature-card:first-child {
+    border-top: none;
+  }
+
+  .landing-limits-title {
+    font-size: 28px !important;
+  }
+
+  .landing-stats {
+    width: 100%;
+    flex-direction: column;
+    gap: 18px !important;
+  }
+
+  .landing-footer {
+    padding: 56px 18px !important;
+  }
+
+  .app-header {
+    padding: 12px 16px !important;
+  }
+
+  .app-header-group,
+  .app-header-actions {
+    flex-basis: 100%;
+  }
+
+  .app-viewer-column {
+    padding: 18px 14px 88px !important;
+  }
+
+  .review-toolbar {
+    padding: 10px 14px !important;
+  }
+
+  .review-toolbar-group,
+  .review-toolbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .review-toolbar-pages {
+    width: 100%;
+    order: 3;
+  }
+
+  .pdf-page-header {
+    padding-bottom: 6px !important;
+  }
+
+  .review-sidebar {
+    width: min(100vw, 360px);
+  }
+
+  .dropzone-shell {
+    padding: 56px 18px 32px;
+  }
+
+  .dropzone-title {
+    font-size: 40px !important;
+  }
+
+  .dropzone-card {
+    padding: 56px 20px !important;
+  }
+}

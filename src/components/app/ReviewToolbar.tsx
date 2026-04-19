@@ -2,13 +2,13 @@ export function ReviewToolbar({
   canExport,
   canFallbackExport,
   drawMode,
+  onOpenReview,
   onExport,
   onFallbackExport,
   onReset,
   onToggleDrawMode,
   processing,
   reviewCount,
-  approvedCount,
   zoom,
   onZoomChange,
   downloadUrl,
@@ -19,13 +19,13 @@ export function ReviewToolbar({
   canExport: boolean;
   canFallbackExport: boolean;
   drawMode: boolean;
+  onOpenReview: () => void;
   onExport: () => void;
   onFallbackExport: () => void;
   onReset: () => void | Promise<void>;
   onToggleDrawMode: () => void;
   processing: boolean;
   reviewCount: number;
-  approvedCount: number;
   zoom: number;
   onZoomChange: (value: number) => void;
   downloadUrl?: string;
@@ -35,6 +35,7 @@ export function ReviewToolbar({
 }) {
   return (
     <div
+      className="review-toolbar"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -47,7 +48,7 @@ export function ReviewToolbar({
       }}
     >
       {/* Left: tool buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="review-toolbar-group" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <ToolButton active={!drawMode} onClick={onToggleDrawMode} label="Select">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M4 3l6 17 3-7 7-3L4 3Z" /></svg>
         </ToolButton>
@@ -64,11 +65,33 @@ export function ReviewToolbar({
         <ToolButton onClick={() => onZoomChange(Math.min(1.8, zoom + 0.1))}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M11 8v6M8 11h6M20 20l-3.5-3.5" /></svg>
         </ToolButton>
+        <button
+          type="button"
+          className="toolbar-mobile-review-trigger"
+          onClick={onOpenReview}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 10px',
+            height: 28,
+            fontSize: 12,
+            fontWeight: 500,
+            borderRadius: 8,
+            cursor: 'pointer',
+            background: 'var(--surface-1)',
+            color: 'var(--ink)',
+            border: '1px solid var(--line)',
+          }}
+        >
+          Review
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>{reviewCount}</span>
+        </button>
       </div>
 
       {/* Center: page navigator */}
       {pageCount && pageCount > 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="review-toolbar-pages" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {Array.from({ length: pageCount }, (_, i) => (
             <button
               key={i}
@@ -97,7 +120,7 @@ export function ReviewToolbar({
       ) : null}
 
       {/* Right: actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="review-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <button
           type="button"
           onClick={onReset}

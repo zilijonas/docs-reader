@@ -1,13 +1,10 @@
-import type { ChangeEvent, DragEvent, RefObject } from 'react';
+import type { ChangeEvent, DragEvent } from 'react';
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 
-import { APP_LIMITS, DETECTION_TYPE_LABELS, FILE_ACCEPT, PRIVACY_PROMISE } from '../../lib/constants';
+import { APP_LIMITS, DETECTION_TYPE_LABELS, FILE_ACCEPT } from '../../lib/constants';
 import { getRedactorWorkerClient } from '../../lib/worker-client';
 import type {
   Detection,
-  DetectionSource,
-  DetectionStatus,
-  DetectionType,
   ProcessingProgress,
   TextSpan,
   WorkerResponse,
@@ -31,11 +28,6 @@ const preserveRuleStatuses = (nextDetections: Detection[], previousDetections: D
 
     return match ? { ...detection, status: match.status } : detection;
   });
-
-const toggleFilterValue = <T extends string>(list: T[], value: T, fallback: T[]) => {
-  const next = list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
-  return next.length ? next : fallback;
-};
 
 const validateSelectedFile = (file: File) => {
   if (file.type && file.type !== FILE_ACCEPT) {
@@ -75,8 +67,6 @@ export function AppShell() {
     removeManualRedaction,
     setManualStatus,
     setCustomKeywords,
-    rejectPage,
-    clearManualPage,
     setExportJob,
     setPreviewState,
     appendWarning,
@@ -91,6 +81,7 @@ export function AppShell() {
   const [keywordDraft, setKeywordDraft] = useState('');
   const [zoom, setZoom] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fileRef = useRef<File | null>(null);
 
@@ -193,6 +184,33 @@ export function AppShell() {
   const suggestedCount =
     detections.filter((detection) => detection.status === 'suggested').length;
   const showViewer = Boolean(sourceDocument && pages.length);
+
+  useEffect(() => {
+    if (!showViewer) {
+      setIsSidebarOpen(false);
+    }
+  }, [showViewer]);
+
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSidebarOpen]);
 
   const runDetections = async (
     keywords: string[],
@@ -352,6 +370,7 @@ export function AppShell() {
 
   const handleSidebarJump = (pageIndex: number) => {
     setActivePage(pageIndex);
+    setIsSidebarOpen(false);
     document.getElementById(`page-${pageIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
@@ -362,6 +381,7 @@ export function AppShell() {
     await clientRef.current.reset();
     reset();
     fileRef.current = null;
+    setIsSidebarOpen(false);
     setSpans([]);
     setProgress(null);
     setError(null);
@@ -395,9 +415,10 @@ export function AppShell() {
   };
 
   return (
-    <div style={{ background: 'var(--paper)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="app-shell">
       {/* Top bar */}
       <header
+        className="app-header"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -411,7 +432,7 @@ export function AppShell() {
           zIndex: 20,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="app-header-group" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth={1.5} />
@@ -422,11 +443,11 @@ export function AppShell() {
           </div>
           <div style={{ width: 1, height: 16, background: 'var(--line)' }} />
           {sourceDocument ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="app-header-doc" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" /><path d="M14 3v5h5" />
               </svg>
-              <span style={{ fontSize: 13, color: 'var(--ink)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="app-header-doc-name" style={{ fontSize: 13, color: 'var(--ink)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {sourceDocument.name}
               </span>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
@@ -439,7 +460,7 @@ export function AppShell() {
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span
             style={{
               display: 'inline-flex',
@@ -463,7 +484,29 @@ export function AppShell() {
           </span>
           {showViewer ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 12px', borderRight: '1px solid var(--line)', height: 28 }}>
+              <button
+                type="button"
+                className="app-mobile-review-trigger"
+                onClick={() => setIsSidebarOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 10px',
+                  height: 28,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  background: 'var(--surface-1)',
+                  color: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                }}
+              >
+                Review
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>{deferredItems.length}</span>
+              </button>
+              <div className="app-review-summary" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 12px', borderRight: '1px solid var(--line)', height: 28 }}>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
                   Review
                 </span>
@@ -515,13 +558,13 @@ export function AppShell() {
             canExport={Boolean(showViewer && !isProcessing)}
             canFallbackExport={fallbackExportReady && !isProcessing}
             drawMode={drawMode}
+            onOpenReview={() => setIsSidebarOpen(true)}
             onExport={() => handleExport('true-redaction')}
             onFallbackExport={() => handleExport('flattened')}
             onReset={resetSession}
             onToggleDrawMode={() => setDrawMode(!drawMode)}
             processing={isProcessing}
             reviewCount={reviewCount}
-            approvedCount={approvedCount}
             zoom={zoom}
             onZoomChange={setZoom}
             downloadUrl={exportJob.downloadUrl}
@@ -535,6 +578,7 @@ export function AppShell() {
 
           {/* Main grid */}
           <div
+            className="app-main-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 380px',
@@ -543,8 +587,17 @@ export function AppShell() {
               minHeight: 0,
             }}
           >
+            <button
+              type="button"
+              aria-label="Close review panel"
+              className="review-sidebar-backdrop"
+              data-open={isSidebarOpen}
+              onClick={() => setIsSidebarOpen(false)}
+              style={{ border: 'none', padding: 0, cursor: 'pointer' }}
+            />
             {/* Pages column */}
             <div
+              className="app-viewer-column"
               style={{
                 padding: '28px 40px 120px',
                 overflow: 'auto',
@@ -553,6 +606,7 @@ export function AppShell() {
               }}
             >
               <div
+                className="app-viewer-inner"
                 style={{
                   maxWidth: 780 * zoom,
                   margin: '0 auto',
@@ -580,8 +634,9 @@ export function AppShell() {
 
             {/* Sidebar */}
             <DetectionSidebar
+              mobileOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
               progress={progress}
-              exportJob={exportJob}
               warnings={warnings}
               error={error}
               draft={keywordDraft}
@@ -598,8 +653,6 @@ export function AppShell() {
               onToggleManualStatus={(id, status) => setManualStatus(id, status)}
               onDeleteManual={removeManualRedaction}
               onJumpToPage={handleSidebarJump}
-              onRejectPage={() => rejectPage(activePage)}
-              onClearManualPage={() => clearManualPage(activePage)}
               items={deferredItems}
             />
           </div>
