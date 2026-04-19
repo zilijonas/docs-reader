@@ -4,16 +4,6 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 
-const pyodidePackageJson = require.resolve('pyodide/package.json');
-const pyodideRoot = path.dirname(pyodidePackageJson);
-const pyodidePackage = require(pyodidePackageJson);
-const pyodideLock = require(path.join(pyodideRoot, 'pyodide-lock.json'));
-const tesseractPackageJson = require.resolve('tesseract.js/package.json');
-const tesseractRoot = path.dirname(tesseractPackageJson);
-const tesseractRequire = createRequire(tesseractPackageJson);
-const tesseractCorePackageJson = tesseractRequire.resolve('tesseract.js-core/package.json');
-const tesseractCoreRoot = path.dirname(tesseractCorePackageJson);
-
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const publicRoot = path.join(projectRoot, 'public');
 const pyodidePublicRoot = path.join(publicRoot, 'pyodide');
@@ -23,38 +13,84 @@ const ensureDir = async (dir) => {
   await mkdir(dir, { recursive: true });
 };
 
+const pathExists = async (targetPath) => {
+  try {
+    await access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const resolveOptional = (moduleId) => {
+  try {
+    return require.resolve(moduleId);
+  } catch {
+    return null;
+  }
+};
+
+const ensureFilesPresent = async (root, fileNames) => {
+  const missingFiles = [];
+
+  for (const fileName of fileNames) {
+    if (!(await pathExists(path.join(root, fileName)))) {
+      missingFiles.push(fileName);
+    }
+  }
+
+  return {
+    ok: missingFiles.length === 0,
+    missingFiles,
+  };
+};
+
 const copyIfNeeded = async (source, destination) => {
   await ensureDir(path.dirname(destination));
 
-  try {
-    await access(destination);
+  if (await pathExists(destination)) {
     return;
-  } catch {
-    await copyFile(source, destination);
   }
+
+  await copyFile(source, destination);
 };
 
 const downloadIfNeeded = async (url, destination) => {
   await ensureDir(path.dirname(destination));
 
-  try {
-    await access(destination);
+  if (await pathExists(destination)) {
     return;
-  } catch {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-    await writeFile(destination, buffer);
   }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  await writeFile(destination, buffer);
 };
 
 const syncPyodide = async () => {
   await ensureDir(pyodidePublicRoot);
 
   const baseFiles = ['pyodide.mjs', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
+  const pyodidePackageJson = resolveOptional('pyodide/package.json');
+
+  if (!pyodidePackageJson) {
+    const existingFiles = await ensureFilesPresent(pyodidePublicRoot, [...baseFiles, 'pymupdf-1.26.3-cp313-none-pyodide_2025_0_wasm32.whl']);
+    if (existingFiles.ok) {
+      return;
+    }
+
+    throw new Error(
+      `Missing pyodide package and required runtime assets in public/pyodide. Missing: ${existingFiles.missingFiles.join(', ')}`,
+    );
+  }
+
+  const pyodideRoot = path.dirname(pyodidePackageJson);
+  const pyodidePackage = require(pyodidePackageJson);
+  const pyodideLock = require(path.join(pyodideRoot, 'pyodide-lock.json'));
   await Promise.all(
     baseFiles.map((fileName) => copyIfNeeded(path.join(pyodideRoot, fileName), path.join(pyodidePublicRoot, fileName))),
   );
@@ -75,6 +111,34 @@ const syncPyodide = async () => {
 const syncTesseract = async () => {
   await ensureDir(tesseractPublicRoot);
 
+  const tesseractPackageJson = resolveOptional('tesseract.js/package.json');
+  if (!tesseractPackageJson) {
+    const requiredFiles = [
+      'worker.min.js',
+      'tesseract-core.wasm.js',
+      'tesseract-core.wasm',
+      'tesseract-core-simd.wasm.js',
+      'tesseract-core-simd.wasm',
+      'tesseract-core-lstm.wasm.js',
+      'tesseract-core-lstm.wasm',
+      'tesseract-core-simd-lstm.wasm.js',
+      'tesseract-core-simd-lstm.wasm',
+      'eng.traineddata.gz',
+    ];
+    const existingFiles = await ensureFilesPresent(tesseractPublicRoot, requiredFiles);
+    if (existingFiles.ok) {
+      return;
+    }
+
+    throw new Error(
+      `Missing tesseract.js package and required runtime assets in public/tesseract. Missing: ${existingFiles.missingFiles.join(', ')}`,
+    );
+  }
+
+  const tesseractRoot = path.dirname(tesseractPackageJson);
+  const tesseractRequire = createRequire(tesseractPackageJson);
+  const tesseractCorePackageJson = tesseractRequire.resolve('tesseract.js-core/package.json');
+  const tesseractCoreRoot = path.dirname(tesseractCorePackageJson);
   const workerFiles = ['dist/worker.min.js'];
   await Promise.all(
     workerFiles.map((fileName) =>
