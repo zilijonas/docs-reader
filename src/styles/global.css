@@ -801,16 +801,6 @@ a {
   line-height: var(--span-line-height);
 }
 
-.pdf-detection {
-  border-color: var(--overlay-border);
-  background: var(--overlay-background);
-}
-
-.pdf-manual {
-  border: var(--overlay-stroke);
-  background: var(--overlay-background);
-}
-
 @media (max-width: 1023px) {
   .app-mobile-review-trigger,
   .toolbar-mobile-review-trigger {

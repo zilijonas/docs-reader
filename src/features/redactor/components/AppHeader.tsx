@@ -24,10 +24,10 @@ export function AppHeader({
   onOpenReview: () => void;
   onExport: () => void;
 }) {
-    const homeHref = import.meta.env.BASE_URL;
+  const homeHref = import.meta.env.BASE_URL;
 
   return (
-    <header className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-md">
+    <header className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-[12px]">
       <div className="app-header-group flex flex-1 flex-wrap items-center gap-4">
         <a href={homeHref} className="flex items-center gap-2">
           <BrandLogo className="app-brand-logo text-content" title="HDDN" />
@@ -38,15 +38,15 @@ export function AppHeader({
         {sourceDocument ? (
           <div className="app-header-doc flex min-w-0 flex-1 items-center gap-2.5">
             <FileText className="text-content-muted" size={14} strokeWidth={1.5} />
-            <span className="app-header-doc-name measure-doc-name truncate text-ui-sm text-content">
+            <span className="app-header-doc-name max-w-[320px] truncate text-[13px] text-content">
               {sourceDocument.name}
             </span>
-            <span className="font-mono text-ui-2xs tracking-ui-tight text-content-subtle">
+            <span className="font-mono text-[10.5px] tracking-[0.04em] text-content-subtle">
               {formatBytes(sourceDocument.size)}
             </span>
           </div>
         ) : (
-          <span className="font-mono text-ui-2xs uppercase tracking-ui-eyebrow text-content-subtle">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-content-subtle">
             No document loaded
           </span>
         )}
@@ -62,11 +62,11 @@ export function AppHeader({
           <>
             <Button className="app-mobile-review-trigger" size="sm" variant="secondary" onClick={onOpenReview}>
               Review
-              <span className="font-mono text-ui-2xs text-content-subtle">{reviewItemCount}</span>
+              <span className="font-mono text-[10.5px] text-content-subtle">{reviewItemCount}</span>
             </Button>
 
             <div className="app-review-summary flex min-h-7 items-center gap-2.5 border-r border-border px-3">
-              <span className="font-mono text-ui-2xs uppercase tracking-ui-data text-content-subtle">Review</span>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-content-subtle">Review</span>
               <div className="flex items-center gap-2.5 text-xs">
                 <span>
                   <strong className="text-content">{approvedCount}</strong>{' '}

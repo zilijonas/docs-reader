@@ -77,7 +77,7 @@ export function PdfViewer({
       ))}
 
       <div className="mt-2 text-center">
-        <span className="font-mono text-ui-2xs tracking-ui-data text-content-subtle">
+        <span className="font-mono text-[10.5px] tracking-[0.14em] text-content-subtle">
           - end of document -
         </span>
       </div>
@@ -235,14 +235,14 @@ function PageHeader({
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            'font-mono text-ui-2xs uppercase tracking-ui-data',
+            'font-mono text-[10.5px] uppercase tracking-[0.14em]',
             active ? 'text-content' : 'text-content-subtle',
           )}
         >
           Page {pageIndex + 1} / {totalPages}
         </span>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-ui-xs lowercase text-content-muted">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-[11px] lowercase text-content-muted">
           {pageLabel === 'ocr lane' ? (
             <ImageIcon size={10} strokeWidth={1.5} />
           ) : (
@@ -252,7 +252,7 @@ function PageHeader({
         </span>
       </div>
 
-      <div className="flex items-center gap-2.5 font-mono text-ui-2xs tracking-ui-tight text-content-subtle">
+      <div className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.04em] text-content-subtle">
         {pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <StatusDot tone="warning" />
@@ -312,10 +312,10 @@ function DetectionOverlay({
           className={cn(
             'pdf-box pdf-detection pointer-events-auto rounded-sm border transition',
             detection.status === 'approved'
-              ? 'border-success bg-success/20'
+              ? 'border-success bg-success/[0.18]'
               : detection.status === 'suggested'
-                ? 'border-warning bg-warning-soft'
-                : 'border-border-strong bg-border-strong/20',
+                ? 'border-warning bg-warning/[0.14]'
+                : 'border-border-strong bg-border-strong/[0.18]',
           )}
           key={detection.id}
           onClick={(event) => {
@@ -359,7 +359,7 @@ function ManualRedactionOverlay({
         >
           <div className="absolute -top-3 right-0 flex gap-1">
             <Button
-              className="h-5 rounded-sm border-border-strong bg-surface px-1.5 text-ui-2xs text-content-muted"
+              className="h-5 rounded-[4px] border-border-strong bg-surface px-1.5 text-[10px] text-content-muted"
               onClick={(event) => {
                 event.stopPropagation();
                 onSetManualStatus(manualRedaction.id, nextDetectionStatus(manualRedaction.status));
@@ -370,7 +370,7 @@ function ManualRedactionOverlay({
               {manualRedaction.status}
             </Button>
             <Button
-              className="h-5 rounded-sm px-1.5 text-ui-2xs"
+              className="h-5 rounded-[4px] px-1.5 text-[10px]"
               onClick={(event) => {
                 event.stopPropagation();
                 onRemoveManual(manualRedaction.id);
