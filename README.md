@@ -60,7 +60,9 @@ The project includes a GitHub Pages workflow in `.github/workflows/deploy.yml`.
 
 - Push to `main`
 - Enable GitHub Pages with the GitHub Actions source
-- If your repository name changes, update `base` in `astro.config.mjs`
+- The workflow runs `actions/configure-pages@v5` before build and passes the resolved Pages `origin` and `base_path` into Astro, so project-page repos automatically build under `/<repo>/`
+- User or org sites such as `https://<account>.github.io/` build at the root path automatically
+- For a custom domain, add `public/CNAME` with your domain and configure the domain in the repository Pages settings; the workflow-provided `origin` will be used for the Astro `site` value during deploy
 
 ## MVP constraints
 

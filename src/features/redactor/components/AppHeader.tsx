@@ -24,10 +24,12 @@ export function AppHeader({
   onOpenReview: () => void;
   onExport: () => void;
 }) {
+  const homeHref = import.meta.env.BASE_URL;
+
   return (
     <header className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-[12px]">
       <div className="app-header-group flex flex-1 flex-wrap items-center gap-4">
-        <a href="/" className="flex items-center gap-2">
+        <a href={homeHref} className="flex items-center gap-2">
           <BrandLogo className="app-brand-logo text-content" title="HDDN" />
         </a>
 

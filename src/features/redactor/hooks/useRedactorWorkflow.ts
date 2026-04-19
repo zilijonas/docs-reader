@@ -52,9 +52,16 @@ export function useRedactorWorkflow() {
       }
     });
 
-    client.init({ baseUrl: import.meta.env.BASE_URL }).catch((caughtError) => {
-      setError(caughtError instanceof Error ? caughtError.message : 'Could not initialize the worker runtime.');
-    });
+    client
+      .init({ baseUrl: import.meta.env.BASE_URL })
+      .then(() => {
+        startTransition(() =>
+          setProgress((currentProgress) => (currentProgress?.phase === 'booting' ? null : currentProgress)),
+        );
+      })
+      .catch((caughtError) => {
+        setError(caughtError instanceof Error ? caughtError.message : 'Could not initialize the worker runtime.');
+      });
 
     return unsubscribe;
   }, [appendWarning]);
