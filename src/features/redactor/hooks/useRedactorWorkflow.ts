@@ -3,8 +3,9 @@ import { startTransition, useEffect, useRef, useState } from 'react';
 
 import { dedupeDetections } from '../../../lib/utils';
 import { getRedactorWorkerClient } from '../../../lib/worker-client';
-import type { Detection, ExportMode, ProcessingProgress, TextSpan, WorkerResponse } from '../../../lib/types';
+import type { ExportMode, ProcessingProgress, TextSpan, WorkerResponse } from '../../../lib/types';
 import { useReviewStore } from '../../../store/reviewStore';
+import { EXPORT_MODE_META, PRIMARY_EXPORT_MODE, REDACTOR_UI, getPageAnchorId } from '../config';
 import { preserveRuleStatuses } from '../review-helpers';
 import { validateSelectedFile } from '../fileValidation';
 
@@ -36,7 +37,7 @@ export function useRedactorWorkflow() {
   const [progress, setProgress] = useState<ProcessingProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [keywordDraft, setKeywordDraft] = useState('');
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState<number>(REDACTOR_UI.defaultZoom);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -215,9 +216,8 @@ export function useRedactorWorkflow() {
       const loadedFile = fileRef.current;
       if (loadedFile) {
         const anchor = document.createElement('a');
-        const suffix = mode === 'flattened' ? '-flattened-redacted.pdf' : '-redacted.pdf';
         anchor.href = downloadUrl;
-        anchor.download = loadedFile.name.replace(/\.pdf$/i, '') + suffix;
+        anchor.download = loadedFile.name.replace(/\.pdf$/i, '') + EXPORT_MODE_META[mode].filenameSuffix;
         anchor.click();
       }
     } catch (caughtError) {
@@ -229,7 +229,7 @@ export function useRedactorWorkflow() {
       });
       setError(message);
 
-      if (mode === 'true-redaction') {
+      if (mode === PRIMARY_EXPORT_MODE) {
         setFallbackExportReady(true);
       }
     }
@@ -247,7 +247,7 @@ export function useRedactorWorkflow() {
     setSpans([]);
     setProgress(null);
     setError(null);
-    setZoom(1);
+    setZoom(REDACTOR_UI.defaultZoom);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -282,7 +282,7 @@ export function useRedactorWorkflow() {
   const handleSidebarJump = (pageIndex: number) => {
     setActivePage(pageIndex);
     setIsSidebarOpen(false);
-    document.getElementById(`page-${pageIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById(getPageAnchorId(pageIndex))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   return {

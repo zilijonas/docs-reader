@@ -13,23 +13,38 @@ import type {
   ManualRedaction,
   PageAsset,
   ProcessingProgress,
+  SourceDocument,
   TextSpan,
   WorkerRequest,
   WorkerResponse,
 } from '../lib/types';
 
+type PyodideGlobalsLike = {
+  set: (name: string, value: unknown) => void;
+  delete: (name: string) => void;
+};
+
+type PyProxyLike = {
+  toJs: () => Uint8Array;
+  destroy?: () => void;
+};
+
+type PyodideLike = {
+  globals: PyodideGlobalsLike;
+  loadPackage: (name: string) => Promise<void>;
+  runPythonAsync: (code: string) => Promise<unknown>;
+};
+
+type LoadPyodideModule = {
+  loadPyodide: (options: { indexURL: string }) => Promise<PyodideLike>;
+};
+
 type WorkerState = {
   baseUrl: string;
-  pyodide: any | null;
-  pyodidePromise?: Promise<any>;
+  pyodide: PyodideLike | null;
+  pyodidePromise?: Promise<PyodideLike>;
   tesseractWorker?: import('tesseract.js').Worker;
-  source?: WorkerResponse extends never ? never : {
-    name: string;
-    size: number;
-    pageCount: number;
-    mimeType: string;
-    fingerprint: string;
-  };
+  source?: SourceDocument;
   pages: PageAsset[];
   spans: TextSpan[];
   warnings: string[];
@@ -240,10 +255,10 @@ const runPythonJson = async <T>(code: string, bindings: Record<string, unknown>)
 const runPythonBytes = async (code: string, bindings: Record<string, unknown>) =>
   withGlobals(bindings, async () => {
     const pyodide = await ensurePyodide();
-    const proxy = await pyodide.runPythonAsync(code);
+    const proxy = (await pyodide.runPythonAsync(code)) as PyProxyLike;
 
     try {
-      return proxy.toJs() as Uint8Array;
+      return proxy.toJs();
     } finally {
       proxy.destroy?.();
     }
@@ -263,7 +278,7 @@ const ensurePyodide = async () => {
       });
 
       const moduleUrl = new URL(`${state.baseUrl}pyodide/pyodide.mjs`, self.location.origin).toString();
-      const { loadPyodide } = await import(/* @vite-ignore */ moduleUrl);
+      const { loadPyodide } = (await import(/* @vite-ignore */ moduleUrl)) as LoadPyodideModule;
       const pyodide = await loadPyodide({
         indexURL: new URL(`${state.baseUrl}pyodide/`, self.location.origin).toString(),
       });

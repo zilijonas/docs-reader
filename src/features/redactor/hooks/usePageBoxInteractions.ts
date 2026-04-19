@@ -1,8 +1,9 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import type { BoundingBox, DetectionStatus, ManualRedaction } from '../../../lib/types';
+import type { BoundingBox, ManualRedaction } from '../../../lib/types';
 import { clamp, normalizeBox, unionBoxes } from '../../../lib/utils';
+import { REDACTOR_INTERACTION } from '../config';
 
 type ManualDragState = {
   id: string;
@@ -115,7 +116,10 @@ export function usePageBoxInteractions({
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (drawingStartRef.current && draftBoxRef.current) {
-      if (draftBoxRef.current.width > 0.01 && draftBoxRef.current.height > 0.01) {
+      if (
+        draftBoxRef.current.width > REDACTOR_INTERACTION.minManualBoxSize &&
+        draftBoxRef.current.height > REDACTOR_INTERACTION.minManualBoxSize
+      ) {
         onCreateManual({ box: draftBoxRef.current, mode: 'box' });
       }
 
@@ -160,7 +164,11 @@ export function usePageBoxInteractions({
           height: rect.height / pageRect.height,
         }),
       )
-      .filter((box) => box.width > 0.002 && box.height > 0.002);
+      .filter(
+        (box) =>
+          box.width > REDACTOR_INTERACTION.minTextSelectionBoxSize &&
+          box.height > REDACTOR_INTERACTION.minTextSelectionBoxSize,
+      );
 
     if (boxes.length > 0) {
       onCreateManual({ box: unionBoxes(boxes), mode: 'text', snippet: selectedText });

@@ -3,23 +3,37 @@ import {
   BadgeInfo,
   CalendarDays,
   CreditCard,
+  FileText,
   Hash,
+  Image as ImageIcon,
   Landmark,
   Link2,
   Mail,
   Pencil,
   Phone,
   Tag,
+  Shield,
 } from 'lucide-react';
 
 import { APP_LIMITS } from '../../lib/constants';
 import { DETECTION_TYPE_LABELS as BASE_DETECTION_TYPE_LABELS, DETECTION_TYPE_ORDER as BASE_DETECTION_TYPE_ORDER } from '../../lib/detectionMetadata';
-import type { DetectionSource, DetectionStatus, DetectionType, FilterState } from '../../lib/types';
+import type { DetectionSource, DetectionStatus, DetectionType, ExportMode, FilterState } from '../../lib/types';
 
 export interface DetectionTypeMeta {
   type: DetectionType;
   shortLabel: string;
   pluralLabel: string;
+  icon: (props?: { size?: number; className?: string }) => ReactNode;
+}
+
+export interface ReviewFilterTab {
+  label: string;
+  status: DetectionStatus;
+}
+
+export interface UploadHintMeta {
+  id: 'privacy' | 'limits' | 'ocr';
+  label: string;
   icon: (props?: { size?: number; className?: string }) => ReactNode;
 }
 
@@ -106,6 +120,15 @@ export const DETECTION_TYPE_LABELS = BASE_DETECTION_TYPE_LABELS;
 
 export const REVIEW_STATUS_ORDER: DetectionStatus[] = ['suggested', 'approved', 'rejected'];
 export const REVIEW_SOURCE_ORDER: DetectionSource[] = ['rule', 'manual'];
+export const REVIEW_STATUS_LABELS: Record<DetectionStatus, string> = {
+  suggested: 'Queue',
+  approved: 'Approved',
+  rejected: 'Rejected',
+};
+export const REVIEW_FILTER_TABS: ReviewFilterTab[] = REVIEW_STATUS_ORDER.map((status) => ({
+  label: REVIEW_STATUS_LABELS[status],
+  status,
+}));
 
 export const DEFAULT_REVIEW_FILTERS: FilterState = {
   statuses: REVIEW_STATUS_ORDER,
@@ -113,10 +136,22 @@ export const DEFAULT_REVIEW_FILTERS: FilterState = {
   types: DETECTION_TYPE_ORDER,
 };
 
-export const UPLOAD_HINTS = [
-  'No uploads - ever',
-  `PDF · up to ${APP_LIMITS.maxFileSizeMb} MB · ${APP_LIMITS.maxPages} pages`,
-  'OCR auto-fallback for scans',
+export const UPLOAD_HINTS: UploadHintMeta[] = [
+  {
+    id: 'privacy',
+    label: 'No uploads - ever',
+    icon: (props?: IconProps) => <Shield {...iconProps(props)} />,
+  },
+  {
+    id: 'limits',
+    label: `PDF · up to ${APP_LIMITS.maxFileSizeMb} MB · ${APP_LIMITS.maxPages} pages`,
+    icon: (props?: IconProps) => <FileText {...iconProps(props)} />,
+  },
+  {
+    id: 'ocr',
+    label: 'OCR auto-fallback for scans',
+    icon: (props?: IconProps) => <ImageIcon {...iconProps(props)} />,
+  },
 ] as const;
 
 export const KEYBOARD_SHORTCUTS = [
@@ -124,3 +159,40 @@ export const KEYBOARD_SHORTCUTS = [
   { key: 'R', label: 'reject' },
   { key: 'J/K', label: 'navigate' },
 ] as const;
+
+export const REDACTOR_PAGE_ID_PREFIX = 'page';
+
+export const getPageAnchorId = (pageIndex: number) => `${REDACTOR_PAGE_ID_PREFIX}-${pageIndex}`;
+
+export const EXPORT_MODE_META: Record<
+  ExportMode,
+  {
+    actionLabel: string;
+    filenameSuffix: string;
+  }
+> = {
+  'true-redaction': {
+    actionLabel: 'Export',
+    filenameSuffix: '-redacted.pdf',
+  },
+  flattened: {
+    actionLabel: 'Flattened fallback',
+    filenameSuffix: '-flattened-redacted.pdf',
+  },
+};
+
+export const PRIMARY_EXPORT_MODE: ExportMode = 'true-redaction';
+export const FALLBACK_EXPORT_MODE: ExportMode = 'flattened';
+
+export const REDACTOR_UI = {
+  defaultZoom: 1,
+  minZoom: 0.7,
+  maxZoom: 1.8,
+  zoomStep: 0.1,
+  viewerBaseWidth: 780,
+} as const;
+
+export const REDACTOR_INTERACTION = {
+  minManualBoxSize: 0.01,
+  minTextSelectionBoxSize: 0.002,
+} as const;

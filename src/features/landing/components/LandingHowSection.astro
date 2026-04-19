@@ -8,7 +8,7 @@ import { howSteps } from '../data';
     <div class="landing-section-head">
       <div>
         <div class="landing-eyebrow mb-3">How it works</div>
-        <h2 class="type-display-section max-w-[600px]">Assistive detection. You stay in control.</h2>
+        <h2 class="type-display-section measure-landing-section">Assistive detection. You stay in control.</h2>
       </div>
       <p class="landing-section-copy type-body">Review stays central from upload to export.</p>
     </div>
@@ -19,11 +19,11 @@ import { howSteps } from '../data';
           <div class="landing-feature-card-head">
             <span class="type-data">{step.number}</span>
             {step.icon === 'upload' ? (
-              <Upload class="text-content-muted" size={18} strokeWidth={1.5} />
+              <Upload className="text-content-muted" size={18} strokeWidth={1.5} />
             ) : step.icon === 'review' ? (
-              <Eye class="text-content-muted" size={18} strokeWidth={1.5} />
+              <Eye className="text-content-muted" size={18} strokeWidth={1.5} />
             ) : (
-              <Download class="text-content-muted" size={18} strokeWidth={1.5} />
+              <Download className="text-content-muted" size={18} strokeWidth={1.5} />
             )}
           </div>
           <h3 class="type-display-card">{step.title}</h3>

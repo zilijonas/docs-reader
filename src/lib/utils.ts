@@ -1,5 +1,14 @@
 import type { BoundingBox, Detection, TextSpan } from './types';
 
+const BOX_CLOSENESS_THRESHOLD = {
+  position: 0.01,
+  size: 0.02,
+} as const;
+
+const READING_ORDER_LINE_THRESHOLD = 0.012;
+
+const SOURCE_CONFIDENCE_MERGE_THRESHOLD = 0.05;
+
 export const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
 export const toPercent = (value: number) => `${(value * 100).toFixed(3)}%`;
@@ -39,7 +48,12 @@ export const boxesClose = (a: BoundingBox, b: BoundingBox) => {
   const dy = Math.abs(a.y - b.y);
   const dw = Math.abs(a.width - b.width);
   const dh = Math.abs(a.height - b.height);
-  return dx < 0.01 && dy < 0.01 && dw < 0.02 && dh < 0.02;
+  return (
+    dx < BOX_CLOSENESS_THRESHOLD.position &&
+    dy < BOX_CLOSENESS_THRESHOLD.position &&
+    dw < BOX_CLOSENESS_THRESHOLD.size &&
+    dh < BOX_CLOSENESS_THRESHOLD.size
+  );
 };
 
 export const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -47,7 +61,7 @@ export const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/
 export const sortSpansForReadingOrder = (spans: TextSpan[]) =>
   [...spans].sort((left, right) => {
     const lineDelta = Math.abs(left.box.y - right.box.y);
-    if (lineDelta > 0.012) {
+    if (lineDelta > READING_ORDER_LINE_THRESHOLD) {
       return left.box.y - right.box.y;
     }
     return left.box.x - right.box.x;
@@ -104,7 +118,10 @@ export const dedupeDetections = (detections: Detection[]) => {
       existing.confidence = candidate.confidence;
     }
 
-    if (candidate.source !== existing.source && candidate.confidence >= existing.confidence - 0.05) {
+    if (
+      candidate.source !== existing.source &&
+      candidate.confidence >= existing.confidence - SOURCE_CONFIDENCE_MERGE_THRESHOLD
+    ) {
       existing.source = candidate.source;
     }
   });

@@ -16,7 +16,7 @@ import type {
 } from '../../lib/types';
 import { toPercent } from '../../lib/utils';
 import { usePageBoxInteractions } from '../../features/redactor/hooks/usePageBoxInteractions';
-import { getPreviewDisplayState, nextDetectionStatus } from '../../features/redactor';
+import { getPageAnchorId, getPreviewDisplayState, nextDetectionStatus } from '../../features/redactor';
 
 export function PdfViewer({
   pages,
@@ -58,7 +58,7 @@ export function PdfViewer({
           active={activePage === page.pageIndex}
           detections={detections.filter((detection) => detection.pageIndex === page.pageIndex)}
           drawMode={drawMode}
-          id={`page-${page.pageIndex}`}
+          id={getPageAnchorId(page.pageIndex)}
           key={page.pageIndex}
           manualRedactions={manualRedactions.filter((manualRedaction) => manualRedaction.pageIndex === page.pageIndex)}
           onActivate={() => onActivatePage(page.pageIndex)}
@@ -77,7 +77,7 @@ export function PdfViewer({
       ))}
 
       <div className="mt-2 text-center">
-        <span className="font-mono text-[10.5px] tracking-[0.14em] text-content-subtle">
+        <span className="font-mono text-ui-2xs tracking-ui-data text-content-subtle">
           - end of document -
         </span>
       </div>
@@ -172,7 +172,7 @@ function PagePreviewCard({
       <div
         ref={pageRef}
         className={cn(
-          'relative inline-block w-[var(--page-display-width)] max-w-full overflow-hidden border border-page-border bg-page shadow-[0_1px_0_var(--theme-page-border),0_16px_40px_-24px_rgba(20,16,10,0.18)]',
+          'viewer-page-surface relative inline-block w-[var(--page-display-width)] max-w-full overflow-hidden',
           drawMode ? 'cursor-crosshair' : 'cursor-default',
         )}
         onMouseUp={handleTextSelection}
@@ -235,14 +235,14 @@ function PageHeader({
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            'font-mono text-[10.5px] uppercase tracking-[0.14em]',
+            'font-mono text-ui-2xs uppercase tracking-ui-data',
             active ? 'text-content' : 'text-content-subtle',
           )}
         >
           Page {pageIndex + 1} / {totalPages}
         </span>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-[11px] lowercase text-content-muted">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-ui-xs lowercase text-content-muted">
           {pageLabel === 'ocr lane' ? (
             <ImageIcon size={10} strokeWidth={1.5} />
           ) : (
@@ -252,7 +252,7 @@ function PageHeader({
         </span>
       </div>
 
-      <div className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.04em] text-content-subtle">
+      <div className="flex items-center gap-2.5 font-mono text-ui-2xs tracking-ui-tight text-content-subtle">
         {pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <StatusDot tone="warning" />
@@ -284,14 +284,14 @@ function PagePreviewState({
 
   if (displayState === 'error') {
     return (
-      <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-danger">
+      <div className="flex min-h-64 items-center justify-center px-6 py-10 text-center text-sm text-danger">
         {preview?.error}
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-content-subtle">
+    <div className="flex min-h-64 items-center justify-center px-6 py-10 text-center text-sm text-content-subtle">
       Rendering page preview locally.
     </div>
   );
@@ -359,7 +359,7 @@ function ManualRedactionOverlay({
         >
           <div className="absolute -top-3 right-0 flex gap-1">
             <Button
-              className="h-5 rounded-[4px] border-border-strong bg-surface px-1.5 text-[10px] text-content-muted"
+              className="h-5 rounded-sm border-border-strong bg-surface px-1.5 text-ui-2xs text-content-muted"
               onClick={(event) => {
                 event.stopPropagation();
                 onSetManualStatus(manualRedaction.id, nextDetectionStatus(manualRedaction.status));
@@ -370,7 +370,7 @@ function ManualRedactionOverlay({
               {manualRedaction.status}
             </Button>
             <Button
-              className="h-5 rounded-[4px] px-1.5 text-[10px]"
+              className="h-5 rounded-sm px-1.5 text-ui-2xs"
               onClick={(event) => {
                 event.stopPropagation();
                 onRemoveManual(manualRedaction.id);

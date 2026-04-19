@@ -1,11 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import DocumentRedactorApp from '../components/DocumentRedactorApp';
+import { AppShell } from '../features/redactor/components/AppShell';
 ---
 
 <Layout
 	title="HDDN - Hide what matters."
 	description="Review and redact PDFs locally in your browser with no uploads and no servers."
 >
-	<DocumentRedactorApp client:only="react" />
+	<AppShell client:only="react" />
 </Layout>

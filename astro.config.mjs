@@ -4,6 +4,7 @@ import path from 'node:path';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
+/** @param {string | undefined} value */
 const normalizeBase = (value) => {
   if (!value || value === '/') {
     return '/';

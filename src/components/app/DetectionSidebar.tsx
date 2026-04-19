@@ -10,17 +10,12 @@ import {
   DETECTION_TYPE_META,
   DETECTION_TYPE_ORDER,
   KEYBOARD_SHORTCUTS,
+  REVIEW_FILTER_TABS,
   groupReviewItemsByType,
   type ReviewItem,
 } from '../../features/redactor';
 
 export type SidebarItem = ReviewItem;
-
-const filterTabs = [
-  { label: 'Queue', status: 'suggested' as const },
-  { label: 'Approved', status: 'approved' as const },
-  { label: 'Rejected', status: 'rejected' as const },
-];
 
 export function DetectionSidebar({
   mobileOpen,
@@ -75,26 +70,26 @@ export function DetectionSidebar({
 
   return (
     <aside
-      className="review-sidebar sticky top-[101px] flex h-full flex-col overflow-auto bg-canvas"
+      className="review-sidebar flex h-full flex-col overflow-auto bg-canvas"
       data-open={mobileOpen}
     >
-      <div className="sidebar-mobile-header sticky top-0 z-[1] items-center justify-between border-b border-border bg-canvas px-5 py-3.5">
+      <div className="sidebar-mobile-header sticky top-0 z-10 items-center justify-between border-b border-border bg-canvas px-5 py-3.5">
         <span className="type-data">
           Review queue
         </span>
-        <IconButton className="size-7.5" onClick={onClose} shape="pill" tone="surface">
+        <IconButton className="size-8" onClick={onClose} shape="pill" tone="surface">
           <X size={14} strokeWidth={1.5} />
         </IconButton>
       </div>
 
       <div className="flex gap-0 border-b border-border px-5 pt-3.5">
-        {filterTabs.map(({ label, status }) => {
+        {REVIEW_FILTER_TABS.map(({ label, status }) => {
           const isActive = filters.statuses.includes(status);
 
           return (
             <button
               className={cn(
-                'mb-[-1px] mr-5 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 text-[12.5px] transition-colors duration-200 ease-standard',
+                '-mb-px mr-5 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 text-ui-sm transition-colors duration-200 ease-standard',
                 isActive
                   ? 'border-content text-content'
                   : 'border-transparent text-content-subtle hover:text-content-muted',
@@ -112,7 +107,7 @@ export function DetectionSidebar({
               {label}
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.25 font-mono text-[10.5px]',
+                  'rounded-full px-1.5 py-px font-mono text-ui-2xs',
                   isActive ? 'bg-content text-canvas' : 'bg-surface-muted text-content-subtle',
                 )}
               >
@@ -127,7 +122,7 @@ export function DetectionSidebar({
         <div className="border-b border-border px-5 py-3">
           {warnings.map((warning) => (
             <div
-              className="mb-1.5 rounded-[var(--radius-control)] bg-warning-soft px-2.5 py-2 text-[12.5px] text-warning-ink"
+              className="mb-1.5 rounded-control bg-warning-soft px-2.5 py-2 text-ui-sm text-warning-ink"
               key={warning}
             >
               {warning}
@@ -135,7 +130,7 @@ export function DetectionSidebar({
           ))}
           {error ? (
             <div
-              className="rounded-[var(--radius-control)] bg-danger-soft px-2.5 py-2 text-[12.5px] text-danger"
+              className="rounded-control bg-danger-soft px-2.5 py-2 text-ui-sm text-danger"
             >
               {error}
             </div>
@@ -150,7 +145,7 @@ export function DetectionSidebar({
         </div>
       ) : null}
 
-      <div className="border-b border-border px-5 py-[18px]">
+      <div className="border-b border-border px-5 py-4">
         <div className="mb-2.5 flex items-center justify-between">
           <span className="type-data">
             Watch for these words
@@ -159,7 +154,7 @@ export function DetectionSidebar({
 
         <div className="mb-2.5 flex gap-1.5">
           <Input
-            className="flex-1 text-[13px]"
+            className="flex-1 text-ui-sm"
             onChange={(event) => onDraftChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
@@ -188,7 +183,7 @@ export function DetectionSidebar({
             </Chip>
           ))}
           {keywords.length === 0 ? (
-            <span className="text-[11.5px] italic text-content-subtle">None yet.</span>
+            <span className="text-ui-xs italic text-content-subtle">None yet.</span>
           ) : null}
         </div>
       </div>
@@ -213,15 +208,15 @@ export function DetectionSidebar({
               >
                 <div className="flex items-center gap-2.5">
                   <span className="text-content-muted">{meta.icon()}</span>
-                  <span className="text-[13px] font-medium">{meta.pluralLabel}</span>
-                  <span className="font-mono text-[10.5px] text-content-subtle">({typeItems.length})</span>
+                  <span className="text-ui-sm font-medium">{meta.pluralLabel}</span>
+                  <span className="font-mono text-ui-2xs text-content-subtle">({typeItems.length})</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   {pendingCount > 0 ? <StatusDot tone="warning" /> : null}
                   <ChevronDown
                     className={cn(
-                      'size-[13px] text-content-subtle transition-transform duration-200 ease-standard',
+                      'size-3.5 text-content-subtle transition-transform duration-200 ease-standard',
                       isExpanded ? 'rotate-0' : '-rotate-90',
                     )}
                     strokeWidth={1.5}
@@ -234,7 +229,7 @@ export function DetectionSidebar({
                   {pendingCount > 1 && type !== 'manual' ? (
                     <div className="px-5 pb-2.5">
                       <button
-                        className="w-full rounded-[var(--radius-control)] border border-dashed border-border-strong bg-transparent px-2.5 py-1.5 text-left font-mono text-[11.5px] tracking-[0.06em] text-content-muted transition-colors duration-200 ease-standard hover:border-content-subtle hover:text-content"
+                        className="w-full rounded-control border border-dashed border-border-strong bg-transparent px-2.5 py-1.5 text-left font-mono text-ui-xs tracking-ui-wide text-content-muted transition-colors duration-200 ease-standard hover:border-content-subtle hover:text-content"
                         onClick={() => {
                           typeItems.forEach((item) => {
                             if (item.status === 'suggested' && !item.manual) {
@@ -280,7 +275,7 @@ export function DetectionSidebar({
       </div>
 
       <div className="border-t border-border bg-surface-muted px-5 py-3">
-        <div className="flex items-center gap-4 font-mono text-[10.5px] tracking-[0.06em] text-content-subtle">
+        <div className="flex items-center gap-4 font-mono text-ui-2xs tracking-ui-wide text-content-subtle">
           {KEYBOARD_SHORTCUTS.map((shortcut) => (
             <span className="inline-flex items-center gap-1" key={shortcut.key}>
               {shortcut.key.includes('/') ? (
@@ -337,15 +332,15 @@ function DetectionRow({
           <StatusDot tone={statusTone} />
           <span
             className={cn(
-              'max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap text-content',
-              item.manual ? 'text-[13px] italic' : 'font-mono text-[12.5px]',
+              'measure-review-snippet overflow-hidden text-ellipsis whitespace-nowrap text-content',
+              item.manual ? 'text-ui-sm italic' : 'font-mono text-ui-sm',
             )}
           >
             {item.snippet}
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5 font-mono text-[10.5px] text-content-subtle">
+        <div className="flex items-center gap-2.5 font-mono text-ui-2xs text-content-subtle">
           <span>p.{item.pageIndex + 1}</span>
           {!item.manual ? (
             <>

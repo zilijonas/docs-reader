@@ -1,21 +1,12 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import type { ChangeEvent, DragEvent, RefObject } from 'react';
-import { FileText, Image as ImageIcon, Shield, Upload } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 
 import { Button, Panel, ProgressBar } from '../../components/ui';
 import { cn } from '@/lib/cn';
 import { FILE_ACCEPT } from '../../lib/constants';
 import type { ProcessingProgress } from '../../lib/types';
 import { UPLOAD_HINTS } from '../../features/redactor';
-
-const hintIconByLabel: Record<(typeof UPLOAD_HINTS)[number], ReactNode> = {
-  'No uploads - ever': (
-    <Shield size={13} strokeWidth={1.5} />
-  ),
-  [UPLOAD_HINTS[1]]: <FileText size={13} strokeWidth={1.5} />,
-  'OCR auto-fallback for scans': <ImageIcon size={13} strokeWidth={1.5} />,
-};
 
 export function Dropzone({
   fileInputRef,
@@ -41,7 +32,7 @@ export function Dropzone({
         <h1 className="type-display-hero mt-4">
           Start with a PDF.
         </h1>
-        <p className="type-body mx-auto mt-3 max-w-[32.5rem]">
+        <p className="type-body measure-copy mx-auto mt-3">
           Drag one into the frame, or choose a file. Nothing leaves your browser.
         </p>
       </div>
@@ -71,7 +62,7 @@ export function Dropzone({
 
           <div
             className={cn(
-              'mx-auto mb-7 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-border-strong text-content transition-transform duration-200 ease-standard',
+              'mx-auto mb-7 flex size-18 items-center justify-center rounded-full border border-border-strong text-content transition-transform duration-200 ease-standard',
               isHovering ? '-translate-y-0.5' : 'translate-y-0',
             )}
           >
@@ -95,23 +86,23 @@ export function Dropzone({
       </Panel>
 
       {progress ? (
-        <div className="mx-auto mt-8 max-w-[720px]">
+        <div className="measure-progress mx-auto mt-8">
           <ProgressBar value={progress.progress} />
           <p className="type-body-sm mt-3 text-center">{progress.message}</p>
         </div>
       ) : null}
 
       {error ? (
-        <div className="mx-auto mt-6 max-w-[35rem] rounded-[var(--radius-control)] border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
+        <div className="measure-feedback mx-auto mt-6 rounded-control border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="mt-10 flex flex-wrap justify-center gap-6">
         {UPLOAD_HINTS.map((hint) => (
-          <div key={hint} className="flex items-center gap-2 text-[12.5px] text-content-subtle">
-            {hintIconByLabel[hint]}
-            {hint}
+          <div key={hint.id} className="flex items-center gap-2 text-ui-sm text-content-subtle">
+            {hint.icon()}
+            {hint.label}
           </div>
         ))}
       </div>

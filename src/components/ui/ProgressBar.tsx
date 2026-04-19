@@ -20,7 +20,7 @@ export function ProgressBar({
     >
       <div
         className={cn(
-          'h-full w-[var(--progress-value)] bg-content transition-[width] duration-[460ms] ease-standard',
+          'h-full w-[var(--progress-value)] bg-content transition-[width] duration-500 ease-standard',
           indicatorClassName,
         )}
       />

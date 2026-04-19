@@ -3,10 +3,7 @@ import { ArrowRight, Download, MousePointer2, Square, ZoomIn, ZoomOut } from 'lu
 
 import { Button } from '../../components/ui';
 import { cn } from '@/lib/cn';
-
-const MIN_ZOOM = 0.7;
-const MAX_ZOOM = 1.8;
-const ZOOM_STEP = 0.1;
+import { REDACTOR_UI } from '../../features/redactor';
 
 export function ReviewToolbar({
   canExport,
@@ -55,19 +52,19 @@ export function ReviewToolbar({
 
         <div className="mx-1.5 h-5 w-px bg-border" />
 
-        <ToolButton onClick={() => onZoomChange(Math.max(MIN_ZOOM, zoom - ZOOM_STEP))}>
+        <ToolButton onClick={() => onZoomChange(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}>
           <ZoomOut size={13} strokeWidth={1.5} />
         </ToolButton>
-        <span className="min-w-10 text-center font-mono text-[11px] text-content-subtle">
+        <span className="min-w-10 text-center font-mono text-ui-xs text-content-subtle">
           {Math.round(zoom * 100)}%
         </span>
-        <ToolButton onClick={() => onZoomChange(Math.min(MAX_ZOOM, zoom + ZOOM_STEP))}>
+        <ToolButton onClick={() => onZoomChange(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}>
           <ZoomIn size={13} strokeWidth={1.5} />
         </ToolButton>
 
         <Button className="toolbar-mobile-review-trigger" onClick={onOpenReview} size="sm" variant="secondary">
           Review
-          <span className="font-mono text-[10.5px] text-content-subtle">{reviewCount}</span>
+          <span className="font-mono text-ui-2xs text-content-subtle">{reviewCount}</span>
         </Button>
       </div>
 
@@ -76,7 +73,7 @@ export function ReviewToolbar({
           {Array.from({ length: pageCount }, (_, pageIndex) => (
             <button
               className={cn(
-                'flex size-7 items-center justify-center rounded-[var(--radius-control)] border font-mono text-[11px] transition-colors duration-200 ease-standard',
+                'flex size-7 items-center justify-center rounded-control border font-mono text-ui-xs transition-colors duration-200 ease-standard',
                 activePage === pageIndex
                   ? 'border-content bg-content text-canvas'
                   : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',
@@ -133,7 +130,7 @@ function ToolButton({
   return (
     <button
       className={cn(
-        'inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-medium transition-colors duration-200 ease-standard',
+        'inline-flex h-7 items-center gap-1.5 rounded-control border px-2.5 text-xs font-medium transition-colors duration-200 ease-standard',
         active
           ? 'border-content bg-content text-canvas'
           : 'border-transparent bg-transparent text-content-muted hover:bg-surface-muted hover:text-content',

@@ -6,6 +6,7 @@ import { DetectionSidebar } from '../../../components/app/DetectionSidebar';
 import { Dropzone } from '../../../components/app/Dropzone';
 import { PdfViewer } from '../../../components/app/PdfViewer';
 import { ReviewToolbar } from '../../../components/app/ReviewToolbar';
+import { FALLBACK_EXPORT_MODE, PRIMARY_EXPORT_MODE, REDACTOR_UI, getPageAnchorId } from '../config';
 import { useRedactorReviewModel } from '../hooks/useRedactorReviewModel';
 import { useRedactorWorkflow } from '../hooks/useRedactorWorkflow';
 import { AppHeader } from './AppHeader';
@@ -101,7 +102,7 @@ export function AppShell() {
         approvedCount={reviewCounts.approvedCount}
         hasViewer={hasViewer}
         isProcessing={isProcessing}
-        onExport={() => handleExport('true-redaction')}
+        onExport={() => handleExport(PRIMARY_EXPORT_MODE)}
         onOpenReview={() => setIsSidebarOpen(true)}
         pendingReviewCount={reviewCounts.suggestedCount}
         reviewItemCount={deferredReviewItems.length}
@@ -126,10 +127,10 @@ export function AppShell() {
             drawMode={drawMode}
             onActivatePage={(pageIndex) => {
               setActivePage(pageIndex);
-              document.getElementById(`page-${pageIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              document.getElementById(getPageAnchorId(pageIndex))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-            onExport={() => handleExport('true-redaction')}
-            onFallbackExport={() => handleExport('flattened')}
+            onExport={() => handleExport(PRIMARY_EXPORT_MODE)}
+            onFallbackExport={() => handleExport(FALLBACK_EXPORT_MODE)}
             onOpenReview={() => setIsSidebarOpen(true)}
             onReset={resetSession}
             onToggleDrawMode={() => setDrawMode(!drawMode)}
@@ -150,7 +151,15 @@ export function AppShell() {
             />
 
             <div className="app-viewer-column">
-              <div className="app-viewer-inner" style={{ '--viewer-zoom': zoom } as CSSProperties}>
+              <div
+                className="app-viewer-inner"
+                style={
+                  {
+                    '--viewer-base-width': `${REDACTOR_UI.viewerBaseWidth}px`,
+                    '--viewer-zoom': zoom,
+                  } as CSSProperties
+                }
+              >
                 <PdfViewer
                   activePage={activePage}
                   detections={detections}
