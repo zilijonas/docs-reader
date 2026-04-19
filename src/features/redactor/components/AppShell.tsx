@@ -171,26 +171,33 @@ export function AppShell() {
   }, [hasViewer]);
 
   const scrollToPage = (pageIndex: number) => {
-    const viewerColumn = viewerColumnRef.current;
-
     setActivePage(pageIndex);
 
-    if (!viewerColumn) {
-      return;
-    }
-
     requestAnimationFrame(() => {
-      const nextViewerColumn = viewerColumnRef.current;
       const pageElement = document.getElementById(getPageAnchorId(pageIndex));
 
-      if (!nextViewerColumn || !pageElement) {
+      if (!pageElement) {
         return;
       }
 
-      nextViewerColumn.scrollTo({
-        top: pageElement.offsetTop,
-        behavior: 'smooth',
-      });
+      const stickyOffset = appHeaderHeight + reviewToolbarHeight;
+      const pageRect = pageElement.getBoundingClientRect();
+      const viewerColumn = viewerColumnRef.current;
+      const scrollTarget =
+        viewerColumn && viewerColumn.scrollHeight > viewerColumn.clientHeight ? viewerColumn : window;
+
+      if (scrollTarget === window) {
+        window.scrollTo({
+          top: window.scrollY + pageRect.top - stickyOffset - 12,
+          behavior: 'smooth',
+        });
+      } else {
+        const viewerRect = (scrollTarget as HTMLDivElement).getBoundingClientRect();
+        (scrollTarget as HTMLDivElement).scrollTo({
+          top: (scrollTarget as HTMLDivElement).scrollTop + (pageRect.top - viewerRect.top),
+          behavior: 'smooth',
+        });
+      }
     });
   };
 
