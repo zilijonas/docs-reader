@@ -9,6 +9,49 @@ import { EXPORT_MODE_META, PRIMARY_EXPORT_MODE, REDACTOR_UI, getPageAnchorId } f
 import { preserveRuleStatuses } from '../review-helpers';
 import { validateSelectedFile } from '../fileValidation';
 
+const writeBlobToFile = async (blob: Blob, fileName: string) => {
+  const windowWithSavePicker = window as Window & typeof globalThis & {
+    showSaveFilePicker?: (options?: {
+      suggestedName?: string;
+      types?: Array<{ description?: string; accept: Record<string, string[]> }>;
+    }) => Promise<{
+      createWritable: () => Promise<{
+        write: (data: Blob) => Promise<void>;
+        close: () => Promise<void>;
+      }>;
+    }>;
+  };
+
+  if (windowWithSavePicker.showSaveFilePicker) {
+    const handle = await windowWithSavePicker.showSaveFilePicker({
+      suggestedName: fileName,
+      types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return;
+  }
+
+  const file = new File([blob], fileName, { type: blob.type });
+  const navigatorWithShare = navigator as Navigator & {
+    canShare?: (data?: ShareData) => boolean;
+    share?: (data?: ShareData) => Promise<void>;
+  };
+
+  if (navigatorWithShare.canShare?.({ files: [file] }) && navigatorWithShare.share) {
+    await navigatorWithShare.share({ files: [file], title: fileName });
+    return;
+  }
+
+  const downloadUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = downloadUrl;
+  anchor.download = fileName;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+};
+
 export function useRedactorWorkflow() {
   const {
     sourceDocument,
@@ -179,10 +222,21 @@ export function useRedactorWorkflow() {
     await syncKeywords(customKeywords.filter((entry) => entry !== keyword));
   };
 
-  const handleExport = async (mode: ExportMode) => {
+  const handleExport = async (mode: ExportMode, options?: { approveAllSuggested?: boolean }) => {
     if (!sourceDocument) {
       return;
     }
+
+    const exportDetections = options?.approveAllSuggested
+      ? detections.map((detection) =>
+          detection.status === 'suggested' ? { ...detection, status: 'approved' as const } : detection,
+        )
+      : detections;
+    const exportManualRedactions = options?.approveAllSuggested
+      ? manualRedactions.map((redaction) =>
+          redaction.status === 'suggested' ? { ...redaction, status: 'approved' as const } : redaction,
+        )
+      : manualRedactions;
 
     setError(null);
     setExportJob({
@@ -197,28 +251,27 @@ export function useRedactorWorkflow() {
     try {
       const response = await clientRef.current.applyRedactions({
         redactions: {
-          detections,
-          manualRedactions,
+          detections: exportDetections,
+          manualRedactions: exportManualRedactions,
           mode,
         },
       });
       const blob = new Blob([response.payload.file], { type: 'application/pdf' });
-      const downloadUrl = URL.createObjectURL(blob);
 
       setExportJob({
         status: 'done',
         completedPages: sourceDocument.pageCount,
-        downloadUrl,
+        downloadUrl: undefined,
         mode,
       });
       setFallbackExportReady(false);
 
       const loadedFile = fileRef.current;
       if (loadedFile) {
-        const anchor = document.createElement('a');
-        anchor.href = downloadUrl;
-        anchor.download = loadedFile.name.replace(/\.pdf$/i, '') + EXPORT_MODE_META[mode].filenameSuffix;
-        anchor.click();
+        await writeBlobToFile(
+          blob,
+          loadedFile.name.replace(/\.pdf$/i, '') + EXPORT_MODE_META[mode].filenameSuffix,
+        );
       }
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : 'Export failed.';

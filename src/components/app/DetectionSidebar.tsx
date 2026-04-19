@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Check, ChevronDown, Plus, Trash2, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Download, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 
@@ -20,6 +20,10 @@ export type SidebarItem = ReviewItem;
 export function DetectionSidebar({
   mobileOpen,
   onClose,
+  onApproveAll,
+  onExport,
+  onReset,
+  processing,
   progress,
   warnings,
   error,
@@ -40,6 +44,10 @@ export function DetectionSidebar({
 }: {
   mobileOpen: boolean;
   onClose: () => void;
+  onApproveAll: () => void;
+  onExport: () => void;
+  onReset: () => void | Promise<void>;
+  processing: boolean;
   progress: ProcessingProgress | null;
   warnings: string[];
   error: string | null;
@@ -73,13 +81,27 @@ export function DetectionSidebar({
       className="review-sidebar flex h-full flex-col overflow-auto bg-canvas"
       data-open={mobileOpen}
     >
-      <div className="sidebar-mobile-header sticky top-0 z-[1] items-center justify-between border-b border-border bg-canvas px-5 py-3.5">
-        <span className="type-data">
-          Review queue
-        </span>
-        <IconButton className="size-ui-close" onClick={onClose} shape="pill" tone="surface">
-          <X size={14} strokeWidth={1.5} />
-        </IconButton>
+      <div className="sidebar-mobile-header sticky top-0 z-[1] border-b border-border bg-canvas px-5 py-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="type-data">
+            Review queue
+          </span>
+          <IconButton className="size-ui-close" onClick={onClose} shape="pill" tone="surface">
+            <X size={14} strokeWidth={1.5} />
+          </IconButton>
+        </div>
+
+        <div className="sidebar-mobile-actions mt-3 gap-2">
+          <Button onClick={onReset} size="sm" variant="ghost">
+            <RotateCcw size={14} strokeWidth={1.5} />
+            Reset session
+          </Button>
+          <Button disabled={processing} onClick={onExport} size="sm">
+            <Download size={14} strokeWidth={1.5} />
+            Export
+            <ArrowRight size={14} strokeWidth={1.5} />
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-0 border-b border-border px-5 pt-3.5">
@@ -116,6 +138,12 @@ export function DetectionSidebar({
             </button>
           );
         })}
+      </div>
+
+      <div className="border-b border-border px-5 py-3">
+        <Button fullWidth onClick={onApproveAll} size="sm" variant="secondary">
+          Approve all
+        </Button>
       </div>
 
       {(warnings.length > 0 || error) ? (

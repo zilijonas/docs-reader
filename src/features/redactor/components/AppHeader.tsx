@@ -1,8 +1,8 @@
 import type { Ref } from 'react';
-import { ArrowRight, Download, FileText, RotateCcw, Shield } from 'lucide-react';
+import { ArrowRight, Download, FileText, Menu, RotateCcw, Shield } from 'lucide-react';
 
 import { BrandLogo } from '../../../components/BrandLogo';
-import { Badge, Button } from '../../../components/ui';
+import { Badge, Button, IconButton } from '../../../components/ui';
 import type { SourceDocument } from '../../../lib/types';
 import { formatBytes } from '../../../lib/utils';
 
@@ -33,10 +33,10 @@ export function AppHeader({
 
   return (
     <header
-      className="app-header sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-app-header"
+      className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-app-header"
       ref={headerRef}
     >
-      <div className="app-header-group flex flex-1 flex-wrap items-center gap-4">
+      <div className="app-header-group flex min-w-0 flex-1 items-center gap-4">
         <a href={homeHref} className="flex items-center gap-2">
           <BrandLogo className="app-brand-logo text-content" title="HDDN" />
         </a>
@@ -69,27 +69,53 @@ export function AppHeader({
 
           {hasViewer ? (
             <>
-              <Button className="app-mobile-review-trigger" size="sm" variant="secondary" onClick={onOpenReview}>
-                Review
-                <span className="ui-text-label font-mono text-content-subtle">{reviewItemCount}</span>
-              </Button>
-
-                <div className="flex items-center gap-3 text-xs min-h-7">
-                  <span className="whitespace-nowrap">
-                    <strong className="text-content">{approvedCount}</strong>{' '}
-                    <span className="text-content-subtle whitespace-nowrap">approved</span>
-                  </span>
-                  <span className="whitespace-nowrap">
-                    <strong className="text-warning-ink">{pendingReviewCount}</strong>{' '}
-                    <span className="text-content-subtle whitespace-nowrap">to review</span>
-                  </span>
-                </div>
+              <div className="app-review-summary flex items-center gap-3 text-xs min-h-7">
+                <span className="whitespace-nowrap">
+                  <strong className="text-content">{approvedCount}</strong>{' '}
+                  <span className="text-content-subtle whitespace-nowrap">approved</span>
+                </span>
+                <span className="whitespace-nowrap">
+                  <strong className="text-warning-ink">{pendingReviewCount}</strong>{' '}
+                  <span className="text-content-subtle whitespace-nowrap">to review</span>
+                </span>
+              </div>
             </>
           ) : null}
         </div>
 
         {hasViewer ? (
           <div className="app-header-controls flex shrink-0 items-center justify-end gap-1.5">
+            <IconButton
+              aria-label={`Open review sidebar (${reviewItemCount} items)`}
+              className="app-mobile-review-trigger"
+              onClick={onOpenReview}
+              shape="pill"
+              size="md"
+            >
+              <Menu aria-hidden="true" size={16} strokeWidth={1.7} />
+            </IconButton>
+
+            <IconButton
+              aria-label="Reset session"
+              className="app-mobile-icon-action"
+              onClick={onReset}
+              shape="pill"
+              size="md"
+            >
+              <RotateCcw aria-hidden="true" size={16} strokeWidth={1.7} />
+            </IconButton>
+
+            <IconButton
+              aria-label="Export"
+              className="app-mobile-icon-action"
+              disabled={isProcessing}
+              onClick={onExport}
+              shape="pill"
+              size="md"
+            >
+              <Download aria-hidden="true" size={16} strokeWidth={1.7} />
+            </IconButton>
+
             <Button onClick={onReset} size="sm" variant="ghost">
               <RotateCcw size={14} strokeWidth={1.5} />
               Reset session

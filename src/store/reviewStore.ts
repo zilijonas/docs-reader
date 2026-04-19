@@ -44,6 +44,7 @@ interface ReviewState {
   toggleDetectionStatus: (id: string) => void;
   setDetectionStatus: (id: string, status: DetectionStatus) => void;
   approveGroup: (groupId: string) => void;
+  approveAll: () => void;
   setFilters: (next: Partial<FilterState>) => void;
   setDrawMode: (enabled: boolean) => void;
   addManualRedaction: (payload: {
@@ -126,6 +127,15 @@ export const useReviewStore = create<ReviewState>((set) => ({
     set((state) => ({
       detections: state.detections.map((detection) =>
         detection.groupId === groupId ? { ...detection, status: 'approved' } : detection,
+      ),
+    })),
+  approveAll: () =>
+    set((state) => ({
+      detections: state.detections.map((detection) =>
+        detection.status === 'suggested' ? { ...detection, status: 'approved' } : detection,
+      ),
+      manualRedactions: state.manualRedactions.map((redaction) =>
+        redaction.status === 'suggested' ? { ...redaction, status: 'approved' } : redaction,
       ),
     })),
   setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),

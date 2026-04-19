@@ -129,7 +129,7 @@ body {
 }
 
 body {
-  min-width: 320px;
+  min-width: 310px;
   background: var(--theme-canvas);
   color: var(--theme-content);
   font-family: var(--font-ui-sans);
@@ -801,7 +801,8 @@ a {
 }
 
 .app-header-actions {
-  flex: 1 1 20rem;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .app-header-status {
@@ -812,14 +813,43 @@ a {
   margin-left: auto;
 }
 
-.app-mobile-review-trigger,
+.app-mobile-review-trigger {
+  display: none !important;
+}
+
+.app-mobile-icon-action {
+  display: none !important;
+}
+
+.app-mobile-status-banner {
+  display: none;
+}
+
+.review-toolbar-pages-mobile {
+  display: none;
+}
+
 .toolbar-mobile-review-trigger,
-.sidebar-mobile-header {
+.sidebar-mobile-header,
+.sidebar-mobile-actions {
   display: none !important;
 }
 
 .review-toolbar {
   top: var(--app-header-height);
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+}
+
+.review-toolbar-group {
+  justify-self: start;
+}
+
+.review-toolbar-pages-desktop {
+  justify-self: center;
+}
+
+.review-toolbar-actions {
+  justify-self: end;
 }
 
 .app-main-grid {
@@ -883,13 +913,22 @@ a {
 }
 
 @media (max-width: 1023px) {
-  .app-mobile-review-trigger,
-  .toolbar-mobile-review-trigger {
-    display: inline-flex !important;
+  .app-mobile-status-banner {
+    display: block;
   }
 
   .sidebar-mobile-header {
+    display: block !important;
+  }
+
+  .sidebar-mobile-actions {
     display: flex !important;
+  }
+
+  .app-header-actions {
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.25rem;
   }
 
   .app-main-grid {
@@ -927,6 +966,86 @@ a {
   .review-sidebar[data-open='true'] {
     transform: translateX(0);
   }
+
+  .app-header-status {
+    display: none !important;
+  }
+
+  .app-review-summary {
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .app-header-controls {
+    order: 0;
+    width: auto;
+    justify-content: flex-end;
+    align-self: center;
+    gap: 0.125rem;
+  }
+
+  .app-mobile-review-trigger,
+  .app-mobile-icon-action {
+    display: inline-flex !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--theme-content) !important;
+    box-shadow: none !important;
+  }
+
+  .app-mobile-review-trigger:hover,
+  .app-mobile-icon-action:hover {
+    background: transparent !important;
+    color: var(--theme-content-muted) !important;
+    transform: none;
+  }
+
+  .app-mobile-review-trigger:focus-visible,
+  .app-mobile-icon-action:focus-visible {
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--theme-brand) 20%, transparent);
+  }
+
+  .app-mobile-review-trigger svg,
+  .app-mobile-icon-action svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .app-mobile-review-trigger {
+    order: 3;
+  }
+
+  .app-header-controls > :not(.app-mobile-review-trigger):not(.app-mobile-icon-action) {
+    display: none !important;
+  }
+
+  .toolbar-mobile-review-trigger {
+    display: none !important;
+  }
+
+  .review-toolbar {
+    display: grid;
+  }
+
+  .review-toolbar-group {
+    justify-self: start;
+  }
+
+  .review-toolbar-pages {
+    justify-self: center;
+  }
+
+  .review-toolbar-pages-desktop {
+    display: none !important;
+  }
+
+  .review-toolbar-pages-mobile {
+    display: flex !important;
+  }
+
+  .review-toolbar-actions {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 900px) {
@@ -963,19 +1082,6 @@ a {
     gap: 1.5rem;
   }
 
-  .app-header-actions {
-    justify-content: flex-start;
-  }
-
-  .app-header-status {
-    justify-content: flex-start;
-  }
-
-  .app-review-summary {
-    border-right: none;
-    padding-inline: 0;
-  }
-
   .landing-brand-logo {
     width: 4.5rem;
   }
@@ -984,6 +1090,14 @@ a {
 @media (max-width: 640px) {
   :root {
     --layout-container-gutter: 1.125rem;
+  }
+
+  .app-header {
+    padding-inline: 1rem;
+  }
+
+  .review-toolbar {
+    padding-inline: 1rem;
   }
 
   .landing-nav {
@@ -1056,36 +1170,23 @@ a {
     width: 4rem;
   }
 
-  .app-header-group,
-  .app-header-actions {
-    flex-basis: 100%;
+  .app-header {
+    gap: 0.75rem;
   }
 
-  .app-header-actions {
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.875rem;
-  }
-
-  .app-header-status {
-    flex: 1 1 0;
-    min-width: 0;
-    justify-content: flex-start;
-    align-items: flex-start;
+  .app-header-group {
     gap: 0.625rem;
   }
 
-  .app-review-summary {
-    width: 100%;
-    padding-inline: 0;
+  .app-header-doc {
+    gap: 0.5rem;
   }
 
-  .app-header-controls {
-    flex-shrink: 0;
-    align-self: flex-start;
+  .app-header-doc .ui-text-label {
+    display: none;
   }
 
   .app-viewer-column {
-    padding: 1.125rem 0.875rem 5.5rem;
+    padding: 1.125rem 0.875rem 7rem;
   }
 }
