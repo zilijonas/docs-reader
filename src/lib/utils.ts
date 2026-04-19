@@ -8,6 +8,20 @@ const BOX_CLOSENESS_THRESHOLD = {
 const READING_ORDER_LINE_THRESHOLD = 0.012;
 
 const SOURCE_CONFIDENCE_MERGE_THRESHOLD = 0.05;
+const OVERLAP_RATIO_THRESHOLD = 0.7;
+
+const DETECTION_TYPE_PRIORITY: Record<Detection['type'], number> = {
+  email: 90,
+  phone: 80,
+  url: 80,
+  iban: 100,
+  card: 95,
+  date: 60,
+  id: 85,
+  number: 10,
+  keyword: 70,
+  manual: 110,
+};
 
 export const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
@@ -41,6 +55,23 @@ export const overlaps = (a: BoundingBox, b: BoundingBox) => {
   const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
   const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
   return overlapX > 0 && overlapY > 0;
+};
+
+const boxArea = (box: BoundingBox) => box.width * box.height;
+
+const getOverlapArea = (a: BoundingBox, b: BoundingBox) => {
+  const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+  const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+  return overlapX * overlapY;
+};
+
+const overlapRatioToSmallerBox = (a: BoundingBox, b: BoundingBox) => {
+  const smallerArea = Math.min(boxArea(a), boxArea(b));
+  if (smallerArea === 0) {
+    return 0;
+  }
+
+  return getOverlapArea(a, b) / smallerArea;
 };
 
 export const boxesClose = (a: BoundingBox, b: BoundingBox) => {
@@ -96,27 +127,76 @@ export const detectionKey = (detection: Detection) =>
 
 export const normalizeSnippet = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase();
 
+const snippetsOverlap = (left: Detection, right: Detection) =>
+  left.normalizedSnippet === right.normalizedSnippet ||
+  left.normalizedSnippet.includes(right.normalizedSnippet) ||
+  right.normalizedSnippet.includes(left.normalizedSnippet);
+
+const shouldMergeDetections = (current: Detection, candidate: Detection) => {
+  if (current.pageIndex !== candidate.pageIndex) {
+    return false;
+  }
+
+  const sameType = current.type === candidate.type;
+  const sameSnippet = current.normalizedSnippet === candidate.normalizedSnippet;
+  const nestedSnippet = snippetsOverlap(current, candidate);
+  const spatiallySame =
+    boxesClose(current.box, candidate.box) ||
+    overlapRatioToSmallerBox(current.box, candidate.box) >= OVERLAP_RATIO_THRESHOLD;
+
+  if (!spatiallySame) {
+    return false;
+  }
+
+  if (sameType || sameSnippet) {
+    return true;
+  }
+
+  return nestedSnippet && (current.type === 'number' || candidate.type === 'number');
+};
+
+const selectPreferredDetection = (current: Detection, candidate: Detection) => {
+  const currentPriority = DETECTION_TYPE_PRIORITY[current.type];
+  const candidatePriority = DETECTION_TYPE_PRIORITY[candidate.type];
+
+  if (candidatePriority !== currentPriority) {
+    return candidatePriority > currentPriority ? candidate : current;
+  }
+
+  if (candidate.confidence !== current.confidence) {
+    return candidate.confidence > current.confidence ? candidate : current;
+  }
+
+  if (candidate.normalizedSnippet === current.normalizedSnippet) {
+    return boxArea(candidate.box) < boxArea(current.box) ? candidate : current;
+  }
+
+  return candidate.normalizedSnippet.length > current.normalizedSnippet.length ? candidate : current;
+};
+
 export const dedupeDetections = (detections: Detection[]) => {
   const deduped: Detection[] = [];
 
   detections.forEach((candidate) => {
-    const existing = deduped.find(
-      (current) =>
-        current.pageIndex === candidate.pageIndex &&
-        current.type === candidate.type &&
-        (current.normalizedSnippet === candidate.normalizedSnippet ||
-          boxesClose(current.box, candidate.box)),
-    );
+    const existing = deduped.find((current) => shouldMergeDetections(current, candidate));
 
     if (!existing) {
       deduped.push(candidate);
       return;
     }
 
-    if (candidate.confidence > existing.confidence) {
-      existing.box = candidate.box;
-      existing.confidence = candidate.confidence;
-    }
+    const preferred = selectPreferredDetection(existing, candidate);
+    existing.id = preferred.id;
+    existing.type = preferred.type;
+    existing.label = preferred.label;
+    existing.box = preferred.box;
+    existing.snippet = preferred.snippet;
+    existing.normalizedSnippet = preferred.normalizedSnippet;
+    existing.source = preferred.source;
+    existing.confidence = preferred.confidence;
+    existing.status = preferred.status;
+    existing.groupId = preferred.groupId;
+    existing.matchCount = preferred.matchCount;
 
     if (
       candidate.source !== existing.source &&

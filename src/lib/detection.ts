@@ -55,6 +55,48 @@ const buildKeywordPattern = (keywords: string[]) => {
   return new RegExp(`\\b(?:${filtered.map(escapeRegex).join('|')})\\b`, 'gi');
 };
 
+const getJoinedSpanText = (spans: TextSpan[]) => normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
+
+const refineCoveredSpans = (coveredSpans: TextSpan[], snippet: string) => {
+  if (coveredSpans.length <= 1) {
+    return coveredSpans;
+  }
+
+  const normalizedSnippet = normalizeSnippet(snippet);
+  let bestMatch = coveredSpans;
+
+  for (let startIndex = 0; startIndex < coveredSpans.length; startIndex += 1) {
+    for (let endIndex = startIndex; endIndex < coveredSpans.length; endIndex += 1) {
+      const candidate = coveredSpans.slice(startIndex, endIndex + 1);
+      const candidateText = getJoinedSpanText(candidate);
+
+      if (!candidateText) {
+        continue;
+      }
+
+      const isMatch =
+        candidateText === normalizedSnippet ||
+        candidateText.includes(normalizedSnippet) ||
+        normalizedSnippet.includes(candidateText);
+
+      if (!isMatch) {
+        continue;
+      }
+
+      if (candidate.length < bestMatch.length) {
+        bestMatch = candidate;
+        continue;
+      }
+
+      if (candidate.length === bestMatch.length && candidateText.length < getJoinedSpanText(bestMatch).length) {
+        bestMatch = candidate;
+      }
+    }
+  }
+
+  return bestMatch;
+};
+
 const matchToDetection = (
   match: RegExpExecArray,
   type: DetectionType,
@@ -65,7 +107,7 @@ const matchToDetection = (
 ): Detection | null => {
   const start = match.index;
   const end = start + match[0].length;
-  const coveredSpans = findSpansInRange(spans, start, end);
+  const coveredSpans = refineCoveredSpans(findSpansInRange(spans, start, end), match[0]);
 
   if (!coveredSpans.length) {
     return null;
