@@ -48,6 +48,7 @@ Useful commands:
 ```sh
 pnpm test
 pnpm build
+pnpm check:styles
 pnpm exec tsc --noEmit
 ```
 
@@ -68,4 +69,10 @@ The project includes a GitHub Pages workflow in `.github/workflows/deploy.yml`.
 - 30 page max document size
 - OCR currently ships with English language assets
 - Review-first workflow with no auto-export
+
+## UI styling
+
+- Use Tailwind utilities, semantic theme tokens, and shared variant-based components for presentation.
+- Do not add inline presentation styles in React or Astro templates.
+- Runtime geometry values are allowed only at rendering boundaries such as viewer overlays, zoom, and progress indicators.
 # docs-reader

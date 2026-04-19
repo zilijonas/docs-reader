@@ -2,9 +2,7 @@ import { create } from 'zustand';
 
 import type {
   Detection,
-  DetectionSource,
   DetectionStatus,
-  DetectionType,
   ExportJob,
   FilterState,
   ManualMode,
@@ -14,6 +12,13 @@ import type {
   SourceDocument,
 } from '../lib/types';
 import { createId, normalizeBox } from '../lib/utils';
+import {
+  DEFAULT_REVIEW_FILTERS,
+  createManualRedactionRecord,
+  initialExportJob,
+  nextDetectionStatus,
+  updatePreviewRecord,
+} from '../features/redactor';
 
 interface ReviewState {
   sourceDocument: SourceDocument | null;
@@ -61,21 +66,12 @@ interface ReviewState {
   reset: () => void;
 }
 
-const allStatuses: DetectionStatus[] = ['suggested', 'approved', 'rejected'];
-const allSources: DetectionSource[] = ['rule', 'manual'];
-const allTypes: DetectionType[] = ['email', 'phone', 'url', 'iban', 'card', 'date', 'id', 'number', 'keyword', 'manual'];
-
-const initialExport: ExportJob = {
-  totalPages: 0,
-  completedPages: 0,
-  status: 'idle',
-};
-
-const initialFilters: FilterState = {
-  statuses: allStatuses,
-  sources: allSources,
-  types: allTypes,
-};
+const createInitialExportJob = (): ExportJob => initialExportJob();
+const createInitialFilters = (): FilterState => ({
+  statuses: [...DEFAULT_REVIEW_FILTERS.statuses],
+  sources: [...DEFAULT_REVIEW_FILTERS.sources],
+  types: [...DEFAULT_REVIEW_FILTERS.types],
+});
 
 export const useReviewStore = create<ReviewState>((set) => ({
   sourceDocument: null,
@@ -83,11 +79,11 @@ export const useReviewStore = create<ReviewState>((set) => ({
   detections: [],
   manualRedactions: [],
   customKeywords: [],
-  filters: initialFilters,
+  filters: createInitialFilters(),
   previews: {},
   activePage: 0,
   drawMode: false,
-  exportJob: initialExport,
+  exportJob: createInitialExportJob(),
   warnings: [],
   fallbackExportReady: false,
   setDocument: ({ sourceDocument, pages, detections, warnings }) =>
@@ -106,7 +102,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
         manualRedactions: [],
         activePage: 0,
         previews: {},
-        exportJob: { ...initialExport, totalPages: pages.length },
+        exportJob: { ...createInitialExportJob(), totalPages: pages.length },
         fallbackExportReady: false,
       };
     }),
@@ -118,12 +114,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
         if (detection.id !== id) {
           return detection;
         }
-        const next: Record<DetectionStatus, DetectionStatus> = {
-          suggested: 'approved',
-          approved: 'rejected',
-          rejected: 'suggested',
-        };
-        return { ...detection, status: next[detection.status] };
+        return { ...detection, status: nextDetectionStatus(detection.status) };
       }),
     })),
   setDetectionStatus: (id, status) =>
@@ -142,15 +133,14 @@ export const useReviewStore = create<ReviewState>((set) => ({
     set((state) => ({
       manualRedactions: [
         ...state.manualRedactions,
-        {
+        createManualRedactionRecord({
           id: createId('manual'),
           pageIndex,
-          box: normalizeBox(box),
+          box,
           mode,
           snippet,
           note,
-          status: 'approved',
-        },
+        }),
       ],
     })),
   updateManualRedaction: (id, box) =>
@@ -192,15 +182,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
     })),
   setPreviewState: (pageIndex, preview) =>
     set((state) => ({
-      previews: {
-        ...state.previews,
-        [pageIndex]: {
-          ...state.previews[pageIndex],
-          pageIndex,
-          status: 'idle',
-          ...preview,
-        },
-      },
+      previews: updatePreviewRecord(state.previews, pageIndex, preview),
     })),
   appendWarning: (message) =>
     set((state) => ({
@@ -221,11 +203,11 @@ export const useReviewStore = create<ReviewState>((set) => ({
         detections: [],
         manualRedactions: [],
         customKeywords: [],
-        filters: initialFilters,
+        filters: createInitialFilters(),
         previews: {},
         activePage: 0,
         drawMode: false,
-        exportJob: initialExport,
+        exportJob: createInitialExportJob(),
         warnings: [],
         fallbackExportReady: false,
       };

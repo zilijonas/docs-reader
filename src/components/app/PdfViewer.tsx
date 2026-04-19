@@ -1,7 +1,10 @@
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import clsx from 'clsx';
+import { useEffect, useRef } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import { FileText, Image as ImageIcon } from 'lucide-react';
 
+import { cn } from '@/lib/cn';
+
+import { Button, StatusDot } from '../../components/ui';
 import type {
   BoundingBox,
   Detection,
@@ -11,14 +14,9 @@ import type {
   PreviewAsset,
   TextSpan,
 } from '../../lib/types';
-import { clamp, normalizeBox, toPercent, unionBoxes } from '../../lib/utils';
-
-type ManualDragState = {
-  id: string;
-  origin: BoundingBox;
-  pointerX: number;
-  pointerY: number;
-};
+import { toPercent } from '../../lib/utils';
+import { usePageBoxInteractions } from '../../features/redactor/hooks/usePageBoxInteractions';
+import { getPreviewDisplayState, nextDetectionStatus } from '../../features/redactor';
 
 export function PdfViewer({
   pages,
@@ -54,36 +52,47 @@ export function PdfViewer({
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
 }) {
   return (
-    <div className="pdf-viewer" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="pdf-viewer flex flex-col gap-7">
       {pages.map((page) => (
         <PagePreviewCard
-          key={page.pageIndex}
+          active={activePage === page.pageIndex}
+          detections={detections.filter((detection) => detection.pageIndex === page.pageIndex)}
+          drawMode={drawMode}
           id={`page-${page.pageIndex}`}
+          key={page.pageIndex}
+          manualRedactions={manualRedactions.filter((manualRedaction) => manualRedaction.pageIndex === page.pageIndex)}
+          onActivate={() => onActivatePage(page.pageIndex)}
+          onCreateManual={(payload) => onCreateManual(page.pageIndex, payload)}
+          onEnsurePreview={() => onEnsurePreview(page.pageIndex)}
+          onRemoveManual={onRemoveManual}
+          onSetManualStatus={onSetManualStatus}
+          onToggleDetection={onToggleDetection}
+          onUpdateManual={onUpdateManual}
           page={page}
           preview={previews[page.pageIndex]}
-          active={activePage === page.pageIndex}
-          zoom={zoom}
-          drawMode={drawMode}
           spans={spansByPage.get(page.pageIndex) ?? []}
-          detections={detections.filter((detection) => detection.pageIndex === page.pageIndex)}
-          manualRedactions={manualRedactions.filter((redaction) => redaction.pageIndex === page.pageIndex)}
-          onActivate={() => onActivatePage(page.pageIndex)}
-          onEnsurePreview={() => onEnsurePreview(page.pageIndex)}
-          onCreateManual={(payload) => onCreateManual(page.pageIndex, payload)}
-          onUpdateManual={onUpdateManual}
-          onRemoveManual={onRemoveManual}
-          onToggleDetection={onToggleDetection}
-          onSetManualStatus={onSetManualStatus}
           totalPages={pages.length}
+          zoom={zoom}
         />
       ))}
-      <div style={{ textAlign: 'center', marginTop: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.14em', color: 'var(--ink-3)' }}>
+
+      <div className="mt-2 text-center">
+        <span className="font-mono text-[10.5px] tracking-[0.14em] text-content-subtle">
           — end of document —
         </span>
       </div>
     </div>
   );
+}
+
+function getBoxStyle(box: BoundingBox, extra?: Record<string, string>): CSSProperties {
+  return {
+    '--box-left': toPercent(box.x),
+    '--box-top': toPercent(box.y),
+    '--box-width': toPercent(box.width),
+    '--box-height': toPercent(box.height),
+    ...extra,
+  } as CSSProperties;
 }
 
 function PagePreviewCard({
@@ -125,217 +134,68 @@ function PagePreviewCard({
 }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
-  const [draftBox, setDraftBox] = useState<BoundingBox | null>(null);
-  const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null);
-  const [dragState, setDragState] = useState<ManualDragState | null>(null);
-  const draftBoxRef = useRef<BoundingBox | null>(null);
-  const drawingStartRef = useRef<{ x: number; y: number } | null>(null);
-  const dragStateRef = useRef<ManualDragState | null>(null);
+  const {
+    beginManualDrag,
+    draftBox,
+    endPointer,
+    handleTextSelection,
+    movePointer,
+    startDrawing,
+  } = usePageBoxInteractions({
+    drawMode,
+    onCreateManual,
+    onUpdateManual,
+    pageRef,
+    textLayerRef,
+  });
 
   useEffect(() => {
     if (!preview || preview.status === 'idle') {
-      onEnsurePreview();
+      void onEnsurePreview();
     }
   }, [onEnsurePreview, preview]);
 
-  useEffect(() => { draftBoxRef.current = draftBox; }, [draftBox]);
-  useEffect(() => { drawingStartRef.current = drawingStart; }, [drawingStart]);
-  useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
-
-  const getNormalizedPoint = (clientX: number, clientY: number) => {
-    const rect = pageRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-    return { x: clamp((clientX - rect.left) / rect.width), y: clamp((clientY - rect.top) / rect.height) };
-  };
-
-  const startDrawing = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drawMode || event.button !== 0) return;
-    const point = getNormalizedPoint(event.clientX, event.clientY);
-    if (!point) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDrawingStart(point);
-    setDraftBox({ x: point.x, y: point.y, width: 0, height: 0 });
-  };
-
-  const movePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const activeDrawingStart = drawingStartRef.current;
-    if (activeDrawingStart) {
-      const point = getNormalizedPoint(event.clientX, event.clientY);
-      if (!point) return;
-      setDraftBox(normalizeBox({
-        x: Math.min(activeDrawingStart.x, point.x),
-        y: Math.min(activeDrawingStart.y, point.y),
-        width: Math.abs(point.x - activeDrawingStart.x),
-        height: Math.abs(point.y - activeDrawingStart.y),
-      }));
-      return;
-    }
-
-    const activeDragState = dragStateRef.current;
-    if (!activeDragState || drawMode) return;
-    const rect = pageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const deltaX = (event.clientX - activeDragState.pointerX) / rect.width;
-    const deltaY = (event.clientY - activeDragState.pointerY) / rect.height;
-    onUpdateManual(activeDragState.id, normalizeBox({
-      x: activeDragState.origin.x + deltaX,
-      y: activeDragState.origin.y + deltaY,
-      width: activeDragState.origin.width,
-      height: activeDragState.origin.height,
-    }));
-  };
-
-  const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (drawingStartRef.current && draftBoxRef.current) {
-      if (draftBoxRef.current.width > 0.01 && draftBoxRef.current.height > 0.01) {
-        onCreateManual({ box: draftBoxRef.current, mode: 'box' });
-      }
-      event.currentTarget.releasePointerCapture(event.pointerId);
-      setDrawingStart(null);
-      setDraftBox(null);
-    }
-    if (dragStateRef.current) {
-      pageRef.current?.releasePointerCapture(event.pointerId);
-      setDragState(null);
-    }
-  };
-
-  const handleTextSelection = () => {
-    if (drawMode || !pageRef.current || !textLayerRef.current) return;
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
-    const text = selection.toString().trim();
-    if (!text) return;
-    const range = selection.getRangeAt(0);
-    if (!textLayerRef.current.contains(range.commonAncestorContainer)) return;
-    const pageRect = pageRef.current.getBoundingClientRect();
-    const boxes = Array.from(range.getClientRects())
-      .map((rect) => normalizeBox({
-        x: (rect.left - pageRect.left) / pageRect.width,
-        y: (rect.top - pageRect.top) / pageRect.height,
-        width: rect.width / pageRect.width,
-        height: rect.height / pageRect.height,
-      }))
-      .filter((box) => box.width > 0.002 && box.height > 0.002);
-    if (boxes.length) {
-      onCreateManual({ box: unionBoxes(boxes), mode: 'text', snippet: text });
-    }
-    selection.removeAllRanges();
-  };
-
-  const onManualPointerDown = (event: ReactPointerEvent<HTMLDivElement>, redaction: ManualRedaction) => {
-    if (drawMode || event.button !== 0) return;
-    event.stopPropagation();
-    pageRef.current?.setPointerCapture(event.pointerId);
-    setDragState({ id: redaction.id, origin: redaction.box, pointerX: event.clientX, pointerY: event.clientY });
-  };
-
-  const pageLabel = page.lane === 'ocr' ? 'OCR lane' : 'Native text';
-  const displayWidth = page.width * page.previewScale * zoom;
-  const pendingCount = detections.filter((d) => d.status === 'suggested').length;
+  const pageLabel = page.lane === 'ocr' ? 'ocr lane' : 'native text';
+  const pageDisplayWidth = page.width * page.previewScale * zoom;
+  const pendingCount = detections.filter((detection) => detection.status === 'suggested').length;
 
   return (
     <div id={id} onClick={onActivate}>
-      {/* Page header strip */}
-      <div
-        className="pdf-page-header"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 4px 10px',
-        }}
-      >
-        <div className="pdf-page-header-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 10.5,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: active ? 'var(--ink)' : 'var(--ink-3)',
-            }}
-          >
-            Page {page.pageIndex + 1} / {totalPages}
-          </span>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '3px 9px',
-              borderRadius: 999,
-              fontSize: 11,
-              fontFamily: 'var(--mono)',
-              letterSpacing: '0.04em',
-              textTransform: 'lowercase',
-              background: page.lane === 'ocr' ? 'var(--surface-1)' : 'transparent',
-              color: 'var(--ink-2)',
-              border: '1px solid var(--line)',
-            }}
-          >
-            {page.lane === 'ocr' ? (
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="6" width="12" height="12" rx="2" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" /></svg>
-            ) : (
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" /><path d="M14 3v5h5" /></svg>
-            )}
-            {page.lane === 'ocr' ? 'ocr lane' : 'native text'}
-          </span>
-        </div>
-        <div className="pdf-page-header-right" style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
-          {pendingCount > 0 ? (
-            <span><span style={{ color: 'var(--risk-ink)' }}>●</span> {pendingCount} pending</span>
-          ) : (
-            <span><span style={{ color: 'var(--safe)' }}>●</span> page clean</span>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        active={active}
+        pageIndex={page.pageIndex}
+        pageLabel={pageLabel}
+        pendingCount={pendingCount}
+        totalPages={totalPages}
+      />
 
-      {/* Page card */}
       <div
         ref={pageRef}
-        className={clsx(drawMode ? 'cursor-crosshair' : 'cursor-default')}
-        style={{
-          position: 'relative',
-          display: 'inline-block',
-          maxWidth: '100%',
-          overflow: 'hidden',
-          borderRadius: 2,
-          border: '1px solid var(--page-edge)',
-          background: 'var(--page-paper)',
-          boxShadow: '0 1px 0 var(--page-edge), 0 16px 40px -24px rgba(20,16,10,0.18)',
-          width: `${displayWidth}px`,
-        }}
+        className={cn(
+          'relative inline-block w-[var(--page-display-width)] max-w-full overflow-hidden border border-page-border bg-page shadow-[0_1px_0_var(--theme-page-border),0_16px_40px_-24px_rgba(20,16,10,0.18)]',
+          drawMode ? 'cursor-crosshair' : 'cursor-default',
+        )}
+        onMouseUp={handleTextSelection}
+        onPointerCancel={endPointer}
         onPointerDown={startDrawing}
         onPointerMove={movePointer}
         onPointerUp={endPointer}
-        onPointerCancel={endPointer}
-        onMouseUp={handleTextSelection}
+        style={{ '--page-display-width': `${pageDisplayWidth}px` } as CSSProperties}
       >
-        {preview?.status === 'ready' && preview.url ? (
-          <img src={preview.url} alt={`Preview of page ${page.pageIndex + 1}`} className="block w-full" draggable={false} />
-        ) : preview?.status === 'error' ? (
-          <div style={{ display: 'flex', minHeight: 260, alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', fontSize: 14, color: 'var(--error)' }}>
-            {preview.error}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', minHeight: 260, alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', fontSize: 14, color: 'var(--ink-3)' }}>
-            Rendering page preview locally.
-          </div>
-        )}
+        <PagePreviewState pageIndex={page.pageIndex} preview={preview} />
 
-        <div ref={textLayerRef} className={clsx('selection-text-layer absolute inset-0', drawMode && 'pointer-events-none select-none')}>
+        <div
+          ref={textLayerRef}
+          className={cn('selection-text-layer absolute inset-0', drawMode && 'pointer-events-none select-none')}
+        >
           {spans.map((span) => (
             <span
+              className="pdf-box pdf-text-span"
               key={span.id}
-              style={{
-                left: toPercent(span.box.x),
-                top: toPercent(span.box.y),
-                width: toPercent(span.box.width),
-                height: toPercent(span.box.height),
-                fontSize: `${Math.max(11, span.box.height * 1000)}%`,
-                lineHeight: `${Math.max(1.1, span.box.height * 40)}`,
-              }}
+              style={getBoxStyle(span.box, {
+                '--span-font-size': `${Math.max(11, span.box.height * 1000)}%`,
+                '--span-line-height': `${Math.max(1.1, span.box.height * 40)}`,
+              })}
             >
               {span.text}
             </span>
@@ -343,114 +203,193 @@ function PagePreviewCard({
         </div>
 
         <div className="pointer-events-none absolute inset-0">
-          {detections.map((detection) => (
-            <button
-              key={detection.id}
-              type="button"
-              className="pointer-events-auto absolute rounded-sm border transition"
-              style={{
-                left: toPercent(detection.box.x),
-                top: toPercent(detection.box.y),
-                width: toPercent(detection.box.width),
-                height: toPercent(detection.box.height),
-                borderColor: detection.status === 'approved'
-                  ? 'var(--safe)'
-                  : detection.status === 'suggested'
-                  ? 'var(--risk)'
-                  : 'var(--line-strong)',
-                background: detection.status === 'approved'
-                  ? 'rgba(16, 185, 129, 0.18)'
-                  : detection.status === 'suggested'
-                  ? 'var(--risk-soft)'
-                  : 'rgba(217, 217, 223, 0.18)',
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleDetection(detection.id);
-              }}
-              aria-label={`Toggle ${detection.snippet}`}
-            />
-          ))}
-
-          {manualRedactions.map((redaction) => (
-            <div
-              key={redaction.id}
-              className="pointer-events-auto absolute"
-              style={{
-                left: toPercent(redaction.box.x),
-                top: toPercent(redaction.box.y),
-                width: toPercent(redaction.box.width),
-                height: toPercent(redaction.box.height),
-                borderRadius: 2,
-                border: redaction.status === 'rejected' ? '2px solid var(--line-strong)' : '2px solid rgba(0,0,0,0.8)',
-                background: redaction.status === 'rejected' ? 'rgba(217, 217, 223, 0.2)' : 'rgba(0,0,0,0.2)',
-              }}
-              onPointerDown={(event) => onManualPointerDown(event, redaction)}
-            >
-              <div className="absolute -top-3 right-0 flex gap-1">
-                <button
-                  type="button"
-                  style={{
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    background: 'var(--paper)',
-                    border: '1px solid var(--line-strong)',
-                    fontSize: 10,
-                    fontWeight: 500,
-                    color: 'var(--ink-2)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSetManualStatus(redaction.id, nextStatus(redaction.status));
-                  }}
-                >
-                  {redaction.status}
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    background: 'var(--paper)',
-                    border: '1px solid var(--line-strong)',
-                    fontSize: 10,
-                    fontWeight: 500,
-                    color: 'var(--error)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onRemoveManual(redaction.id);
-                  }}
-                >
-                  remove
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {draftBox ? (
-            <div
-              className="absolute rounded-sm border-2 border-dashed"
-              style={{
-                left: toPercent(draftBox.x),
-                top: toPercent(draftBox.y),
-                width: toPercent(draftBox.width),
-                height: toPercent(draftBox.height),
-                borderColor: 'var(--ink)',
-                background: 'rgba(17, 17, 17, 0.12)',
-              }}
-            />
-          ) : null}
+          <DetectionOverlay detections={detections} onToggleDetection={onToggleDetection} />
+          <ManualRedactionOverlay
+            draftBox={draftBox}
+            manualRedactions={manualRedactions}
+            onRemoveManual={onRemoveManual}
+            onSetManualStatus={onSetManualStatus}
+            onStartDrag={beginManualDrag}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-const nextStatus = (status: DetectionStatus): DetectionStatus => {
-  if (status === 'suggested') return 'approved';
-  if (status === 'approved') return 'rejected';
-  return 'suggested';
-};
+function PageHeader({
+  active,
+  pageIndex,
+  pageLabel,
+  pendingCount,
+  totalPages,
+}: {
+  active: boolean;
+  pageIndex: number;
+  pageLabel: string;
+  pendingCount: number;
+  totalPages: number;
+}) {
+  return (
+    <div className="flex items-center justify-between px-1 pb-2.5">
+      <div className="flex items-center gap-2.5">
+        <span
+          className={cn(
+            'font-mono text-[10.5px] uppercase tracking-[0.14em]',
+            active ? 'text-content' : 'text-content-subtle',
+          )}
+        >
+          Page {pageIndex + 1} / {totalPages}
+        </span>
+
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-[11px] lowercase text-content-muted">
+          {pageLabel === 'ocr lane' ? (
+            <ImageIcon size={10} strokeWidth={1.5} />
+          ) : (
+            <FileText size={10} strokeWidth={1.5} />
+          )}
+          {pageLabel}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.04em] text-content-subtle">
+        {pendingCount > 0 ? (
+          <span className="inline-flex items-center gap-1.5">
+            <StatusDot tone="warning" />
+            {pendingCount} pending
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5">
+            <StatusDot tone="safe" />
+            page clean
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PagePreviewState({
+  pageIndex,
+  preview,
+}: {
+  pageIndex: number;
+  preview?: PreviewAsset;
+}) {
+  const displayState = getPreviewDisplayState(preview);
+
+  if (displayState === 'ready' && preview?.url) {
+    return <img alt={`Preview of page ${pageIndex + 1}`} className="block w-full" draggable={false} src={preview.url} />;
+  }
+
+  if (displayState === 'error') {
+    return (
+      <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-danger">
+        {preview?.error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-content-subtle">
+      Rendering page preview locally.
+    </div>
+  );
+}
+
+function DetectionOverlay({
+  detections,
+  onToggleDetection,
+}: {
+  detections: Detection[];
+  onToggleDetection: (id: string) => void;
+}) {
+  return (
+    <>
+      {detections.map((detection) => (
+        <button
+          aria-label={`Toggle ${detection.snippet}`}
+          className={cn(
+            'pdf-box pdf-detection pointer-events-auto rounded-sm border transition',
+            detection.status === 'approved'
+              ? 'border-success bg-success/20'
+              : detection.status === 'suggested'
+                ? 'border-warning bg-warning-soft'
+                : 'border-border-strong bg-border-strong/20',
+          )}
+          key={detection.id}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleDetection(detection.id);
+          }}
+          style={getBoxStyle(detection.box)}
+          type="button"
+        />
+      ))}
+    </>
+  );
+}
+
+function ManualRedactionOverlay({
+  manualRedactions,
+  draftBox,
+  onStartDrag,
+  onSetManualStatus,
+  onRemoveManual,
+}: {
+  manualRedactions: ManualRedaction[];
+  draftBox: BoundingBox | null;
+  onStartDrag: (event: ReactPointerEvent<HTMLDivElement>, manualRedaction: ManualRedaction) => void;
+  onSetManualStatus: (id: string, status: DetectionStatus) => void;
+  onRemoveManual: (id: string) => void;
+}) {
+  return (
+    <>
+      {manualRedactions.map((manualRedaction) => (
+        <div
+          className={cn(
+            'pdf-box pdf-manual pointer-events-auto rounded-sm border-2',
+            manualRedaction.status === 'rejected'
+              ? 'border-border-strong bg-border-strong/20'
+              : 'border-content bg-content/20',
+          )}
+          key={manualRedaction.id}
+          onPointerDown={(event) => onStartDrag(event, manualRedaction)}
+          style={getBoxStyle(manualRedaction.box)}
+        >
+          <div className="absolute -top-3 right-0 flex gap-1">
+            <Button
+              className="h-5 rounded-[4px] border-border-strong bg-surface px-1.5 text-[10px] text-content-muted"
+              onClick={(event) => {
+                event.stopPropagation();
+                onSetManualStatus(manualRedaction.id, nextDetectionStatus(manualRedaction.status));
+              }}
+              size="sm"
+              variant="secondary"
+            >
+              {manualRedaction.status}
+            </Button>
+            <Button
+              className="h-5 rounded-[4px] px-1.5 text-[10px]"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemoveManual(manualRedaction.id);
+              }}
+              size="sm"
+              variant="danger"
+            >
+              remove
+            </Button>
+          </div>
+        </div>
+      ))}
+
+      {draftBox ? (
+        <div
+          className="pdf-box absolute rounded-sm border-2 border-dashed border-content bg-brand-soft"
+          style={getBoxStyle(draftBox)}
+        />
+      ) : null}
+    </>
+  );
+}

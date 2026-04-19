@@ -1,3 +1,13 @@
+import type { ReactNode } from 'react';
+import { ArrowRight, Download, MousePointer2, Square, ZoomIn, ZoomOut } from 'lucide-react';
+
+import { Button } from '../../components/ui';
+import { cn } from '@/lib/cn';
+
+const MIN_ZOOM = 0.7;
+const MAX_ZOOM = 1.8;
+const ZOOM_STEP = 0.1;
+
 export function ReviewToolbar({
   canExport,
   canFallbackExport,
@@ -34,184 +44,76 @@ export function ReviewToolbar({
   onActivatePage?: (pageIndex: number) => void;
 }) {
   return (
-    <div
-      className="review-toolbar"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '10px 24px',
-        borderBottom: '1px solid var(--line)',
-        background: 'var(--paper)',
-        gap: 20,
-        flexWrap: 'wrap',
-      }}
-    >
-      {/* Left: tool buttons */}
-      <div className="review-toolbar-group" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <ToolButton active={!drawMode} onClick={onToggleDrawMode} label="Select">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M4 3l6 17 3-7 7-3L4 3Z" /></svg>
+    <div className="review-toolbar flex flex-wrap items-center justify-between gap-5 border-b border-border bg-canvas px-6 py-2.5">
+      <div className="review-toolbar-group flex items-center gap-1.5">
+        <ToolButton active={!drawMode} label="Select" onClick={onToggleDrawMode}>
+          <MousePointer2 size={13} strokeWidth={1.5} />
         </ToolButton>
-        <ToolButton active={drawMode} onClick={onToggleDrawMode} label="Draw">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="1" /></svg>
+        <ToolButton active={drawMode} label="Draw" onClick={onToggleDrawMode}>
+          <Square size={13} strokeWidth={1.5} />
         </ToolButton>
-        <div style={{ width: 1, height: 20, background: 'var(--line)', margin: '0 6px' }} />
-        <ToolButton onClick={() => onZoomChange(Math.max(0.7, zoom - 0.1))}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M8 11h6M20 20l-3.5-3.5" /></svg>
+
+        <div className="mx-1.5 h-5 w-px bg-border" />
+
+        <ToolButton onClick={() => onZoomChange(Math.max(MIN_ZOOM, zoom - ZOOM_STEP))}>
+          <ZoomOut size={13} strokeWidth={1.5} />
         </ToolButton>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', minWidth: 40, textAlign: 'center' }}>
+        <span className="min-w-10 text-center font-mono text-[11px] text-content-subtle">
           {Math.round(zoom * 100)}%
         </span>
-        <ToolButton onClick={() => onZoomChange(Math.min(1.8, zoom + 0.1))}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M11 8v6M8 11h6M20 20l-3.5-3.5" /></svg>
+        <ToolButton onClick={() => onZoomChange(Math.min(MAX_ZOOM, zoom + ZOOM_STEP))}>
+          <ZoomIn size={13} strokeWidth={1.5} />
         </ToolButton>
-        <button
-          type="button"
-          className="toolbar-mobile-review-trigger"
-          onClick={onOpenReview}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 10px',
-            height: 28,
-            fontSize: 12,
-            fontWeight: 500,
-            borderRadius: 8,
-            cursor: 'pointer',
-            background: 'var(--surface-1)',
-            color: 'var(--ink)',
-            border: '1px solid var(--line)',
-          }}
-        >
+
+        <Button className="toolbar-mobile-review-trigger" onClick={onOpenReview} size="sm" variant="secondary">
           Review
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>{reviewCount}</span>
-        </button>
+          <span className="font-mono text-[10.5px] text-content-subtle">{reviewCount}</span>
+        </Button>
       </div>
 
-      {/* Center: page navigator */}
       {pageCount && pageCount > 0 ? (
-        <div className="review-toolbar-pages" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {Array.from({ length: pageCount }, (_, i) => (
+        <div className="review-toolbar-pages flex items-center gap-1.5">
+          {Array.from({ length: pageCount }, (_, pageIndex) => (
             <button
-              key={i}
+              className={cn(
+                'flex size-7 items-center justify-center rounded-[var(--radius-control)] border font-mono text-[11px] transition-colors duration-200 ease-standard',
+                activePage === pageIndex
+                  ? 'border-content bg-content text-canvas'
+                  : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',
+              )}
+              key={pageIndex}
+              onClick={() => onActivatePage?.(pageIndex)}
               type="button"
-              onClick={() => onActivatePage?.(i)}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 4,
-                border: '1px solid',
-                borderColor: activePage === i ? 'var(--ink)' : 'var(--line)',
-                background: activePage === i ? 'var(--ink)' : 'var(--paper)',
-                color: activePage === i ? 'var(--paper)' : 'var(--ink-2)',
-                fontFamily: 'var(--mono)',
-                fontSize: 11,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
             >
-              {i + 1}
+              {pageIndex + 1}
             </button>
           ))}
         </div>
       ) : null}
 
-      {/* Right: actions */}
-      <div className="review-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button
-          type="button"
-          onClick={onReset}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '6px 10px',
-            height: 28,
-            fontSize: 12,
-            fontWeight: 500,
-            borderRadius: 8,
-            cursor: 'pointer',
-            background: 'transparent',
-            color: 'var(--ink)',
-            border: '1px solid transparent',
-          }}
-        >
+      <div className="review-toolbar-actions flex items-center gap-1.5">
+        <Button onClick={onReset} size="sm" variant="ghost">
           Reset session
-        </button>
+        </Button>
+
         {downloadUrl ? (
-          <a
-            href={downloadUrl}
-            download
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 10px',
-              height: 28,
-              fontSize: 12,
-              fontWeight: 500,
-              borderRadius: 8,
-              background: 'var(--surface-1)',
-              color: 'var(--ink)',
-              border: '1px solid var(--line)',
-              textDecoration: 'none',
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v12M6 10l6 6 6-6" /><path d="M4 20h16" /></svg>
+          <Button download href={downloadUrl} size="sm" variant="secondary">
+            <Download size={12} strokeWidth={1.5} />
             Last export
-          </a>
+          </Button>
         ) : null}
+
         {canFallbackExport ? (
-          <button
-            type="button"
-            disabled={processing}
-            onClick={onFallbackExport}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 10px',
-              height: 28,
-              fontSize: 12,
-              fontWeight: 500,
-              borderRadius: 8,
-              cursor: processing ? 'not-allowed' : 'pointer',
-              opacity: processing ? 0.5 : 1,
-              background: 'var(--paper)',
-              color: 'var(--ink)',
-              border: '1px solid var(--line-strong)',
-            }}
-          >
+          <Button disabled={processing} onClick={onFallbackExport} size="sm" variant="secondary">
             Flattened fallback
-          </button>
+          </Button>
         ) : null}
-        <button
-          type="button"
-          disabled={!canExport || processing}
-          onClick={onExport}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 10px',
-            height: 28,
-            fontSize: 12,
-            fontWeight: 500,
-            borderRadius: 8,
-            cursor: !canExport || processing ? 'not-allowed' : 'pointer',
-            opacity: !canExport || processing ? 0.5 : 1,
-            background: 'var(--ink)',
-            color: 'var(--paper)',
-            border: '1px solid var(--ink)',
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v12M6 10l6 6 6-6" /><path d="M4 20h16" /></svg>
+
+        <Button disabled={!canExport || processing} onClick={onExport} size="sm">
+          <Download size={14} strokeWidth={1.5} />
           Export
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
-        </button>
+          <ArrowRight size={14} strokeWidth={1.5} />
+        </Button>
       </div>
     </div>
   );
@@ -226,27 +128,18 @@ function ToolButton({
   active?: boolean;
   onClick: () => void;
   label?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button
-      type="button"
+      className={cn(
+        'inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-medium transition-colors duration-200 ease-standard',
+        active
+          ? 'border-content bg-content text-canvas'
+          : 'border-transparent bg-transparent text-content-muted hover:bg-surface-muted hover:text-content',
+      )}
       onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: label ? '6px 10px' : '6px',
-        height: 28,
-        borderRadius: 4,
-        border: '1px solid',
-        borderColor: active ? 'var(--ink)' : 'transparent',
-        background: active ? 'var(--ink)' : 'transparent',
-        color: active ? 'var(--paper)' : 'var(--ink-2)',
-        fontSize: 12,
-        fontWeight: 500,
-        cursor: 'pointer',
-      }}
+      type="button"
     >
       {children}
       {label ? <span>{label}</span> : null}

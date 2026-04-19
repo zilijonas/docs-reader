@@ -1,0 +1,25 @@
+---
+import { limitStats } from '../data';
+---
+
+<section id="limits" class="landing-section-shell">
+  <div class="page-container section-space-tight pb-20">
+    <div class="landing-limits-row items-end">
+      <div>
+        <div class="landing-eyebrow mb-2.5">MVP constraints</div>
+        <h2 class="type-display-card max-w-[520px]">
+          A small, careful scope — on purpose.
+        </h2>
+      </div>
+      <div class="landing-stats">
+        {limitStats.map((stat) => (
+          <div class="landing-stat-card">
+            <span class="type-stat-label">{stat.label}</span>
+            <span class="type-stat-value">{stat.value}</span>
+            <span class="type-stat-note">{stat.note}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

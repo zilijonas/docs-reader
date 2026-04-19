@@ -1,4 +1,4 @@
-import type { BoundingBox, Detection, DetectionType, TextSpan } from './types';
+import type { BoundingBox, Detection, TextSpan } from './types';
 
 export const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
@@ -121,16 +121,3 @@ export const formatBytes = (bytes: number) => {
 };
 
 export const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
-
-export const detectionSortOrder: DetectionType[] = [
-  'email',
-  'phone',
-  'url',
-  'iban',
-  'card',
-  'date',
-  'id',
-  'number',
-  'keyword',
-  'manual',
-];

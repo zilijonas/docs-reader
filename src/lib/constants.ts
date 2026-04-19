@@ -1,3 +1,5 @@
+export { DETECTION_TYPE_LABELS } from './detectionMetadata';
+
 export const APP_LIMITS = {
   maxPages: 30,
   maxFileSizeMb: 25,
@@ -6,19 +8,6 @@ export const APP_LIMITS = {
   ocrScale: 2,
   minTextSpanCountForNativeText: 8,
   minTextCharactersForNativeText: 64,
-} as const;
-
-export const DETECTION_TYPE_LABELS = {
-  email: 'Email',
-  phone: 'Phone',
-  url: 'URL',
-  iban: 'IBAN',
-  card: 'Card number',
-  date: 'Date',
-  id: 'ID',
-  number: 'Number',
-  keyword: 'Custom keyword',
-  manual: 'Manual',
 } as const;
 
 export const PRIVACY_PROMISE = [
