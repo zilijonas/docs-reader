@@ -169,7 +169,8 @@ function PagePreviewCard({
 
   const pageLabel = page.lane === 'ocr' ? 'ocr lane' : 'native text';
   const fitWidthScale = viewerContentWidth / Math.max(page.width * page.previewScale, 1);
-  const pageDisplayWidth = page.width * page.previewScale * fitWidthScale * zoom;
+  const pageBaseWidth = page.width * page.previewScale * fitWidthScale;
+  const pageDisplayWidth = pageBaseWidth * zoom;
   const pageDisplayHeight = page.height * page.previewScale * fitWidthScale * zoom;
   const pendingCount = detections.filter((detection) => detection.status === 'suggested').length;
 
@@ -177,6 +178,7 @@ function PagePreviewCard({
     <div id={id} onClick={onActivate}>
       <PageHeader
         active={active}
+        headerWidth={pageBaseWidth}
         pageIndex={page.pageIndex}
         pageLabel={pageLabel}
         pendingCount={pendingCount}
@@ -233,19 +235,24 @@ function PagePreviewCard({
 
 function PageHeader({
   active,
+  headerWidth,
   pageIndex,
   pageLabel,
   pendingCount,
   totalPages,
 }: {
   active: boolean;
+  headerWidth: number;
   pageIndex: number;
   pageLabel: string;
   pendingCount: number;
   totalPages: number;
 }) {
   return (
-    <div className="flex items-center justify-between px-1 pb-2.5">
+    <div
+      className="sticky left-0 z-[1] flex items-center justify-between px-1 pb-2.5"
+      style={{ width: `${headerWidth}px` }}
+    >
       <div className="flex items-center gap-2.5">
         <span
           className={cn(

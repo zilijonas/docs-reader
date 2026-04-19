@@ -9,6 +9,18 @@ import { EXPORT_MODE_META, PRIMARY_EXPORT_MODE, REDACTOR_UI, getPageAnchorId } f
 import { preserveRuleStatuses } from '../review-helpers';
 import { validateSelectedFile } from '../fileValidation';
 
+const triggerAnchorDownload = (blob: Blob, fileName: string) => {
+  const downloadUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = downloadUrl;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+};
+
 const writeBlobToFile = async (blob: Blob, fileName: string) => {
   const windowWithSavePicker = window as Window & typeof globalThis & {
     showSaveFilePicker?: (options?: {
@@ -23,33 +35,24 @@ const writeBlobToFile = async (blob: Blob, fileName: string) => {
   };
 
   if (windowWithSavePicker.showSaveFilePicker) {
-    const handle = await windowWithSavePicker.showSaveFilePicker({
-      suggestedName: fileName,
-      types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
-    });
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    return;
+    try {
+      const handle = await windowWithSavePicker.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (pickerError) {
+      if (pickerError instanceof DOMException && pickerError.name === 'AbortError') {
+        return;
+      }
+      console.warn('showSaveFilePicker failed, falling back to download anchor.', pickerError);
+    }
   }
 
-  const file = new File([blob], fileName, { type: blob.type });
-  const navigatorWithShare = navigator as Navigator & {
-    canShare?: (data?: ShareData) => boolean;
-    share?: (data?: ShareData) => Promise<void>;
-  };
-
-  if (navigatorWithShare.canShare?.({ files: [file] }) && navigatorWithShare.share) {
-    await navigatorWithShare.share({ files: [file], title: fileName });
-    return;
-  }
-
-  const downloadUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = downloadUrl;
-  anchor.download = fileName;
-  anchor.click();
-  setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  triggerAnchorDownload(blob, fileName);
 };
 
 export function useRedactorWorkflow() {
