@@ -1,5 +1,6 @@
 import { ArrowRight, Download, FileText, Shield } from 'lucide-react';
 
+import { BrandLogo } from '../../../components/BrandLogo';
 import { Badge, Button } from '../../../components/ui';
 import type { SourceDocument } from '../../../lib/types';
 import { formatBytes } from '../../../lib/utils';
@@ -26,10 +27,9 @@ export function AppHeader({
   return (
     <header className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-[12px]">
       <div className="app-header-group flex flex-1 flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Shield size={18} strokeWidth={1.75} />
-          <span className="landing-brand-title text-content">Obscura</span>
-        </div>
+        <a href="/" className="flex items-center gap-2">
+          <BrandLogo className="app-brand-logo text-content" title="HDDN" />
+        </a>
 
         <div className="h-4 w-px bg-border" />
 

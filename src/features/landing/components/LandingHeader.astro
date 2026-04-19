@@ -1,5 +1,6 @@
 ---
-import { ArrowRight, Shield } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { BrandLogo } from '../../../components/BrandLogo';
 import { landingNavLinks } from '../data';
 
 interface Props {
@@ -12,11 +13,8 @@ const { appUrl } = Astro.props;
 <header class="landing-header">
   <div class="page-container landing-header-shell">
     <div class="landing-brand">
-      <Shield size={20} strokeWidth={1.75} />
-      <span class="landing-brand-title">Obscura</span>
-      <span class="landing-brand-meta type-data">
-        / docs-reader
-      </span>
+      <BrandLogo className="landing-brand-logo" title="HDDN" />
+      <span class="landing-brand-meta type-data">Hide what matters.</span>
     </div>
 
     <div class="landing-nav">

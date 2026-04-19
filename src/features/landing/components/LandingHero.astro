@@ -10,17 +10,15 @@ const { appUrl } = Astro.props;
 ---
 
 <section class="page-container landing-hero">
-  <div class="landing-hero-meta">
-    <span class="landing-hero-spot"></span>
-    <span class="landing-eyebrow">100% local — no uploads, ever</span>
-  </div>
   <h1 class="type-display-hero max-w-[940px]">
-    Redact a PDF<br />without ever sending it<br /><span class="italic text-content-muted">anywhere.</span>
+    <span class="landing-hero-brand">HDDN</span><br />
+    Redact PDFs locally. Nothing leaves your browser.
   </h1>
   <p class="landing-hero-copy type-body-lg">
-    Drop in a document. We detect sensitive spans, you approve each one, and a
-    clean redacted PDF is produced — entirely inside your browser.
+    Drop a PDF. We detect sensitive data. You approve. Export a clean,
+    permanently redacted file — all inside your browser.
   </p>
+  <p class="landing-hero-trust">No uploads. No servers. No risk.</p>
   <div class="landing-hero-actions">
     <a class="landing-button" href={appUrl}>
       <span>Try it now</span>
@@ -31,6 +29,7 @@ const { appUrl } = Astro.props;
       <span>See how it works</span>
     </a>
   </div>
+  <p class="landing-hero-microcopy type-caption">Free to try. No signup required.</p>
 
   <LandingHeroDiagram />
 </section>

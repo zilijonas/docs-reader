@@ -11,48 +11,27 @@ export const howSteps = [
     number: '01',
     icon: 'upload',
     title: 'Drop a PDF',
-    description:
-      'Searchable pages stay on the native text lane. Scanned pages automatically fall back to OCR.',
+    description: 'Text stays local. Scans use in-browser OCR.',
   },
   {
     number: '02',
     icon: 'review',
     title: 'Review detections',
-    description:
-      'Emails, phones, IBANs, cards, dates, IDs, and custom keywords surface as suggestions. Approve what should go.',
+    description: 'We suggest emails, phones, IBANs, IDs, and more. You decide what gets redacted.',
   },
   {
     number: '03',
     icon: 'export',
-    title: 'Export, redacted',
-    description:
-      'True PDF redaction via applied annotations. A flattened fallback is available if the source is malformed.',
+    title: 'Export safely',
+    description: 'True PDF redaction. Not just visual masking.',
   },
 ] as const;
 
-export const privacyBullets = [
-  {
-    title: 'No server roundtrip',
-    description: 'File bytes stay in browser memory.',
-  },
-  {
-    title: 'Assets bundled',
-    description: 'Pyodide, PyMuPDF and OCR models ship with the app.',
-  },
-  {
-    title: 'Review-first export',
-    description: 'Redaction is not applied until you click Export.',
-  },
-] as const;
-
-export const pipelineSteps = [
-  { title: 'Your browser tab', description: 'File bytes stay in-memory', filled: true },
-  { title: 'Web Worker', description: 'Off-main-thread processing', filled: false },
-  { title: 'Pyodide + PyMuPDF', description: 'Native text extraction', filled: false },
-  { title: 'Tesseract.js', description: 'OCR fallback for scans', filled: false },
-  { title: 'Rules engine', description: 'Regex detection', filled: false },
-  { title: 'Your review', description: 'Approve / reject / draw', filled: false },
-  { title: 'pdf-lib export', description: 'True redaction applied', filled: true },
+export const techHighlights = [
+  'In-browser processing (WebAssembly)',
+  'OCR for scanned PDFs',
+  'Pattern detection (emails, IDs, IBANs, etc.)',
+  'Secure PDF redaction (not reversible)',
 ] as const;
 
 export const limitStats = [
