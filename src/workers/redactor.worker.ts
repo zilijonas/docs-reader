@@ -275,7 +275,7 @@ const ensurePyodide = async () => {
       updateProgress({
         phase: 'booting',
         progress: 0.05,
-        message: 'Starting the Python worker runtime locally.',
+        message: 'Starting up…',
       });
 
       const moduleUrl = new URL(`${state.baseUrl}pyodide/pyodide.mjs`, self.location.origin).toString();
@@ -287,7 +287,7 @@ const ensurePyodide = async () => {
       updateProgress({
         phase: 'booting',
         progress: 0.2,
-        message: 'Loading PyMuPDF into the worker.',
+        message: 'Preparing document tools…',
       });
 
       await pyodide.loadPackage('pymupdf');
@@ -310,7 +310,7 @@ const ensureTesseractWorker = async () => {
         updateProgress({
           phase: 'ocr',
           progress: 0.55 + (message.progress ?? 0) * 0.15,
-          message: message.status ?? 'Running OCR locally.',
+          message: 'Reading text from scans…',
         });
       },
     });
@@ -418,7 +418,7 @@ const exportFlattenedPdf = async (detections: Detection[], manualRedactions: Man
     updateProgress({
       phase: 'export',
       progress: (page.pageIndex + 1) / state.pages.length,
-      message: `Flattening page ${page.pageIndex + 1} of ${state.pages.length}.`,
+      message: `Preparing page ${page.pageIndex + 1} of ${state.pages.length}…`,
       pageIndex: page.pageIndex,
     });
   }
@@ -454,7 +454,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
   updateProgress({
     phase: 'loading',
     progress: 0.24,
-    message: 'Opening the PDF in the worker.',
+    message: 'Opening document…',
   });
 
   const summary = await runPythonJson<{ pageCount: number; pages: PageAsset[]; spans: TextSpan[] }>(
@@ -485,7 +485,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
   };
   state.pages = summary.pages;
   state.spans = summary.spans;
-  state.warnings = ['Manual review is required before export.'];
+  state.warnings = ['Please review detections before exporting.'];
 
   const ocrPages = state.pages.filter((page) => page.lane === 'ocr');
   for (let index = 0; index < ocrPages.length; index += 1) {
@@ -495,7 +495,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
       phase: 'ocr',
       progress: 0.38 + (index / Math.max(1, ocrPages.length)) * 0.3,
       pageIndex: page.pageIndex,
-      message: `Running OCR on page ${page.pageIndex + 1}.`,
+      message: `Reading page ${page.pageIndex + 1}…`,
     });
 
     try {
@@ -518,7 +518,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
         candidate.pageIndex === page.pageIndex ? { ...candidate, ocrStatus: 'error' } : candidate,
       );
       pushWarning(
-        `OCR failed on page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown worker error'}`,
+        `Could not read page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
@@ -526,7 +526,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
   updateProgress({
     phase: 'complete',
     progress: 1,
-    message: 'Document loaded. Run detections and review before export.',
+    message: 'Document ready.',
   });
 
   postMessageSafe({
@@ -545,7 +545,7 @@ const handleDetect = async (requestId: number, keywords: string[]) => {
   updateProgress({
     phase: 'rules',
     progress: 0.82,
-    message: 'Applying deterministic detection rules.',
+    message: 'Scanning for sensitive information…',
   });
 
   const detections = state.pages.flatMap((page) =>
@@ -604,7 +604,7 @@ const handleApplyRedactions = async (
   updateProgress({
     phase: 'export',
     progress: 0.1,
-    message: payload.mode === 'flattened' ? 'Preparing flattened fallback export.' : 'Applying true PDF redactions.',
+    message: 'Preparing export…',
   });
 
   try {
@@ -625,7 +625,7 @@ const handleApplyRedactions = async (
     });
   } catch (error) {
     if (payload.mode === 'true-redaction') {
-      pushWarning('True redaction failed. You can retry with the explicit flattened fallback export mode.');
+      pushWarning('Secure export failed. You can retry with the flattened fallback export.');
     }
     throw error;
   }
@@ -663,7 +663,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       requestId: message.requestId,
       type: 'ERROR',
       payload: {
-        message: error instanceof Error ? error.message : 'Unknown worker error.',
+        message: error instanceof Error ? error.message : 'Something went wrong.',
         recoverable: message.type !== 'INIT',
       },
     });

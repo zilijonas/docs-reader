@@ -166,8 +166,17 @@ a {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .fade-in {
   animation: fadeInUp 320ms var(--theme-ease-standard);
+}
+
+.animate-spin-slow {
+  animation: spinSlow 2400ms linear infinite;
 }
 
 .selection-text-layer {

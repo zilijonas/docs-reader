@@ -4,7 +4,7 @@ import { ArrowRight, Check, CheckCheck, ChevronDown, Download, Plus, RotateCcw, 
 
 import { cn } from '@/lib/cn';
 
-import { Button, Chip, EmptyState, IconButton, Input, Kbd, ProgressBar, StatusDot } from '../../components/ui';
+import { Button, Chip, CircularProgress, EmptyState, IconButton, Input, Kbd, ProgressBar, StatusDot } from '../../components/ui';
 import type { DetectionStatus, FilterState, ProcessingProgress } from '../../lib/types';
 import {
   DETECTION_TYPE_META,
@@ -200,8 +200,13 @@ export function DetectionSidebar({
 
       {progress ? (
         <div className="border-b border-border px-5 py-3">
-          <ProgressBar value={progress.progress} />
-          <p className="type-data mt-2">{progress.message}</p>
+          <div className="flex items-center gap-3">
+            <CircularProgress className="text-content shrink-0" size={36} strokeWidth={3} value={progress.progress} />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <p className="type-data">{progress.message}</p>
+              <ProgressBar value={progress.progress} />
+            </div>
+          </div>
         </div>
       ) : null}
 

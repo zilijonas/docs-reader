@@ -1,6 +1,7 @@
 export * from './Badge';
 export * from './Button';
 export * from './Chip';
+export * from './CircularProgress';
 export * from './EmptyState';
 export * from './IconButton';
 export * from './Input';

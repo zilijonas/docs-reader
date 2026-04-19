@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, DragEvent, RefObject } from 'react';
 import { FileText, Upload } from 'lucide-react';
 
-import { Button, Panel, ProgressBar } from '../../components/ui';
+import { Button, CircularProgress, Panel, ProgressBar } from '../../components/ui';
 import { cn } from '@/lib/cn';
 import { FILE_ACCEPT } from '../../lib/constants';
 import type { ProcessingProgress } from '../../lib/types';
@@ -86,9 +86,10 @@ export function Dropzone({
       </Panel>
 
       {progress ? (
-        <div className="measure-progress mx-auto mt-8">
-          <ProgressBar value={progress.progress} />
-          <p className="type-body-sm mt-3 text-center">{progress.message}</p>
+        <div className="measure-progress mx-auto mt-8 flex flex-col items-center gap-3">
+          <CircularProgress className="text-content" size={48} strokeWidth={3} value={progress.progress} />
+          <ProgressBar className="w-full" value={progress.progress} />
+          <p className="type-body-sm text-center">{progress.message}</p>
         </div>
       ) : null}
 
