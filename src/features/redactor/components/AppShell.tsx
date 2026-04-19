@@ -20,6 +20,7 @@ export function AppShell() {
   const viewerColumnRef = useRef<HTMLDivElement | null>(null);
   const [appHeaderHeight, setAppHeaderHeight] = useState(57);
   const [reviewToolbarHeight, setReviewToolbarHeight] = useState(44);
+  const [viewerContentWidth, setViewerContentWidth] = useState(780);
   const [showApproveAllExportModal, setShowApproveAllExportModal] = useState(false);
 
   const {
@@ -141,21 +142,56 @@ export function AppShell() {
     };
   }, [hasViewer]);
 
-  const scrollToPage = (pageIndex: number) => {
+  useEffect(() => {
     const viewerColumn = viewerColumnRef.current;
-    const pageElement = document.getElementById(getPageAnchorId(pageIndex));
 
-    setActivePage(pageIndex);
-
-    if (!viewerColumn || !pageElement) {
+    if (!viewerColumn) {
       return;
     }
 
-    const viewerRect = viewerColumn.getBoundingClientRect();
-    const pageRect = pageElement.getBoundingClientRect();
-    const top = viewerColumn.scrollTop + (pageRect.top - viewerRect.top);
+    const syncViewerContentWidth = () => {
+      const styles = window.getComputedStyle(viewerColumn);
+      const paddingLeft = Number.parseFloat(styles.paddingLeft) || 0;
+      const paddingRight = Number.parseFloat(styles.paddingRight) || 0;
+      const nextWidth = Math.round(viewerColumn.clientWidth - paddingLeft - paddingRight);
 
-    viewerColumn.scrollTo({ top, behavior: 'smooth' });
+      if (nextWidth > 0) {
+        setViewerContentWidth(nextWidth);
+      }
+    };
+
+    syncViewerContentWidth();
+
+    const resizeObserver = new ResizeObserver(syncViewerContentWidth);
+    resizeObserver.observe(viewerColumn);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [hasViewer]);
+
+  const scrollToPage = (pageIndex: number) => {
+    const viewerColumn = viewerColumnRef.current;
+
+    setActivePage(pageIndex);
+
+    if (!viewerColumn) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      const nextViewerColumn = viewerColumnRef.current;
+      const pageElement = document.getElementById(getPageAnchorId(pageIndex));
+
+      if (!nextViewerColumn || !pageElement) {
+        return;
+      }
+
+      nextViewerColumn.scrollTo({
+        top: pageElement.offsetTop,
+        behavior: 'smooth',
+      });
+    });
   };
 
   const handlePrimaryExport = () => {
@@ -245,15 +281,7 @@ export function AppShell() {
             />
 
             <div className="app-viewer-column" ref={viewerColumnRef}>
-              <div
-                className="app-viewer-inner"
-                style={
-                  {
-                    '--viewer-base-width': `${REDACTOR_UI.viewerBaseWidth}px`,
-                    '--viewer-zoom': zoom,
-                  } as CSSProperties
-                }
-              >
+              <div className="app-viewer-inner">
                 <PdfViewer
                   activePage={activePage}
                   detections={detections}
@@ -270,6 +298,7 @@ export function AppShell() {
                   pages={pages}
                   previews={previews}
                   spansByPage={spansByPage}
+                  viewerContentWidth={viewerContentWidth}
                   zoom={zoom}
                 />
               </div>

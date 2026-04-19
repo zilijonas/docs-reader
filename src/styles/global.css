@@ -868,7 +868,9 @@ a {
 }
 
 .app-viewer-inner {
-  max-width: min(100%, calc(var(--viewer-base-width, 780px) * var(--viewer-zoom, 1)));
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
   margin: 0 auto;
 }
 

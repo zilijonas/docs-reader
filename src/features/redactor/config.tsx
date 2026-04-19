@@ -186,8 +186,8 @@ export const FALLBACK_EXPORT_MODE: ExportMode = 'flattened';
 
 export const REDACTOR_UI = {
   defaultZoom: 1,
-  minZoom: 0.7,
-  maxZoom: 1.8,
+  minZoom: 0.5,
+  maxZoom: 2,
   zoomStep: 0.1,
   viewerBaseWidth: 780,
 } as const;

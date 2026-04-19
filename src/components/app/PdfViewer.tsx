@@ -21,6 +21,7 @@ import { getPageAnchorId, getPreviewDisplayState } from '../../features/redactor
 export function PdfViewer({
   pages,
   activePage,
+  viewerContentWidth,
   zoom,
   drawMode,
   previews,
@@ -38,6 +39,7 @@ export function PdfViewer({
 }: {
   pages: PageAsset[];
   activePage: number;
+  viewerContentWidth: number;
   zoom: number;
   drawMode: boolean;
   previews: Record<number, PreviewAsset>;
@@ -75,6 +77,7 @@ export function PdfViewer({
           preview={previews[page.pageIndex]}
           spans={spansByPage.get(page.pageIndex) ?? []}
           totalPages={pages.length}
+          viewerContentWidth={viewerContentWidth}
           zoom={zoom}
         />
       ))}
@@ -103,6 +106,7 @@ function PagePreviewCard({
   page,
   preview,
   active,
+  viewerContentWidth,
   zoom,
   drawMode,
   spans,
@@ -122,6 +126,7 @@ function PagePreviewCard({
   page: PageAsset;
   preview?: PreviewAsset;
   active: boolean;
+  viewerContentWidth: number;
   zoom: number;
   drawMode: boolean;
   spans: TextSpan[];
@@ -163,8 +168,9 @@ function PagePreviewCard({
   }, [onEnsurePreview, preview]);
 
   const pageLabel = page.lane === 'ocr' ? 'ocr lane' : 'native text';
-  const pageDisplayWidth = page.width * page.previewScale * zoom;
-  const pageDisplayHeight = page.height * page.previewScale * zoom;
+  const fitWidthScale = viewerContentWidth / Math.max(page.width * page.previewScale, 1);
+  const pageDisplayWidth = page.width * page.previewScale * fitWidthScale * zoom;
+  const pageDisplayHeight = page.height * page.previewScale * fitWidthScale * zoom;
   const pendingCount = detections.filter((detection) => detection.status === 'suggested').length;
 
   return (
@@ -180,7 +186,7 @@ function PagePreviewCard({
       <div
         ref={pageRef}
         className={cn(
-          'viewer-page-surface relative inline-block w-[var(--page-display-width)] max-w-full overflow-hidden',
+          'viewer-page-surface relative inline-block w-[var(--page-display-width)] overflow-hidden',
           drawMode ? 'cursor-crosshair' : 'cursor-default',
         )}
         onMouseUp={handleTextSelection}
