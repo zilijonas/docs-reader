@@ -192,17 +192,21 @@ export function AppShell() {
     manualRedactions.filter((redaction) => redaction.status === 'approved').length;
   const showViewer = Boolean(sourceDocument && pages.length);
 
-  const runDetections = async (keywords: string[], existingRuleDetections = detections.filter((detection) => detection.source === 'rule')) => {
+  const runDetections = async (
+    keywords: string[],
+    existingRuleDetections = detections.filter((detection) => detection.source === 'rule'),
+    existingNonRuleDetections = detections.filter((detection) => detection.source !== 'rule'),
+    hasLoadedDocument = pages.length > 0,
+  ) => {
     setCustomKeywords(keywords);
 
-    if (!pages.length) {
+    if (!hasLoadedDocument) {
       return;
     }
 
     const response = await clientRef.current.detect({ rules: { keywords } });
     const persistedRules = preserveRuleStatuses(response.payload.items, existingRuleDetections);
-    const otherDetections = detections.filter((detection) => detection.source !== 'rule');
-    setDetections(dedupeDetections([...persistedRules, ...otherDetections]));
+    setDetections(dedupeDetections([...persistedRules, ...existingNonRuleDetections]));
   };
 
   const syncKeywords = async (keywords: string[]) => {
@@ -243,7 +247,7 @@ export function AppShell() {
         warnings: response.payload.warnings,
       });
 
-      await runDetections(customKeywords, []);
+      await runDetections(customKeywords, [], [], true);
     } catch (caughtError) {
       fileRef.current = null;
       reset();
