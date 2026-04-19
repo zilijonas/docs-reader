@@ -43,6 +43,8 @@ const state: WorkerState = {
   warnings: [],
 };
 
+let pythonTaskQueue = Promise.resolve();
+
 const PYTHON_HELPERS = `
 import json
 import pymupdf
@@ -199,24 +201,34 @@ const pushWarning = (message: string) => {
   postMessageSafe({ type: 'WARNING', payload: { message } });
 };
 
-const withGlobals = async <T>(bindings: Record<string, unknown>, action: () => Promise<T>) => {
-  const pyodide = await ensurePyodide();
-  Object.entries(bindings).forEach(([name, value]) => {
-    pyodide.globals.set(name, value);
-  });
-
-  try {
-    return await action();
-  } finally {
-    Object.keys(bindings).forEach((name) => {
-      try {
-        pyodide.globals.delete(name);
-      } catch {
-        pyodide.globals.set(name, undefined);
-      }
-    });
-  }
+const runPythonTask = async <T>(task: () => Promise<T>) => {
+  const nextTask = pythonTaskQueue.then(task, task);
+  pythonTaskQueue = nextTask.then(
+    () => undefined,
+    () => undefined,
+  );
+  return nextTask;
 };
+
+const withGlobals = async <T>(bindings: Record<string, unknown>, action: () => Promise<T>) =>
+  runPythonTask(async () => {
+    const pyodide = await ensurePyodide();
+    Object.entries(bindings).forEach(([name, value]) => {
+      pyodide.globals.set(name, value);
+    });
+
+    try {
+      return await action();
+    } finally {
+      Object.keys(bindings).forEach((name) => {
+        try {
+          pyodide.globals.delete(name);
+        } catch {
+          pyodide.globals.set(name, undefined);
+        }
+      });
+    }
+  });
 
 const runPythonJson = async <T>(code: string, bindings: Record<string, unknown>) =>
   withGlobals(bindings, async () => {
