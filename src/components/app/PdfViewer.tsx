@@ -78,7 +78,7 @@ export function PdfViewer({
 
       <div className="mt-2 text-center">
         <span className="font-mono text-[10.5px] tracking-[0.14em] text-content-subtle">
-          — end of document —
+          - end of document -
         </span>
       </div>
     </div>

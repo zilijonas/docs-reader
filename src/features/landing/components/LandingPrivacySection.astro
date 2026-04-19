@@ -1,6 +1,6 @@
 ---
-import { Shield } from 'lucide-react';
-import { techHighlights } from '../data';
+import { Shield } from "lucide-react";
+import { techHighlights } from "../data";
 ---
 
 <section id="privacy" class="landing-section-shell">
@@ -12,9 +12,15 @@ import { techHighlights } from '../data';
           Your document never leaves your browser.
         </h2>
         <div class="landing-privacy-copy">
-          <p class="type-body max-w-[480px]">There is no server. Nothing is uploaded. Nothing is stored.</p>
-          <p class="type-body max-w-[480px]">All processing runs locally using WebAssembly.</p>
-          <p class="type-body max-w-[480px]">Close the tab — everything is gone.</p>
+          <p class="type-body max-w-[480px]">
+            There is no server. Nothing is uploaded. Nothing is stored.
+          </p>
+          <p class="type-body max-w-[480px]">
+            All processing runs locally using WebAssembly.
+          </p>
+          <p class="type-body max-w-[480px]">
+            Close the tab - everything is gone.
+          </p>
         </div>
       </div>
 
@@ -27,9 +33,11 @@ import { techHighlights } from '../data';
           </span>
         </div>
         <ul class="landing-tech-list">
-          {techHighlights.map((item) => (
-            <li class="landing-tech-item">{item}</li>
-          ))}
+          {
+            techHighlights.map((item) => (
+              <li class="landing-tech-item">{item}</li>
+            ))
+          }
         </ul>
       </div>
     </div>

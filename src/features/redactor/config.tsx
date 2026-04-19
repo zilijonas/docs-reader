@@ -114,7 +114,7 @@ export const DEFAULT_REVIEW_FILTERS: FilterState = {
 };
 
 export const UPLOAD_HINTS = [
-  'No uploads — ever',
+  'No uploads - ever',
   `PDF · up to ${APP_LIMITS.maxFileSizeMb} MB · ${APP_LIMITS.maxPages} pages`,
   'OCR auto-fallback for scans',
 ] as const;

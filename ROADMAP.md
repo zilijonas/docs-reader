@@ -1,4 +1,4 @@
-# ROADMAP.md — Document Redactor
+# ROADMAP.md - Document Redactor
 
 ## Current architecture
 

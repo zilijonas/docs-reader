@@ -10,7 +10,7 @@ import type { ProcessingProgress } from '../../lib/types';
 import { UPLOAD_HINTS } from '../../features/redactor';
 
 const hintIconByLabel: Record<(typeof UPLOAD_HINTS)[number], ReactNode> = {
-  'No uploads — ever': (
+  'No uploads - ever': (
     <Shield size={13} strokeWidth={1.5} />
   ),
   [UPLOAD_HINTS[1]]: <FileText size={13} strokeWidth={1.5} />,
@@ -36,7 +36,7 @@ export function Dropzone({
     <div className="dropzone-shell w-full px-8 pb-12 pt-24">
       <div className="mb-12 text-center">
         <span className="type-eyebrow">
-          Step 01 — Drop a document
+          Step 01 - Drop a document
         </span>
         <h1 className="type-display-hero mt-4">
           Start with a PDF.
