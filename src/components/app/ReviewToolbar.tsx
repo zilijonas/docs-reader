@@ -1,18 +1,15 @@
-import type { ReactNode } from 'react';
-import { ArrowRight, Download, MousePointer2, Square, ZoomIn, ZoomOut } from 'lucide-react';
+import type { ReactNode, Ref } from 'react';
+import { Download, MousePointer2, Square, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { Button } from '../../components/ui';
 import { cn } from '@/lib/cn';
 import { REDACTOR_UI } from '../../features/redactor';
 
 export function ReviewToolbar({
-  canExport,
   canFallbackExport,
   drawMode,
   onOpenReview,
-  onExport,
   onFallbackExport,
-  onReset,
   onToggleDrawMode,
   processing,
   reviewCount,
@@ -22,14 +19,12 @@ export function ReviewToolbar({
   pageCount,
   activePage,
   onActivatePage,
+  toolbarRef,
 }: {
-  canExport: boolean;
   canFallbackExport: boolean;
   drawMode: boolean;
   onOpenReview: () => void;
-  onExport: () => void;
   onFallbackExport: () => void;
-  onReset: () => void | Promise<void>;
   onToggleDrawMode: () => void;
   processing: boolean;
   reviewCount: number;
@@ -39,9 +34,13 @@ export function ReviewToolbar({
   pageCount?: number;
   activePage?: number;
   onActivatePage?: (pageIndex: number) => void;
+  toolbarRef?: Ref<HTMLDivElement>;
 }) {
   return (
-    <div className="review-toolbar flex flex-wrap items-center justify-between gap-5 border-b border-border bg-canvas px-6 py-2.5">
+    <div
+      className="review-toolbar sticky z-10 flex flex-wrap items-center justify-between gap-5 border-b border-border bg-canvas/95 px-6 py-2.5 backdrop-blur-app-header"
+      ref={toolbarRef}
+    >
       <div className="review-toolbar-group flex items-center gap-1.5">
         <ToolButton active={!drawMode} label="Select" onClick={onToggleDrawMode}>
           <MousePointer2 size={13} strokeWidth={1.5} />
@@ -89,10 +88,6 @@ export function ReviewToolbar({
       ) : null}
 
       <div className="review-toolbar-actions flex items-center gap-1.5">
-        <Button onClick={onReset} size="sm" variant="ghost">
-          Reset session
-        </Button>
-
         {downloadUrl ? (
           <Button download href={downloadUrl} size="sm" variant="secondary">
             <Download size={12} strokeWidth={1.5} />
@@ -105,12 +100,6 @@ export function ReviewToolbar({
             Flattened fallback
           </Button>
         ) : null}
-
-        <Button disabled={!canExport || processing} onClick={onExport} size="sm">
-          <Download size={14} strokeWidth={1.5} />
-          Export
-          <ArrowRight size={14} strokeWidth={1.5} />
-        </Button>
       </div>
     </div>
   );

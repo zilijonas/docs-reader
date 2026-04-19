@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect } from 'react';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 
 import { useReviewStore } from '../../../store/reviewStore';
@@ -12,6 +12,12 @@ import { useRedactorWorkflow } from '../hooks/useRedactorWorkflow';
 import { AppHeader } from './AppHeader';
 
 export function AppShell() {
+  const appShellRef = useRef<HTMLDivElement | null>(null);
+  const appHeaderRef = useRef<HTMLDivElement | null>(null);
+  const reviewToolbarRef = useRef<HTMLDivElement | null>(null);
+  const [appHeaderHeight, setAppHeaderHeight] = useState(57);
+  const [reviewToolbarHeight, setReviewToolbarHeight] = useState(44);
+
   const {
     sourceDocument,
     pages,
@@ -34,6 +40,7 @@ export function AppShell() {
     addManualRedaction,
     updateManualRedaction,
     removeManualRedaction,
+    clearPendingManualRedactions,
     setManualStatus,
   } = useReviewStore();
 
@@ -96,14 +103,60 @@ export function AppShell() {
     };
   }, [isSidebarOpen, setIsSidebarOpen]);
 
+  useEffect(() => {
+    const appShellElement = appShellRef.current;
+    const appHeaderElement = appHeaderRef.current;
+    const reviewToolbarElement = reviewToolbarRef.current;
+
+    if (!appShellElement || !appHeaderElement) {
+      return;
+    }
+
+    const syncHeights = () => {
+      const nextHeaderHeight = Math.round(appHeaderElement.getBoundingClientRect().height);
+      const nextToolbarHeight = reviewToolbarElement ? Math.round(reviewToolbarElement.getBoundingClientRect().height) : 0;
+
+      setAppHeaderHeight(nextHeaderHeight);
+      setReviewToolbarHeight(nextToolbarHeight);
+      appShellElement.style.setProperty('--app-header-height', `${nextHeaderHeight}px`);
+      appShellElement.style.setProperty('--review-toolbar-height', `${nextToolbarHeight}px`);
+      appShellElement.style.setProperty('--layout-app-header-offset', `${nextHeaderHeight + nextToolbarHeight}px`);
+    };
+
+    syncHeights();
+
+    const resizeObserver = new ResizeObserver(syncHeights);
+    resizeObserver.observe(appHeaderElement);
+
+    if (reviewToolbarElement) {
+      resizeObserver.observe(reviewToolbarElement);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [hasViewer]);
+
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      ref={appShellRef}
+      style={
+        {
+          '--app-header-height': `${appHeaderHeight}px`,
+          '--review-toolbar-height': `${reviewToolbarHeight}px`,
+          '--layout-app-header-offset': `${appHeaderHeight + reviewToolbarHeight}px`,
+        } as CSSProperties
+      }
+    >
       <AppHeader
         approvedCount={reviewCounts.approvedCount}
         hasViewer={hasViewer}
+        headerRef={appHeaderRef}
         isProcessing={isProcessing}
         onExport={() => handleExport(PRIMARY_EXPORT_MODE)}
         onOpenReview={() => setIsSidebarOpen(true)}
+        onReset={resetSession}
         pendingReviewCount={reviewCounts.suggestedCount}
         reviewItemCount={deferredReviewItems.length}
         sourceDocument={sourceDocument}
@@ -121,7 +174,6 @@ export function AppShell() {
         <>
           <ReviewToolbar
             activePage={activePage}
-            canExport={!isProcessing}
             canFallbackExport={fallbackExportReady && !isProcessing}
             downloadUrl={exportJob.downloadUrl}
             drawMode={drawMode}
@@ -129,15 +181,14 @@ export function AppShell() {
               setActivePage(pageIndex);
               document.getElementById(getPageAnchorId(pageIndex))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-            onExport={() => handleExport(PRIMARY_EXPORT_MODE)}
             onFallbackExport={() => handleExport(FALLBACK_EXPORT_MODE)}
             onOpenReview={() => setIsSidebarOpen(true)}
-            onReset={resetSession}
             onToggleDrawMode={() => setDrawMode(!drawMode)}
             onZoomChange={setZoom}
             pageCount={pages.length}
             processing={isProcessing}
             reviewCount={reviewCounts.reviewCount}
+            toolbarRef={reviewToolbarRef}
             zoom={zoom}
           />
 
@@ -167,6 +218,7 @@ export function AppShell() {
                   manualRedactions={manualRedactions}
                   onActivatePage={setActivePage}
                   onCreateManual={(pageIndex, payload) => addManualRedaction({ pageIndex, ...payload })}
+                  onDismissPendingManuals={clearPendingManualRedactions}
                   onEnsurePreview={ensurePreview}
                   onRemoveManual={removeManualRedaction}
                   onSetManualStatus={setManualStatus}

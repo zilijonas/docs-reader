@@ -401,7 +401,7 @@ const exportFlattenedPdf = async (detections: Detection[], manualRedactions: Man
         .filter((detection) => detection.pageIndex === page.pageIndex && detection.status === 'approved')
         .map((detection) => detection.box),
       ...manualRedactions
-        .filter((redaction) => redaction.pageIndex === page.pageIndex && redaction.status !== 'rejected')
+        .filter((redaction) => redaction.pageIndex === page.pageIndex && redaction.status === 'approved')
         .map((redaction) => redaction.box),
     ];
 
@@ -587,7 +587,7 @@ const filterExportBoxes = (detections: Detection[], manualRedactions: ManualReda
     box: detection.box,
   })),
   ...manualRedactions
-    .filter((redaction) => redaction.status !== 'rejected')
+    .filter((redaction) => redaction.status === 'approved')
     .map((redaction) => ({ pageIndex: redaction.pageIndex, box: redaction.box })),
 ];
 

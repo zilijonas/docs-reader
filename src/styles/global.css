@@ -104,6 +104,8 @@
   --layout-section-space-tight: 3.5rem;
   --layout-app-sidebar: 23.75rem;
   --layout-app-header-offset: 101px;
+  --app-header-height: 57px;
+  --review-toolbar-height: 44px;
   --measure-copy: 32.5rem;
   --measure-feedback: 35rem;
   --measure-progress: 45rem;
@@ -172,6 +174,9 @@ a {
   color: transparent;
   -webkit-text-fill-color: transparent;
   user-select: text;
+  font-family: system-ui, sans-serif;
+  font-kerning: none;
+  font-variant-ligatures: none;
 }
 
 .selection-text-layer span {
@@ -179,6 +184,8 @@ a {
   transform-origin: 0 0;
   white-space: pre;
   cursor: text;
+  overflow: visible;
+  unicode-bidi: plaintext;
 }
 
 .page-shell {
@@ -797,10 +804,22 @@ a {
   flex: 1 1 20rem;
 }
 
+.app-header-status {
+  justify-content: flex-end;
+}
+
+.app-header-controls {
+  margin-left: auto;
+}
+
 .app-mobile-review-trigger,
 .toolbar-mobile-review-trigger,
 .sidebar-mobile-header {
   display: none !important;
+}
+
+.review-toolbar {
+  top: var(--app-header-height);
 }
 
 .app-main-grid {
@@ -948,6 +967,10 @@ a {
     justify-content: flex-start;
   }
 
+  .app-header-status {
+    justify-content: flex-start;
+  }
+
   .app-review-summary {
     border-right: none;
     padding-inline: 0;
@@ -1036,6 +1059,30 @@ a {
   .app-header-group,
   .app-header-actions {
     flex-basis: 100%;
+  }
+
+  .app-header-actions {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.875rem;
+  }
+
+  .app-header-status {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
+  .app-review-summary {
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .app-header-controls {
+    flex-shrink: 0;
+    align-self: flex-start;
   }
 
   .app-viewer-column {

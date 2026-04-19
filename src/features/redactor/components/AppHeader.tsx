@@ -1,4 +1,5 @@
-import { ArrowRight, Download, FileText, Shield } from 'lucide-react';
+import type { Ref } from 'react';
+import { ArrowRight, Download, FileText, RotateCcw, Shield } from 'lucide-react';
 
 import { BrandLogo } from '../../../components/BrandLogo';
 import { Badge, Button } from '../../../components/ui';
@@ -14,6 +15,8 @@ export function AppHeader({
   isProcessing,
   onOpenReview,
   onExport,
+  onReset,
+  headerRef,
 }: {
   sourceDocument: SourceDocument | null;
   hasViewer: boolean;
@@ -23,11 +26,16 @@ export function AppHeader({
   isProcessing: boolean;
   onOpenReview: () => void;
   onExport: () => void;
+  onReset: () => void | Promise<void>;
+  headerRef?: Ref<HTMLElement>;
 }) {
   const homeHref = import.meta.env.BASE_URL;
 
   return (
-    <header className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-app-header">
+    <header
+      className="app-header sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-app-header"
+      ref={headerRef}
+    >
       <div className="app-header-group flex flex-1 flex-wrap items-center gap-4">
         <a href={homeHref} className="flex items-center gap-2">
           <BrandLogo className="app-brand-logo text-content" title="HDDN" />
@@ -53,39 +61,46 @@ export function AppHeader({
       </div>
 
       <div className="app-header-actions flex flex-1 flex-wrap items-center justify-end gap-3">
-        <Badge tone="safe">
-          <Shield size={10} strokeWidth={1.75} />
-          local only
-        </Badge>
+        <div className="app-header-status flex flex-1 items-center gap-3 whitespace-nowrap">
+          <Badge tone="safe">
+            <Shield size={10} strokeWidth={1.75} />
+            local only
+          </Badge>
+
+          {hasViewer ? (
+            <>
+              <Button className="app-mobile-review-trigger" size="sm" variant="secondary" onClick={onOpenReview}>
+                Review
+                <span className="ui-text-label font-mono text-content-subtle">{reviewItemCount}</span>
+              </Button>
+
+                <div className="flex items-center gap-3 text-xs min-h-7">
+                  <span className="whitespace-nowrap">
+                    <strong className="text-content">{approvedCount}</strong>{' '}
+                    <span className="text-content-subtle whitespace-nowrap">approved</span>
+                  </span>
+                  <span className="whitespace-nowrap">
+                    <strong className="text-warning-ink">{pendingReviewCount}</strong>{' '}
+                    <span className="text-content-subtle whitespace-nowrap">to review</span>
+                  </span>
+                </div>
+            </>
+          ) : null}
+        </div>
 
         {hasViewer ? (
-          <>
-            <Button className="app-mobile-review-trigger" size="sm" variant="secondary" onClick={onOpenReview}>
-              Review
-              <span className="ui-text-label font-mono text-content-subtle">{reviewItemCount}</span>
+          <div className="app-header-controls flex shrink-0 items-center justify-end gap-1.5">
+            <Button onClick={onReset} size="sm" variant="ghost">
+              <RotateCcw size={14} strokeWidth={1.5} />
+              Reset session
             </Button>
-
-            <div className="app-review-summary flex min-h-7 items-center gap-2.5 border-r border-border px-3">
-              <span className="ui-text-label font-mono uppercase tracking-ui-data text-content-subtle">Review</span>
-              <div className="flex items-center gap-2.5 text-xs">
-                <span>
-                  <strong className="text-content">{approvedCount}</strong>{' '}
-                  <span className="text-content-subtle">approved</span>
-                </span>
-                <span className="text-border-strong">·</span>
-                <span>
-                  <strong className="text-warning-ink">{pendingReviewCount}</strong>{' '}
-                  <span className="text-content-subtle">to review</span>
-                </span>
-              </div>
-            </div>
 
             <Button disabled={isProcessing} size="sm" onClick={onExport}>
               <Download size={14} strokeWidth={1.5} />
               Export
               <ArrowRight size={14} strokeWidth={1.5} />
             </Button>
-          </>
+          </div>
         ) : null}
       </div>
     </header>

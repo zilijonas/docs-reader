@@ -172,7 +172,7 @@ export const createManualRedactionRecord = ({
   mode,
   snippet,
   note,
-  status: 'approved',
+  status: 'suggested',
 });
 
 export const preserveRuleStatuses = (nextDetections: Detection[], previousDetections: Detection[]) =>

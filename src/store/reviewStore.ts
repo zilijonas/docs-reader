@@ -55,6 +55,7 @@ interface ReviewState {
   }) => void;
   updateManualRedaction: (id: string, box: ManualRedaction['box']) => void;
   removeManualRedaction: (id: string) => void;
+  clearPendingManualRedactions: () => void;
   setManualStatus: (id: string, status: DetectionStatus) => void;
   setCustomKeywords: (keywords: string[]) => void;
   rejectPage: (pageIndex: number) => void;
@@ -152,6 +153,10 @@ export const useReviewStore = create<ReviewState>((set) => ({
   removeManualRedaction: (id) =>
     set((state) => ({
       manualRedactions: state.manualRedactions.filter((redaction) => redaction.id !== id),
+    })),
+  clearPendingManualRedactions: () =>
+    set((state) => ({
+      manualRedactions: state.manualRedactions.filter((redaction) => redaction.status !== 'suggested'),
     })),
   setManualStatus: (id, status) =>
     set((state) => ({

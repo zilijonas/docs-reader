@@ -14,15 +14,19 @@ type ManualDragState = {
 
 export function usePageBoxInteractions({
   drawMode,
+  manualRedactions,
   pageRef,
   textLayerRef,
   onCreateManual,
+  onDismissPendingManuals,
   onUpdateManual,
 }: {
   drawMode: boolean;
+  manualRedactions: ManualRedaction[];
   pageRef: RefObject<HTMLDivElement | null>;
   textLayerRef: RefObject<HTMLDivElement | null>;
   onCreateManual: (payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void;
+  onDismissPendingManuals: () => void;
   onUpdateManual: (id: string, box: BoundingBox) => void;
 }) {
   const [draftBox, setDraftBox] = useState<BoundingBox | null>(null);
@@ -44,6 +48,31 @@ export function usePageBoxInteractions({
   useEffect(() => {
     dragStateRef.current = dragState;
   }, [dragState]);
+
+  useEffect(() => {
+    const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'suggested');
+    if (!hasPendingManual) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (target.closest('[data-manual-pending="true"]')) {
+        return;
+      }
+
+      onDismissPendingManuals();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [manualRedactions, onDismissPendingManuals]);
 
   const getNormalizedPoint = (clientX: number, clientY: number) => {
     const rect = pageRef.current?.getBoundingClientRect();

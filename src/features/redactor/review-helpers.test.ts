@@ -115,7 +115,7 @@ describe('review helpers', () => {
     expect(manualRedaction.box.y).toBe(0.92);
     expect(manualRedaction.box.width).toBeCloseTo(0.05);
     expect(manualRedaction.box.height).toBeCloseTo(0.08);
-    expect(manualRedaction.status).toBe('approved');
+    expect(manualRedaction.status).toBe('suggested');
   });
 
   it('updates preview state without losing previous metadata', () => {

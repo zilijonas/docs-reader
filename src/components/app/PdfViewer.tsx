@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
-import { FileText, Image as ImageIcon } from 'lucide-react';
+import { Check, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 
-import { Button, StatusDot } from '../../components/ui';
+import { IconButton, StatusDot } from '../../components/ui';
 import type {
   BoundingBox,
   Detection,
@@ -16,7 +16,7 @@ import type {
 } from '../../lib/types';
 import { toPercent } from '../../lib/utils';
 import { usePageBoxInteractions } from '../../features/redactor/hooks/usePageBoxInteractions';
-import { getPageAnchorId, getPreviewDisplayState, nextDetectionStatus } from '../../features/redactor';
+import { getPageAnchorId, getPreviewDisplayState } from '../../features/redactor';
 
 export function PdfViewer({
   pages,
@@ -30,6 +30,7 @@ export function PdfViewer({
   onActivatePage,
   onEnsurePreview,
   onCreateManual,
+  onDismissPendingManuals,
   onUpdateManual,
   onRemoveManual,
   onToggleDetection,
@@ -46,6 +47,7 @@ export function PdfViewer({
   onActivatePage: (pageIndex: number) => void;
   onEnsurePreview: (pageIndex: number) => Promise<void>;
   onCreateManual: (pageIndex: number, payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void;
+  onDismissPendingManuals: () => void;
   onUpdateManual: (id: string, box: BoundingBox) => void;
   onRemoveManual: (id: string) => void;
   onToggleDetection: (id: string) => void;
@@ -63,6 +65,7 @@ export function PdfViewer({
           manualRedactions={manualRedactions.filter((manualRedaction) => manualRedaction.pageIndex === page.pageIndex)}
           onActivate={() => onActivatePage(page.pageIndex)}
           onCreateManual={(payload) => onCreateManual(page.pageIndex, payload)}
+          onDismissPendingManuals={onDismissPendingManuals}
           onEnsurePreview={() => onEnsurePreview(page.pageIndex)}
           onRemoveManual={onRemoveManual}
           onSetManualStatus={onSetManualStatus}
@@ -108,6 +111,7 @@ function PagePreviewCard({
   onActivate,
   onEnsurePreview,
   onCreateManual,
+  onDismissPendingManuals,
   onUpdateManual,
   onRemoveManual,
   onToggleDetection,
@@ -126,6 +130,7 @@ function PagePreviewCard({
   onActivate: () => void;
   onEnsurePreview: () => Promise<void>;
   onCreateManual: (payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void;
+  onDismissPendingManuals: () => void;
   onUpdateManual: (id: string, box: BoundingBox) => void;
   onRemoveManual: (id: string) => void;
   onToggleDetection: (id: string) => void;
@@ -143,7 +148,9 @@ function PagePreviewCard({
     startDrawing,
   } = usePageBoxInteractions({
     drawMode,
+    manualRedactions,
     onCreateManual,
+    onDismissPendingManuals,
     onUpdateManual,
     pageRef,
     textLayerRef,
@@ -157,6 +164,7 @@ function PagePreviewCard({
 
   const pageLabel = page.lane === 'ocr' ? 'ocr lane' : 'native text';
   const pageDisplayWidth = page.width * page.previewScale * zoom;
+  const pageDisplayHeight = page.height * page.previewScale * zoom;
   const pendingCount = detections.filter((detection) => detection.status === 'suggested').length;
 
   return (
@@ -193,8 +201,8 @@ function PagePreviewCard({
               className="pdf-box pdf-text-span"
               key={span.id}
               style={getBoxStyle(span.box, {
-                '--span-font-size': `${Math.max(11, span.box.height * 1000)}%`,
-                '--span-line-height': `${Math.max(1.1, span.box.height * 40)}`,
+                '--span-font-size': `${Math.max(10, span.box.height * pageDisplayHeight)}px`,
+                '--span-line-height': `${Math.max(10, span.box.height * pageDisplayHeight)}px`,
               })}
             >
               {span.text}
@@ -349,38 +357,62 @@ function ManualRedactionOverlay({
         <div
           className={cn(
             'pdf-box pdf-manual pointer-events-auto rounded-sm border-2',
-            manualRedaction.status === 'rejected'
-              ? 'border-border-strong bg-border-strong/20'
-              : 'border-content bg-content/20',
+            manualRedaction.status === 'approved'
+              ? 'border-success bg-success/[0.18]'
+              : manualRedaction.status === 'rejected'
+                ? 'border-border-strong bg-border-strong/20'
+                : 'border-warning border-dashed bg-warning/[0.14]',
           )}
           key={manualRedaction.id}
-          onPointerDown={(event) => onStartDrag(event, manualRedaction)}
+          data-manual-pending={manualRedaction.status === 'suggested' ? 'true' : undefined}
+          onPointerDown={(event) => {
+            if (manualRedaction.status !== 'suggested') {
+              return;
+            }
+
+            onStartDrag(event, manualRedaction);
+          }}
           style={getBoxStyle(manualRedaction.box)}
         >
-          <div className="absolute -top-3 right-0 flex gap-1">
-            <Button
-              className="ui-text-micro h-5 rounded-control-sm border-border-strong bg-surface px-1.5 text-content-muted"
-              onClick={(event) => {
-                event.stopPropagation();
-                onSetManualStatus(manualRedaction.id, nextDetectionStatus(manualRedaction.status));
-              }}
-              size="sm"
-              variant="secondary"
+          {manualRedaction.status === 'suggested' ? (
+            <div
+              className="absolute bottom-full right-0 z-10 mb-1.5 flex gap-1 rounded-full bg-canvas/92 p-1 shadow-lg ring-1 ring-border-strong backdrop-blur-sm"
+              data-manual-pending="true"
             >
-              {manualRedaction.status}
-            </Button>
-            <Button
-              className="ui-text-micro h-5 rounded-control-sm px-1.5"
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemoveManual(manualRedaction.id);
-              }}
-              size="sm"
-              variant="danger"
-            >
-              remove
-            </Button>
-          </div>
+              <IconButton
+                aria-label="Approve manual highlight"
+                className="opacity-100 shadow-sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSetManualStatus(manualRedaction.id, 'approved');
+                }}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                shape="pill"
+                size="sm"
+                tone="surface"
+              >
+                <Check size={12} strokeWidth={2} />
+              </IconButton>
+              <IconButton
+                aria-label="Remove manual highlight"
+                className="opacity-100 shadow-sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRemoveManual(manualRedaction.id);
+                }}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                shape="pill"
+                size="sm"
+                tone="danger"
+              >
+                <Trash2 size={12} strokeWidth={2} />
+              </IconButton>
+            </div>
+          ) : null}
         </div>
       ))}
 
