@@ -26,16 +26,34 @@
   --font-sans: var(--font-ui-sans);
   --font-serif: var(--font-ui-serif);
   --font-mono: var(--font-ui-mono);
-  --text-ui-2xs: 0.65625rem;
-  --text-ui-2xs--line-height: 1rem;
-  --text-ui-xs: 0.71875rem;
-  --text-ui-xs--line-height: 1rem;
-  --text-ui-sm: 0.8125rem;
-  --text-ui-sm--line-height: 1.125rem;
+  --text-ui-micro: 0.625rem;
+  --text-ui-micro--line-height: 0.875rem;
+  --text-ui-label: 0.65625rem;
+  --text-ui-label--line-height: 1rem;
+  --text-ui-caption: 0.6875rem;
+  --text-ui-caption--line-height: 1rem;
+  --text-ui-badge: 0.65625rem;
+  --text-ui-badge--line-height: 1rem;
+  --text-ui-button-sm: 0.6875rem;
+  --text-ui-button-sm--line-height: 1rem;
+  --text-ui-note: 0.71875rem;
+  --text-ui-note--line-height: 1rem;
+  --text-ui-control: 0.78125rem;
+  --text-ui-control--line-height: 1rem;
+  --text-ui-field: 0.8125rem;
+  --text-ui-field--line-height: 1.125rem;
   --tracking-ui-tight: 0.04em;
   --tracking-ui-wide: 0.06em;
   --tracking-ui-data: 0.14em;
   --tracking-ui-eyebrow: 0.16em;
+  --radius-control: 0.75rem;
+  --radius-control-sm: 4px;
+  --radius-chip: 999px;
+  --radius-panel: 1rem;
+  --blur-app-header: 12px;
+  --spacing-ui-icon: 13px;
+  --spacing-ui-close: 1.875rem;
+  --spacing-ui-section: 18px;
   --shadow-panel: var(--theme-shadow-panel);
   --shadow-float: var(--theme-shadow-float);
   --ease-standard: var(--theme-ease-standard);
@@ -122,6 +140,10 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
 }
 
 a {
@@ -275,6 +297,46 @@ a {
 .type-stat-note {
   font-size: 0.71875rem;
   color: var(--theme-content-subtle);
+}
+
+.ui-text-micro {
+  font-size: var(--text-ui-micro);
+  line-height: var(--text-ui-micro--line-height);
+}
+
+.ui-text-label {
+  font-size: var(--text-ui-label);
+  line-height: var(--text-ui-label--line-height);
+}
+
+.ui-text-caption {
+  font-size: var(--text-ui-caption);
+  line-height: var(--text-ui-caption--line-height);
+}
+
+.ui-text-badge {
+  font-size: var(--text-ui-badge);
+  line-height: var(--text-ui-badge--line-height);
+}
+
+.ui-text-button-sm {
+  font-size: var(--text-ui-button-sm);
+  line-height: var(--text-ui-button-sm--line-height);
+}
+
+.ui-text-note {
+  font-size: var(--text-ui-note);
+  line-height: var(--text-ui-note--line-height);
+}
+
+.ui-text-control {
+  font-size: var(--text-ui-control);
+  line-height: var(--text-ui-control--line-height);
+}
+
+.ui-text-field {
+  font-size: var(--text-ui-field);
+  line-height: var(--text-ui-field--line-height);
 }
 
 .surface-card {

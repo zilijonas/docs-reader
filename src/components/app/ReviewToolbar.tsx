@@ -55,7 +55,7 @@ export function ReviewToolbar({
         <ToolButton onClick={() => onZoomChange(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}>
           <ZoomOut size={13} strokeWidth={1.5} />
         </ToolButton>
-        <span className="min-w-10 text-center font-mono text-[11px] text-content-subtle">
+        <span className="ui-text-caption min-w-10 text-center font-mono text-content-subtle">
           {Math.round(zoom * 100)}%
         </span>
         <ToolButton onClick={() => onZoomChange(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}>
@@ -64,7 +64,7 @@ export function ReviewToolbar({
 
         <Button className="toolbar-mobile-review-trigger" onClick={onOpenReview} size="sm" variant="secondary">
           Review
-          <span className="font-mono text-[10.5px] text-content-subtle">{reviewCount}</span>
+          <span className="ui-text-label font-mono text-content-subtle">{reviewCount}</span>
         </Button>
       </div>
 
@@ -73,7 +73,7 @@ export function ReviewToolbar({
           {Array.from({ length: pageCount }, (_, pageIndex) => (
             <button
               className={cn(
-                'flex size-7 items-center justify-center rounded-[var(--radius-control)] border font-mono text-[11px] transition-colors duration-200 ease-standard',
+                'ui-text-caption flex size-7 items-center justify-center rounded-control border font-mono transition-colors duration-200 ease-standard',
                 activePage === pageIndex
                   ? 'border-content bg-content text-canvas'
                   : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',
@@ -130,7 +130,7 @@ function ToolButton({
   return (
     <button
       className={cn(
-        'inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-control)] border px-2.5 text-xs font-medium transition-colors duration-200 ease-standard',
+        'ui-text-button-sm inline-flex h-7 items-center gap-1.5 rounded-control border px-2.5 font-medium transition-colors duration-200 ease-standard',
         active
           ? 'border-content bg-content text-canvas'
           : 'border-transparent bg-transparent text-content-muted hover:bg-surface-muted hover:text-content',

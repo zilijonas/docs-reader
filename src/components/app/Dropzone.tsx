@@ -93,14 +93,14 @@ export function Dropzone({
       ) : null}
 
       {error ? (
-        <div className="measure-feedback mx-auto mt-6 rounded-[var(--radius-control)] border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
+        <div className="measure-feedback mx-auto mt-6 rounded-control border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="mt-10 flex flex-wrap justify-center gap-6">
         {UPLOAD_HINTS.map((hint) => (
-          <div key={hint.id} className="flex items-center gap-2 text-[12.5px] text-content-subtle">
+          <div key={hint.id} className="ui-text-control flex items-center gap-2 text-content-subtle">
             {hint.icon()}
             {hint.label}
           </div>

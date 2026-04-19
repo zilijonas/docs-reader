@@ -77,7 +77,7 @@ export function PdfViewer({
       ))}
 
       <div className="mt-2 text-center">
-        <span className="font-mono text-[10.5px] tracking-[0.14em] text-content-subtle">
+        <span className="ui-text-label font-mono tracking-ui-data text-content-subtle">
           - end of document -
         </span>
       </div>
@@ -235,14 +235,14 @@ function PageHeader({
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            'font-mono text-[10.5px] uppercase tracking-[0.14em]',
+            'ui-text-label font-mono uppercase tracking-ui-data',
             active ? 'text-content' : 'text-content-subtle',
           )}
         >
           Page {pageIndex + 1} / {totalPages}
         </span>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 text-[11px] lowercase text-content-muted">
+        <span className="ui-text-caption inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.75 lowercase text-content-muted">
           {pageLabel === 'ocr lane' ? (
             <ImageIcon size={10} strokeWidth={1.5} />
           ) : (
@@ -252,7 +252,7 @@ function PageHeader({
         </span>
       </div>
 
-      <div className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.04em] text-content-subtle">
+      <div className="ui-text-label flex items-center gap-2.5 font-mono tracking-ui-tight text-content-subtle">
         {pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <StatusDot tone="warning" />
@@ -359,7 +359,7 @@ function ManualRedactionOverlay({
         >
           <div className="absolute -top-3 right-0 flex gap-1">
             <Button
-              className="h-5 rounded-[4px] border-border-strong bg-surface px-1.5 text-[10px] text-content-muted"
+              className="ui-text-micro h-5 rounded-control-sm border-border-strong bg-surface px-1.5 text-content-muted"
               onClick={(event) => {
                 event.stopPropagation();
                 onSetManualStatus(manualRedaction.id, nextDetectionStatus(manualRedaction.status));
@@ -370,7 +370,7 @@ function ManualRedactionOverlay({
               {manualRedaction.status}
             </Button>
             <Button
-              className="h-5 rounded-[4px] px-1.5 text-[10px]"
+              className="ui-text-micro h-5 rounded-control-sm px-1.5"
               onClick={(event) => {
                 event.stopPropagation();
                 onRemoveManual(manualRedaction.id);

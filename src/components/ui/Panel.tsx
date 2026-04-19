@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/cn';
 
-const panelVariants = cva('rounded-[var(--radius-panel)] border shadow-panel', {
+const panelVariants = cva('rounded-panel border shadow-panel', {
   variants: {
     tone: {
       surface: 'border-border bg-surface',

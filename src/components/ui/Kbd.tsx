@@ -12,7 +12,7 @@ export function Kbd({
   return (
     <kbd
       className={cn(
-        'inline-flex min-w-[14px] items-center justify-center rounded-[6px] border border-border-strong bg-canvas px-1.5 py-0.5 font-mono text-[10px] text-content shadow-[inset_0_-1px_0_0_color-mix(in_oklab,var(--theme-content-subtle)_16%,transparent)]',
+        'ui-text-micro inline-flex min-w-3.5 items-center justify-center rounded-control-sm border border-border-strong bg-canvas px-1.5 py-0.5 font-mono text-content shadow-[inset_0_-1px_0_0_color-mix(in_oklab,var(--theme-content-subtle)_16%,transparent)]',
         className,
       )}
     >
