@@ -54,7 +54,7 @@ export function PdfViewer({
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
 }) {
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       {pages.map((page) => (
         <PagePreviewCard
           key={page.pageIndex}
@@ -74,8 +74,14 @@ export function PdfViewer({
           onRemoveManual={onRemoveManual}
           onToggleDetection={onToggleDetection}
           onSetManualStatus={onSetManualStatus}
+          totalPages={pages.length}
         />
       ))}
+      <div style={{ textAlign: 'center', marginTop: 8 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.14em', color: 'var(--ink-3)' }}>
+          — end of document —
+        </span>
+      </div>
     </div>
   );
 }
@@ -97,6 +103,7 @@ function PagePreviewCard({
   onRemoveManual,
   onToggleDetection,
   onSetManualStatus,
+  totalPages,
 }: {
   id: string;
   page: PageAsset;
@@ -114,6 +121,7 @@ function PagePreviewCard({
   onRemoveManual: (id: string) => void;
   onToggleDetection: (id: string) => void;
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
+  totalPages: number;
 }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
@@ -130,39 +138,20 @@ function PagePreviewCard({
     }
   }, [onEnsurePreview, preview]);
 
-  useEffect(() => {
-    draftBoxRef.current = draftBox;
-  }, [draftBox]);
-
-  useEffect(() => {
-    drawingStartRef.current = drawingStart;
-  }, [drawingStart]);
-
-  useEffect(() => {
-    dragStateRef.current = dragState;
-  }, [dragState]);
+  useEffect(() => { draftBoxRef.current = draftBox; }, [draftBox]);
+  useEffect(() => { drawingStartRef.current = drawingStart; }, [drawingStart]);
+  useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
 
   const getNormalizedPoint = (clientX: number, clientY: number) => {
     const rect = pageRef.current?.getBoundingClientRect();
-    if (!rect) {
-      return null;
-    }
-    return {
-      x: clamp((clientX - rect.left) / rect.width),
-      y: clamp((clientY - rect.top) / rect.height),
-    };
+    if (!rect) return null;
+    return { x: clamp((clientX - rect.left) / rect.width), y: clamp((clientY - rect.top) / rect.height) };
   };
 
   const startDrawing = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drawMode || event.button !== 0) {
-      return;
-    }
-
+    if (!drawMode || event.button !== 0) return;
     const point = getNormalizedPoint(event.clientX, event.clientY);
-    if (!point) {
-      return;
-    }
-
+    if (!point) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrawingStart(point);
     setDraftBox({ x: point.x, y: point.y, width: 0, height: 0 });
@@ -172,43 +161,28 @@ function PagePreviewCard({
     const activeDrawingStart = drawingStartRef.current;
     if (activeDrawingStart) {
       const point = getNormalizedPoint(event.clientX, event.clientY);
-      if (!point) {
-        return;
-      }
-
-      setDraftBox(
-        normalizeBox({
-          x: Math.min(activeDrawingStart.x, point.x),
-          y: Math.min(activeDrawingStart.y, point.y),
-          width: Math.abs(point.x - activeDrawingStart.x),
-          height: Math.abs(point.y - activeDrawingStart.y),
-        }),
-      );
+      if (!point) return;
+      setDraftBox(normalizeBox({
+        x: Math.min(activeDrawingStart.x, point.x),
+        y: Math.min(activeDrawingStart.y, point.y),
+        width: Math.abs(point.x - activeDrawingStart.x),
+        height: Math.abs(point.y - activeDrawingStart.y),
+      }));
       return;
     }
 
     const activeDragState = dragStateRef.current;
-    if (!activeDragState || drawMode) {
-      return;
-    }
-
+    if (!activeDragState || drawMode) return;
     const rect = pageRef.current?.getBoundingClientRect();
-    if (!rect) {
-      return;
-    }
-
+    if (!rect) return;
     const deltaX = (event.clientX - activeDragState.pointerX) / rect.width;
     const deltaY = (event.clientY - activeDragState.pointerY) / rect.height;
-
-    onUpdateManual(
-      activeDragState.id,
-      normalizeBox({
-        x: activeDragState.origin.x + deltaX,
-        y: activeDragState.origin.y + deltaY,
-        width: activeDragState.origin.width,
-        height: activeDragState.origin.height,
-      }),
-    );
+    onUpdateManual(activeDragState.id, normalizeBox({
+      x: activeDragState.origin.x + deltaX,
+      y: activeDragState.origin.y + deltaY,
+      width: activeDragState.origin.width,
+      height: activeDragState.origin.height,
+    }));
   };
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -220,7 +194,6 @@ function PagePreviewCard({
       setDrawingStart(null);
       setDraftBox(null);
     }
-
     if (dragStateRef.current) {
       pageRef.current?.releasePointerCapture(event.pointerId);
       setDragState(null);
@@ -228,90 +201,110 @@ function PagePreviewCard({
   };
 
   const handleTextSelection = () => {
-    if (drawMode || !pageRef.current || !textLayerRef.current) {
-      return;
-    }
-
+    if (drawMode || !pageRef.current || !textLayerRef.current) return;
     const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) {
-      return;
-    }
-
+    if (!selection || selection.isCollapsed) return;
     const text = selection.toString().trim();
-    if (!text) {
-      return;
-    }
-
+    if (!text) return;
     const range = selection.getRangeAt(0);
-    if (!textLayerRef.current.contains(range.commonAncestorContainer)) {
-      return;
-    }
-
+    if (!textLayerRef.current.contains(range.commonAncestorContainer)) return;
     const pageRect = pageRef.current.getBoundingClientRect();
     const boxes = Array.from(range.getClientRects())
-      .map((rect) =>
-        normalizeBox({
-          x: (rect.left - pageRect.left) / pageRect.width,
-          y: (rect.top - pageRect.top) / pageRect.height,
-          width: rect.width / pageRect.width,
-          height: rect.height / pageRect.height,
-        }),
-      )
+      .map((rect) => normalizeBox({
+        x: (rect.left - pageRect.left) / pageRect.width,
+        y: (rect.top - pageRect.top) / pageRect.height,
+        width: rect.width / pageRect.width,
+        height: rect.height / pageRect.height,
+      }))
       .filter((box) => box.width > 0.002 && box.height > 0.002);
-
     if (boxes.length) {
       onCreateManual({ box: unionBoxes(boxes), mode: 'text', snippet: text });
     }
-
     selection.removeAllRanges();
   };
 
   const onManualPointerDown = (event: ReactPointerEvent<HTMLDivElement>, redaction: ManualRedaction) => {
-    if (drawMode || event.button !== 0) {
-      return;
-    }
+    if (drawMode || event.button !== 0) return;
     event.stopPropagation();
     pageRef.current?.setPointerCapture(event.pointerId);
-    setDragState({
-      id: redaction.id,
-      origin: redaction.box,
-      pointerX: event.clientX,
-      pointerY: event.clientY,
-    });
+    setDragState({ id: redaction.id, origin: redaction.box, pointerX: event.clientX, pointerY: event.clientY });
   };
 
-  const pageLabel = page.lane === 'ocr' ? 'OCR lane' : 'Searchable text lane';
+  const pageLabel = page.lane === 'ocr' ? 'OCR lane' : 'Native text';
   const displayWidth = page.width * page.previewScale * zoom;
+  const pendingCount = detections.filter((d) => d.status === 'suggested').length;
 
   return (
-    <section
-      id={id}
-      className={clsx(
-        'rounded-[1.75rem] border bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(252,248,240,0.72))] p-4 shadow-[0_16px_50px_rgba(53,43,23,0.08)] transition',
-        active ? 'border-[#286f69]/45 ring-2 ring-[#286f69]/15' : 'border-white/70',
-      )}
-      onClick={onActivate}
-    >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-stone-900">Page {page.pageIndex + 1}</h3>
-          <p className="text-sm text-stone-600">
-            {pageLabel} • OCR status: {page.ocrStatus}
-          </p>
+    <div id={id} onClick={onActivate}>
+      {/* Page header strip */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 4px 10px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 10.5,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: active ? 'var(--ink)' : 'var(--ink-3)',
+            }}
+          >
+            Page {page.pageIndex + 1} / {totalPages}
+          </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '3px 9px',
+              borderRadius: 999,
+              fontSize: 11,
+              fontFamily: 'var(--mono)',
+              letterSpacing: '0.04em',
+              textTransform: 'lowercase',
+              background: page.lane === 'ocr' ? 'var(--surface-1)' : 'transparent',
+              color: 'var(--ink-2)',
+              border: '1px solid var(--line)',
+            }}
+          >
+            {page.lane === 'ocr' ? (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="6" width="12" height="12" rx="2" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" /></svg>
+            ) : (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" /><path d="M14 3v5h5" /></svg>
+            )}
+            {page.lane === 'ocr' ? 'ocr lane' : 'native text'}
+          </span>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.16em] text-stone-500">
-          <span className="rounded-full bg-white px-3 py-1">click highlights to cycle status</span>
-          <span className="rounded-full bg-white px-3 py-1">{drawMode ? 'draw mode on' : 'select text or drag manual boxes'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
+          {pendingCount > 0 ? (
+            <span><span style={{ color: 'var(--risk-ink)' }}>●</span> {pendingCount} pending</span>
+          ) : (
+            <span><span style={{ color: 'var(--safe)' }}>●</span> page clean</span>
+          )}
         </div>
       </div>
 
+      {/* Page card */}
       <div
         ref={pageRef}
-        className={clsx(
-          'relative mx-auto inline-block max-w-full overflow-hidden rounded-[1.35rem] border border-stone-200 bg-white shadow-inner',
-          drawMode ? 'cursor-crosshair' : 'cursor-default',
-        )}
-        style={{ width: `${displayWidth}px` }}
+        className={clsx(drawMode ? 'cursor-crosshair' : 'cursor-default')}
+        style={{
+          position: 'relative',
+          display: 'inline-block',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          borderRadius: 2,
+          border: '1px solid var(--page-edge)',
+          background: 'var(--page-paper)',
+          boxShadow: '0 1px 0 var(--page-edge), 0 16px 40px -24px rgba(20,16,10,0.18)',
+          width: `${displayWidth}px`,
+        }}
         onPointerDown={startDrawing}
         onPointerMove={movePointer}
         onPointerUp={endPointer}
@@ -321,9 +314,11 @@ function PagePreviewCard({
         {preview?.status === 'ready' && preview.url ? (
           <img src={preview.url} alt={`Preview of page ${page.pageIndex + 1}`} className="block w-full" draggable={false} />
         ) : preview?.status === 'error' ? (
-          <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-rose-700">{preview.error}</div>
+          <div style={{ display: 'flex', minHeight: 260, alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', fontSize: 14, color: 'var(--error)' }}>
+            {preview.error}
+          </div>
         ) : (
-          <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-sm text-stone-600">
+          <div style={{ display: 'flex', minHeight: 260, alignItems: 'center', justifyContent: 'center', padding: '40px 24px', textAlign: 'center', fontSize: 14, color: 'var(--ink-3)' }}>
             Rendering page preview locally.
           </div>
         )}
@@ -351,17 +346,22 @@ function PagePreviewCard({
             <button
               key={detection.id}
               type="button"
-              className={clsx(
-                'pointer-events-auto absolute rounded-md border transition',
-                detection.status === 'approved' && 'border-[#286f69] bg-[#286f69]/18',
-                detection.status === 'suggested' && 'border-[#d26c36] bg-[#d26c36]/18',
-                detection.status === 'rejected' && 'border-stone-400 bg-stone-300/18',
-              )}
+              className="pointer-events-auto absolute rounded-sm border transition"
               style={{
                 left: toPercent(detection.box.x),
                 top: toPercent(detection.box.y),
                 width: toPercent(detection.box.width),
                 height: toPercent(detection.box.height),
+                borderColor: detection.status === 'approved'
+                  ? 'var(--safe)'
+                  : detection.status === 'suggested'
+                  ? 'var(--risk)'
+                  : 'var(--line-strong)',
+                background: detection.status === 'approved'
+                  ? 'rgba(16, 185, 129, 0.18)'
+                  : detection.status === 'suggested'
+                  ? 'var(--risk-soft)'
+                  : 'rgba(217, 217, 223, 0.18)',
               }}
               onClick={(event) => {
                 event.stopPropagation();
@@ -374,22 +374,31 @@ function PagePreviewCard({
           {manualRedactions.map((redaction) => (
             <div
               key={redaction.id}
-              className={clsx(
-                'pointer-events-auto absolute rounded-md border-2 border-black/80 bg-black/20',
-                redaction.status === 'rejected' && 'border-stone-400 bg-stone-300/20',
-              )}
+              className="pointer-events-auto absolute"
               style={{
                 left: toPercent(redaction.box.x),
                 top: toPercent(redaction.box.y),
                 width: toPercent(redaction.box.width),
                 height: toPercent(redaction.box.height),
+                borderRadius: 2,
+                border: redaction.status === 'rejected' ? '2px solid var(--line-strong)' : '2px solid rgba(0,0,0,0.8)',
+                background: redaction.status === 'rejected' ? 'rgba(217, 217, 223, 0.2)' : 'rgba(0,0,0,0.2)',
               }}
               onPointerDown={(event) => onManualPointerDown(event, redaction)}
             >
               <div className="absolute -top-3 right-0 flex gap-1">
                 <button
                   type="button"
-                  className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-semibold text-stone-700 shadow"
+                  style={{
+                    padding: '1px 5px',
+                    borderRadius: 3,
+                    background: 'var(--paper)',
+                    border: '1px solid var(--line-strong)',
+                    fontSize: 10,
+                    fontWeight: 500,
+                    color: 'var(--ink-2)',
+                    cursor: 'pointer',
+                  }}
                   onClick={(event) => {
                     event.stopPropagation();
                     onSetManualStatus(redaction.id, nextStatus(redaction.status));
@@ -399,7 +408,16 @@ function PagePreviewCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 shadow"
+                  style={{
+                    padding: '1px 5px',
+                    borderRadius: 3,
+                    background: 'var(--paper)',
+                    border: '1px solid var(--line-strong)',
+                    fontSize: 10,
+                    fontWeight: 500,
+                    color: 'var(--error)',
+                    cursor: 'pointer',
+                  }}
                   onClick={(event) => {
                     event.stopPropagation();
                     onRemoveManual(redaction.id);
@@ -413,18 +431,20 @@ function PagePreviewCard({
 
           {draftBox ? (
             <div
-              className="absolute rounded-md border-2 border-dashed border-[#286f69] bg-[#286f69]/18"
+              className="absolute rounded-sm border-2 border-dashed"
               style={{
                 left: toPercent(draftBox.x),
                 top: toPercent(draftBox.y),
                 width: toPercent(draftBox.width),
                 height: toPercent(draftBox.height),
+                borderColor: 'var(--ink)',
+                background: 'rgba(17, 17, 17, 0.12)',
               }}
             />
           ) : null}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 

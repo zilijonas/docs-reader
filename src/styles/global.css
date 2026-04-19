@@ -2,7 +2,42 @@
 
 :root {
   color-scheme: light;
-  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+
+  --paper: #F7F7F9;
+  --surface-1: #FFFFFF;
+  --surface-2: #FBFBFD;
+  --ink: #111111;
+  --ink-2: #6B7280;
+  --ink-3: #9CA3AF;
+  --line: #EDEDF0;
+  --line-strong: #D9D9DF;
+
+  --page-paper: #FFFFFF;
+  --page-edge: #EDEDF0;
+  --page-ink: #111111;
+  --page-muted: #9CA3AF;
+
+  --primary: #6C5CE7;
+  --primary-hover: #5A4BD1;
+  --primary-soft: rgba(108, 92, 231, 0.10);
+
+  --risk: #F59E0B;
+  --risk-soft: rgba(245, 158, 11, 0.14);
+  --risk-ink: #B45309;
+
+  --safe: #10B981;
+  --safe-ink: #047857;
+
+  --error: #EF4444;
+
+  --serif: 'Space Grotesk', 'Inter', sans-serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --display: 'Space Grotesk', 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  font-family: var(--sans);
 }
 
 * {
@@ -17,6 +52,10 @@ body {
 
 body {
   min-width: 320px;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -26,13 +65,26 @@ select {
   font: inherit;
 }
 
-::selection {
-  background: rgba(210, 108, 54, 0.28);
+a {
+  color: inherit;
 }
 
-.glass-panel {
-  backdrop-filter: blur(16px);
-  background: rgba(255, 252, 247, 0.8);
+::selection {
+  background: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+@keyframes pulseScale {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeInUp 320ms var(--ease);
 }
 
 .selection-text-layer {

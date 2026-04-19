@@ -190,6 +190,8 @@ export function AppShell() {
   const approvedCount =
     detections.filter((detection) => detection.status === 'approved').length +
     manualRedactions.filter((redaction) => redaction.status === 'approved').length;
+  const suggestedCount =
+    detections.filter((detection) => detection.status === 'suggested').length;
   const showViewer = Boolean(sourceDocument && pages.length);
 
   const runDetections = async (
@@ -393,41 +395,122 @@ export function AppShell() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1680px] flex-col gap-6 px-4 py-5 text-stone-900 lg:px-6">
-      <section className="glass-panel overflow-hidden rounded-[2rem] border border-white/60 shadow-[0_28px_80px_rgba(44,38,25,0.12)]">
-        <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.35fr_0.85fr] lg:px-8">
-          <div className="space-y-4">
-            <span className="inline-flex rounded-full border border-[#cb8b63]/50 bg-[#fff5eb] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#8e4a24]">
-              True PDF redaction in the browser
+    <div style={{ background: 'var(--paper)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 24px',
+          borderBottom: '1px solid var(--line)',
+          background: 'color-mix(in oklab, var(--paper) 94%, transparent)',
+          backdropFilter: 'blur(12px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth={1.5} />
+              <rect x="7" y="10" width="10" height="2.2" fill="currentColor" />
+              <rect x="7" y="14" width="6" height="2.2" fill="currentColor" />
+            </svg>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 15, letterSpacing: '-0.01em' }}>Obscura</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: 'var(--line)' }} />
+          {sourceDocument ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" /><path d="M14 3v5h5" />
+              </svg>
+              <span style={{ fontSize: 13, color: 'var(--ink)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {sourceDocument.name}
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
+                {formatBytes(sourceDocument.size)}
+              </span>
+            </div>
+          ) : (
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+              No document loaded
             </span>
-            <div className="space-y-3">
-              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-stone-900 sm:text-5xl">
-                Review, redact, and export PDFs without sending them anywhere.
-              </h1>
-              <p className="max-w-3xl text-base leading-7 text-stone-700 sm:text-lg">
-                Searchable pages stay on the native text lane. Scanned pages fall back to OCR. Everything heavy runs in a
-                worker so the review UI stays responsive.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <StatCard label="Local-only pipeline" value="100%" />
-              <StatCard label="MVP file cap" value={`${APP_LIMITS.maxFileSizeMb} MB`} />
-              <StatCard label="Page cap" value={`${APP_LIMITS.maxPages} pages`} />
-            </div>
-          </div>
-          <div className="grid gap-3 rounded-[1.75rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(252,248,240,0.94))] p-5">
-            {PRIVACY_PROMISE.map((line) => (
-              <div key={line} className="flex items-start gap-3 rounded-2xl bg-white/70 px-4 py-3 text-sm leading-6 text-stone-700">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[#286f69]" />
-                <p>{line}</p>
-              </div>
-            ))}
-          </div>
+          )}
         </div>
-      </section>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '3px 9px',
+              borderRadius: 999,
+              fontSize: 11,
+              fontFamily: 'var(--mono)',
+              letterSpacing: '0.04em',
+              textTransform: 'lowercase',
+              background: 'color-mix(in oklab, var(--safe) 10%, var(--paper))',
+              color: 'var(--safe-ink)',
+              border: '1px solid color-mix(in oklab, var(--safe) 25%, var(--line))',
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3 4 6v6c0 4.5 3.2 8.3 8 9 4.8-.7 8-4.5 8-9V6l-8-3Z" />
+            </svg>
+            local only
+          </span>
+          {showViewer ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 12px', borderRight: '1px solid var(--line)', height: 28 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+                  Review
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
+                  <span><strong style={{ color: 'var(--ink)' }}>{approvedCount}</strong> <span style={{ color: 'var(--ink-3)' }}>approved</span></span>
+                  <span style={{ color: 'var(--line-strong)' }}>·</span>
+                  <span><strong style={{ color: 'var(--risk-ink)' }}>{suggestedCount}</strong> <span style={{ color: 'var(--ink-3)' }}>to review</span></span>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={!showViewer || isProcessing}
+                onClick={() => handleExport('true-redaction')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 10px',
+                  height: 28,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  borderRadius: 8,
+                  cursor: !showViewer || isProcessing ? 'not-allowed' : 'pointer',
+                  opacity: !showViewer || isProcessing ? 0.5 : 1,
+                  background: 'var(--ink)',
+                  color: 'var(--paper)',
+                  border: '1px solid var(--ink)',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 4v12M6 10l6 6 6-6" /><path d="M4 20h16" />
+                </svg>
+                Export
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          ) : null}
+        </div>
+      </header>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-5">
+      {!showViewer ? (
+        <Dropzone fileInputRef={fileInputRef} onDrop={handleDrop} onFileChange={handleFileChange} error={error} progress={progress} />
+      ) : (
+        <>
+          {/* Sub-toolbar */}
           <ReviewToolbar
             canExport={Boolean(showViewer && !isProcessing)}
             canFallbackExport={fallbackExportReady && !isProcessing}
@@ -442,25 +525,39 @@ export function AppShell() {
             zoom={zoom}
             onZoomChange={setZoom}
             downloadUrl={exportJob.downloadUrl}
+            pageCount={pages.length}
+            activePage={activePage}
+            onActivatePage={(i) => {
+              setActivePage(i);
+              document.getElementById(`page-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
           />
 
-          {!showViewer ? (
-            <Dropzone fileInputRef={fileInputRef} onDrop={handleDrop} onFileChange={handleFileChange} error={error} progress={progress} />
-          ) : (
-            <>
-              <div className="glass-panel rounded-[2rem] border border-white/70 p-4 shadow-[0_16px_50px_rgba(53,43,23,0.12)] sm:p-5">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 pb-4">
-                  <div>
-                    <p className="text-sm font-medium uppercase tracking-[0.16em] text-stone-500">Current document</p>
-                    <h2 className="text-xl font-semibold text-stone-900">{sourceDocument?.name}</h2>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-sm text-stone-600">
-                    <span className="rounded-full bg-stone-100 px-3 py-1">{formatBytes(sourceDocument?.size ?? 0)}</span>
-                    <span className="rounded-full bg-stone-100 px-3 py-1">{sourceDocument?.pageCount} pages</span>
-                    <span className="rounded-full bg-stone-100 px-3 py-1">{manualRedactions.length} manual edits</span>
-                  </div>
-                </div>
-
+          {/* Main grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 380px',
+              gap: 0,
+              flex: 1,
+              minHeight: 0,
+            }}
+          >
+            {/* Pages column */}
+            <div
+              style={{
+                padding: '28px 40px 120px',
+                overflow: 'auto',
+                background: 'color-mix(in oklab, var(--paper) 96%, var(--ink))',
+                borderRight: '1px solid var(--line)',
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: 780 * zoom,
+                  margin: '0 auto',
+                }}
+              >
                 <PdfViewer
                   pages={pages}
                   activePage={activePage}
@@ -479,43 +576,35 @@ export function AppShell() {
                   onSetManualStatus={setManualStatus}
                 />
               </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        <DetectionSidebar
-          progress={progress}
-          exportJob={exportJob}
-          warnings={warnings}
-          error={error}
-          draft={keywordDraft}
-          keywords={customKeywords}
-          onDraftChange={setKeywordDraft}
-          onAddKeyword={handleKeywordSubmit}
-          onRemoveKeyword={handleKeywordRemove}
-          filters={filters}
-          onChangeFilters={setFilters}
-          onApproveGroup={approveGroup}
-          onApproveDetection={(id) => setDetectionStatus(id, 'approved')}
-          onRejectDetection={(id) => setDetectionStatus(id, 'rejected')}
-          onToggleDetection={toggleDetectionStatus}
-          onToggleManualStatus={(id, status) => setManualStatus(id, status)}
-          onDeleteManual={removeManualRedaction}
-          onJumpToPage={handleSidebarJump}
-          onRejectPage={() => rejectPage(activePage)}
-          onClearManualPage={() => clearManualPage(activePage)}
-          items={deferredItems}
-        />
-      </section>
-    </main>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.35rem] border border-white/70 bg-white/70 px-4 py-3">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-stone-900">{value}</div>
+            {/* Sidebar */}
+            <DetectionSidebar
+              progress={progress}
+              exportJob={exportJob}
+              warnings={warnings}
+              error={error}
+              draft={keywordDraft}
+              keywords={customKeywords}
+              onDraftChange={setKeywordDraft}
+              onAddKeyword={handleKeywordSubmit}
+              onRemoveKeyword={handleKeywordRemove}
+              filters={filters}
+              onChangeFilters={setFilters}
+              onApproveGroup={approveGroup}
+              onApproveDetection={(id) => setDetectionStatus(id, 'approved')}
+              onRejectDetection={(id) => setDetectionStatus(id, 'rejected')}
+              onToggleDetection={toggleDetectionStatus}
+              onToggleManualStatus={(id, status) => setManualStatus(id, status)}
+              onDeleteManual={removeManualRedaction}
+              onJumpToPage={handleSidebarJump}
+              onRejectPage={() => rejectPage(activePage)}
+              onClearManualPage={() => clearManualPage(activePage)}
+              items={deferredItems}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
