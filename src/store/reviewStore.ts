@@ -45,6 +45,7 @@ interface ReviewState {
   setDetectionStatus: (id: string, status: DetectionStatus) => void;
   approveGroup: (groupId: string) => void;
   approveAll: () => void;
+  rejectAll: () => void;
   setFilters: (next: Partial<FilterState>) => void;
   setDrawMode: (enabled: boolean) => void;
   addManualRedaction: (payload: {
@@ -131,12 +132,13 @@ export const useReviewStore = create<ReviewState>((set) => ({
     })),
   approveAll: () =>
     set((state) => ({
-      detections: state.detections.map((detection) =>
-        detection.status === 'suggested' ? { ...detection, status: 'approved' } : detection,
-      ),
-      manualRedactions: state.manualRedactions.map((redaction) =>
-        redaction.status === 'suggested' ? { ...redaction, status: 'approved' } : redaction,
-      ),
+      detections: state.detections.map((detection) => ({ ...detection, status: 'approved' as const })),
+      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'approved' as const })),
+    })),
+  rejectAll: () =>
+    set((state) => ({
+      detections: state.detections.map((detection) => ({ ...detection, status: 'rejected' as const })),
+      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'rejected' as const })),
     })),
   setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
   setDrawMode: (enabled) => set({ drawMode: enabled }),

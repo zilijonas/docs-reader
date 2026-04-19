@@ -133,9 +133,13 @@ export function useRedactorWorkflow() {
       return;
     }
 
-    const response = await clientRef.current.detect({ rules: { keywords } });
-    const persistedRuleDetections = preserveRuleStatuses(response.payload.items, existingRuleDetections);
-    setDetections(dedupeDetections([...persistedRuleDetections, ...existingNonRuleDetections]));
+    try {
+      const response = await clientRef.current.detect({ rules: { keywords } });
+      const persistedRuleDetections = preserveRuleStatuses(response.payload.items, existingRuleDetections);
+      setDetections(dedupeDetections([...persistedRuleDetections, ...existingNonRuleDetections]));
+    } finally {
+      setProgress(null);
+    }
   };
 
   const syncKeywords = async (keywords: string[]) => {
@@ -288,6 +292,8 @@ export function useRedactorWorkflow() {
       if (mode === PRIMARY_EXPORT_MODE) {
         setFallbackExportReady(true);
       }
+    } finally {
+      setProgress(null);
     }
   };
 

@@ -40,6 +40,7 @@ export function AppShell() {
     setDetectionStatus,
     approveGroup,
     approveAll,
+    rejectAll,
     setFilters,
     setDrawMode,
     addManualRedaction,
@@ -320,6 +321,7 @@ export function AppShell() {
               mobileOpen={isSidebarOpen}
               onAddKeyword={handleKeywordSubmit}
               onApproveAll={approveAll}
+              onRejectAll={rejectAll}
               onApproveDetection={(id) => setDetectionStatus(id, 'approved')}
               onApproveGroup={approveGroup}
               onChangeFilters={setFilters}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { ArrowRight, Check, ChevronDown, Download, Plus, RotateCcw, Trash2, X } from 'lucide-react';
+import { ArrowRight, Check, CheckCheck, ChevronDown, Download, Plus, RotateCcw, Trash2, X, XCircle } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 
@@ -21,6 +21,7 @@ export function DetectionSidebar({
   mobileOpen,
   onClose,
   onApproveAll,
+  onRejectAll,
   onExport,
   onReset,
   processing,
@@ -45,6 +46,7 @@ export function DetectionSidebar({
   mobileOpen: boolean;
   onClose: () => void;
   onApproveAll: () => void;
+  onRejectAll: () => void;
   onExport: () => void;
   onReset: () => void | Promise<void>;
   processing: boolean;
@@ -141,9 +143,39 @@ export function DetectionSidebar({
       </div>
 
       <div className="border-b border-border px-5 py-3">
-        <Button fullWidth onClick={onApproveAll} size="sm" variant="secondary">
-          Approve all
-        </Button>
+        {(() => {
+          const totalItems = counts.approved + counts.rejected + counts.suggested;
+          const allApproved = totalItems > 0 && counts.approved === totalItems;
+
+          if (allApproved) {
+            return (
+              <Button
+                className="border-danger/25 bg-danger-soft text-danger hover:border-danger/40 hover:bg-danger/10"
+                fullWidth
+                onClick={onRejectAll}
+                size="sm"
+                variant="secondary"
+              >
+                <XCircle size={14} strokeWidth={1.75} />
+                Reject all
+              </Button>
+            );
+          }
+
+          return (
+            <Button
+              className="border-success/25 bg-success-soft text-success-ink hover:border-success/40 hover:bg-success/10"
+              disabled={totalItems === 0}
+              fullWidth
+              onClick={onApproveAll}
+              size="sm"
+              variant="secondary"
+            >
+              <CheckCheck size={14} strokeWidth={1.75} />
+              Approve all
+            </Button>
+          );
+        })()}
       </div>
 
       {(warnings.length > 0 || error) ? (
@@ -201,12 +233,11 @@ export function DetectionSidebar({
         <div className="flex flex-wrap gap-1.5">
           {keywords.map((keyword) => (
             <Chip
-              className="font-mono"
               interactive
               key={keyword}
               onClick={() => void onRemoveKeyword(keyword)}
             >
-              <span>{keyword}</span>
+              <span className="whitespace-nowrap font-mono text-xs">{keyword}</span>
               <X className="text-content-subtle" size={10} strokeWidth={1.5} />
             </Chip>
           ))}
