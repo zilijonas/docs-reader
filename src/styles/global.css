@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(210, 108, 54, 0.28);
+}
+
+.glass-panel {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 252, 247, 0.8);
+}
+
+.selection-text-layer {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  user-select: text;
+}
+
+.selection-text-layer span {
+  position: absolute;
+  transform-origin: 0 0;
+  white-space: pre;
+  cursor: text;
+}

@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DocumentRedactorApp from '../components/DocumentRedactorApp';
+---
+
+<Layout
+	title="Document Redactor App"
+	description="Worker-based local PDF redaction for searchable and scanned documents."
+>
+	<DocumentRedactorApp client:only="react" />
+</Layout>
