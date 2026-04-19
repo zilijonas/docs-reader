@@ -5,6 +5,7 @@ import { createWorker as createTesseractWorker, OEM } from 'tesseract.js';
 
 import { APP_LIMITS } from '../lib/constants';
 import { detectSensitiveData, groupDetections } from '../lib/detection';
+import { extractOcrWords } from '../lib/ocr';
 import type {
   BoundingBox,
   Detection,
@@ -331,19 +332,18 @@ const runPageOcr = async (page: PageAsset) => {
   const bitmap = await createImageBitmap(previewBlob);
   const result = await tesseractWorker.recognize(previewBlob, {
     rotateAuto: true,
+  }, {
+    text: true,
+    blocks: true,
   });
 
-  const words = (result.data.blocks ?? [])
-    .flatMap((block) => block.paragraphs)
-    .flatMap((paragraph) => paragraph.lines)
-    .flatMap((line) => line.words)
-    .filter((word) => word.text.trim());
+  const words = extractOcrWords(result, bitmap.width, bitmap.height);
 
   const textParts: string[] = [];
   let cursor = 0;
 
   const spans = words.map((word, index) => {
-    const text = word.text.trim();
+    const text = word.text;
     const prefix = index === 0 ? '' : ' ';
     const start = cursor + prefix.length;
     cursor = start + text.length;
@@ -353,14 +353,9 @@ const runPageOcr = async (page: PageAsset) => {
       id: `ocr_${page.pageIndex}_${index}`,
       pageIndex: page.pageIndex,
       text,
-      box: {
-        x: word.bbox.x0 / bitmap.width,
-        y: word.bbox.y0 / bitmap.height,
-        width: (word.bbox.x1 - word.bbox.x0) / bitmap.width,
-        height: (word.bbox.y1 - word.bbox.y0) / bitmap.height,
-      },
+      box: word.box,
       source: 'ocr',
-      confidence: (word.confidence ?? 70) / 100,
+      confidence: word.confidence,
       start,
       end: cursor,
     } satisfies TextSpan;
