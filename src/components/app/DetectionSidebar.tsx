@@ -14,6 +14,7 @@ import {
   groupReviewItemsByType,
   type ReviewItem,
 } from '../../features/redactor';
+import { OcrLanguagePicker } from '../../features/redactor/components/OcrLanguagePicker';
 
 export type SidebarItem = ReviewItem;
 
@@ -33,6 +34,8 @@ export function DetectionSidebar({
   onDraftChange,
   onAddKeyword,
   onRemoveKeyword,
+  ocrLanguages,
+  onChangeOcrLanguages,
   filters,
   onChangeFilters,
   onApproveGroup,
@@ -58,6 +61,8 @@ export function DetectionSidebar({
   onDraftChange: (value: string) => void;
   onAddKeyword: () => void | Promise<void>;
   onRemoveKeyword: (keyword: string) => void | Promise<void>;
+  ocrLanguages: string[];
+  onChangeOcrLanguages: (next: string[]) => void;
   filters: FilterState;
   onChangeFilters: (next: Partial<FilterState>) => void;
   onApproveGroup: (groupId: string) => void;
@@ -251,6 +256,8 @@ export function DetectionSidebar({
           ) : null}
         </div>
       </div>
+
+      <OcrLanguagePicker onChange={onChangeOcrLanguages} selected={ocrLanguages} />
 
       <div className="flex-1 overflow-auto">
         {DETECTION_TYPE_ORDER.map((type) => {

@@ -62,6 +62,7 @@ export function useRedactorWorkflow() {
     detections,
     manualRedactions,
     customKeywords,
+    ocrLanguages,
     previews,
     exportJob,
     setDocument,
@@ -72,6 +73,7 @@ export function useRedactorWorkflow() {
     appendWarning,
     setFallbackExportReady,
     setCustomKeywords,
+    setOcrLanguages,
     reset,
   } = useReviewStore();
 
@@ -172,6 +174,7 @@ export function useRedactorWorkflow() {
         name: selectedFile.name,
         size: selectedFile.size,
         mimeType: selectedFile.type || 'application/pdf',
+        ocrLanguages,
       });
 
       setSpans(response.payload.spans);
@@ -359,12 +362,14 @@ export function useRedactorWorkflow() {
     isProcessing,
     isSidebarOpen,
     keywordDraft,
+    ocrLanguages,
     pages,
     progress,
     resetSession,
     setError,
     setIsSidebarOpen,
     setKeywordDraft,
+    setOcrLanguages,
     setZoom,
     spans,
     ensurePreview,

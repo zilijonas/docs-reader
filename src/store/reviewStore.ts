@@ -12,6 +12,7 @@ import type {
   SourceDocument,
 } from '../lib/types';
 import { createId, normalizeBox } from '../lib/utils';
+import { DEFAULT_OCR_LANGUAGES } from '../lib/constants';
 import {
   DEFAULT_REVIEW_FILTERS,
   createManualRedactionRecord,
@@ -26,6 +27,7 @@ interface ReviewState {
   detections: Detection[];
   manualRedactions: ManualRedaction[];
   customKeywords: string[];
+  ocrLanguages: string[];
   filters: FilterState;
   previews: Record<number, PreviewAsset>;
   activePage: number;
@@ -60,6 +62,7 @@ interface ReviewState {
   clearPendingManualRedactions: () => void;
   setManualStatus: (id: string, status: DetectionStatus) => void;
   setCustomKeywords: (keywords: string[]) => void;
+  setOcrLanguages: (languages: string[]) => void;
   rejectPage: (pageIndex: number) => void;
   clearManualPage: (pageIndex: number) => void;
   setExportJob: (payload: Partial<ExportJob>) => void;
@@ -82,6 +85,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
   detections: [],
   manualRedactions: [],
   customKeywords: [],
+  ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
   filters: createInitialFilters(),
   previews: {},
   activePage: 0,
@@ -177,6 +181,10 @@ export const useReviewStore = create<ReviewState>((set) => ({
       ),
     })),
   setCustomKeywords: (keywords) => set({ customKeywords: keywords }),
+  setOcrLanguages: (languages) => {
+    const unique = Array.from(new Set(languages.filter(Boolean)));
+    set({ ocrLanguages: unique.length > 0 ? unique : [...DEFAULT_OCR_LANGUAGES] });
+  },
   rejectPage: (pageIndex) =>
     set((state) => ({
       detections: state.detections.map((detection) =>
@@ -220,6 +228,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
         detections: [],
         manualRedactions: [],
         customKeywords: [],
+        ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
         filters: createInitialFilters(),
         previews: {},
         activePage: 0,

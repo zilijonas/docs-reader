@@ -127,6 +127,153 @@ describe('groupDetections', () => {
   });
 });
 
+describe('detectSensitiveData multi-locale', () => {
+  const makeSpan = (id: string, text: string, start: number): TextSpan => ({
+    id,
+    pageIndex: 0,
+    text,
+    box: { x: 0.1, y: 0.1 + start * 0.001, width: 0.3, height: 0.04 },
+    source: 'native',
+    confidence: 1,
+    start,
+    end: start + text.length,
+  });
+
+  const buildPage = (words: string[]) => {
+    const spans: TextSpan[] = [];
+    let cursor = 0;
+    const parts: string[] = [];
+    words.forEach((word, index) => {
+      const prefix = index === 0 ? '' : ' ';
+      const start = cursor + prefix.length;
+      parts.push(prefix + word);
+      spans.push(makeSpan(`span_${index}`, word, start));
+      cursor = start + word.length;
+    });
+    return { text: parts.join(''), spans };
+  };
+
+  it('detects German date with "März" and a PLZ postal code', () => {
+    const { text, spans } = buildPage(['Am', '15.', 'März', '2024', 'PLZ', '10115', 'Berlin']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(detections.some((detection) => detection.type === 'date')).toBe(true);
+    expect(detections.some((detection) => detection.type === 'postal')).toBe(true);
+  });
+
+  it('detects a Lithuanian asmens kodas via checksum-validated national ID rule', () => {
+    const { text, spans } = buildPage(['Asmens', 'kodas:', '38501011239']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(detections.some((detection) => detection.type === 'nationalId')).toBe(true);
+  });
+
+  it('detects a French NIR number', () => {
+    const { text, spans } = buildPage(['NIR', '1', '84', '12', '75', '116', '002', '25']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(detections.some((detection) => detection.type === 'nationalId')).toBe(true);
+  });
+
+  it('detects an EU VAT number', () => {
+    const { text, spans } = buildPage(['Invoice', 'VAT', 'DE123456789']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(detections.some((detection) => detection.type === 'vat')).toBe(true);
+  });
+
+  it('detects a UK postcode', () => {
+    const { text, spans } = buildPage(['Delivery', 'to', 'SW1A', '1AA']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(detections.some((detection) => detection.type === 'postal')).toBe(true);
+  });
+
+  it('validates IBANs via checksum and rejects random alphanumerics', () => {
+    const { text, spans } = buildPage(['IBAN', 'GB82WEST12345698765432', 'XX00BAD00000000000000']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    const ibans = detections.filter((detection) => detection.type === 'iban');
+    expect(ibans.length).toBe(1);
+    expect(ibans[0].normalizedSnippet).toBe('gb82west12345698765432');
+  });
+
+  it('detects a card number only when it passes Luhn', () => {
+    const valid = buildPage(['Card', '4539148803436467']);
+    const invalid = buildPage(['Card', '4539148803436468']);
+
+    const validDetections = detectSensitiveData(0, valid.text, valid.spans);
+    const invalidDetections = detectSensitiveData(0, invalid.text, invalid.spans);
+
+    expect(validDetections.some((detection) => detection.type === 'card')).toBe(true);
+    expect(invalidDetections.some((detection) => detection.type === 'card')).toBe(false);
+  });
+
+  it('detects an address anchored by a street token', () => {
+    const { text, spans } = buildPage(['Sender:', 'Hauptstraße', '42,', '10115', 'Berlin']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(
+      detections.some(
+        (detection) => detection.type === 'address' || detection.normalizedSnippet.includes('straße'),
+      ),
+    ).toBe(true);
+  });
+
+  it('captures a Lithuanian address with initials, short street token, postal and locality marker', () => {
+    const { text, spans } = buildPage(['J.', 'Basanavičiaus', 'g.', '10,', '01118,', 'Vilniaus', 'm.']);
+    const detections = detectSensitiveData(0, text, spans);
+    const address = detections.find((detection) => detection.type === 'address');
+
+    expect(address).toBeTruthy();
+    expect(address?.normalizedSnippet).toContain('basanavičiaus');
+    expect(address?.normalizedSnippet).toContain('g.');
+    expect(address?.normalizedSnippet).toContain('01118');
+    expect(address?.normalizedSnippet).toContain('vilniaus');
+    expect(address?.normalizedSnippet).toContain('m.');
+  });
+
+  it('captures a Lithuanian address with no initials and a trailing locality marker', () => {
+    const { text, spans } = buildPage(['Tarpininko', 'adresas:', 'Konstitucijos', 'pr.', '24,', '08131', 'Vilniaus', 'm.']);
+    const detections = detectSensitiveData(0, text, spans);
+    const address = detections.find((detection) => detection.type === 'address');
+
+    expect(address).toBeTruthy();
+    expect(address?.normalizedSnippet).toContain('konstitucijos');
+    expect(address?.normalizedSnippet).toContain('pr.');
+    expect(address?.normalizedSnippet).toContain('24');
+    expect(address?.normalizedSnippet).toContain('08131');
+    expect(address?.normalizedSnippet).toContain('vilniaus');
+    expect(address?.normalizedSnippet).toContain('m.');
+  });
+
+  it('extends the address bounding box across every span of the phrase', () => {
+    const { text, spans } = buildPage(['Konstitucijos', 'pr.', '24,', '08131', 'Vilniaus', 'm.']);
+    const detections = detectSensitiveData(0, text, spans);
+    const address = detections.find((detection) => detection.type === 'address');
+
+    expect(address).toBeTruthy();
+    // The union must span at least the first ("Konstitucijos") and last ("m.") spans.
+    const firstSpan = spans[0];
+    const lastSpan = spans[spans.length - 1];
+    const boxRight = address!.box.x + address!.box.width;
+    const spanRight = lastSpan.box.x + lastSpan.box.width;
+    expect(address!.box.x).toBeCloseTo(firstSpan.box.x, 5);
+    expect(boxRight).toBeCloseTo(spanRight, 5);
+  });
+
+  it('captures a French token-prefixed address with connectors', () => {
+    const { text, spans } = buildPage(['rue', 'de', 'la', 'Paix', '12,', '75002', 'Paris']);
+    const detections = detectSensitiveData(0, text, spans);
+    const address = detections.find((detection) => detection.type === 'address');
+
+    expect(address).toBeTruthy();
+    expect(address?.normalizedSnippet).toContain('rue');
+    expect(address?.normalizedSnippet).toContain('paix');
+    expect(address?.normalizedSnippet).toContain('12');
+  });
+});
+
 describe('dedupeDetections', () => {
   it('collapses overlapping generic and specific detections into one precise box', () => {
     const deduped = dedupeDetections([

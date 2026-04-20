@@ -1,59 +1,7 @@
 import { DETECTION_TYPE_LABELS } from './constants';
+import { DETECTION_RULES, buildKeywordPattern, type DetectionRule } from './detection-rules';
 import type { Detection, DetectionType, TextSpan } from './types';
-import { createId, dedupeDetections, escapeRegex, findSpansInRange, normalizeSnippet, unionBoxes } from './utils';
-
-const RULES: Array<{ type: DetectionType; pattern: RegExp; confidence: number }> = [
-  {
-    type: 'email',
-    pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-    confidence: 0.98,
-  },
-  {
-    type: 'phone',
-    pattern: /(?<!\w)(?:\+?\d[\d\s().-]{6,}\d)(?!\w)/g,
-    confidence: 0.93,
-  },
-  {
-    type: 'url',
-    pattern: /\bhttps?:\/\/[^\s<>()]+|(?:www\.)[^\s<>()]+\.[a-z]{2,}\S*/gi,
-    confidence: 0.95,
-  },
-  {
-    type: 'iban',
-    pattern: /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/gi,
-    confidence: 0.96,
-  },
-  {
-    type: 'card',
-    pattern: /\b(?:\d[ -]*?){13,19}\b/g,
-    confidence: 0.9,
-  },
-  {
-    type: 'date',
-    pattern:
-      /\b(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?\s+\d{2,4})\b/gi,
-    confidence: 0.86,
-  },
-  {
-    type: 'id',
-    pattern: /\b(?:\d{3}[- ]?\d{2}[- ]?\d{4}|[A-Z]{1,3}\d{5,10}|\d{2}[A-Z]{2}\d{6,})\b/gi,
-    confidence: 0.9,
-  },
-  {
-    type: 'number',
-    pattern: /\b\d{8,}\b/g,
-    confidence: 0.78,
-  },
-];
-
-const buildKeywordPattern = (keywords: string[]) => {
-  const filtered = keywords.map((keyword) => keyword.trim()).filter(Boolean);
-  if (!filtered.length) {
-    return null;
-  }
-
-  return new RegExp(`\\b(?:${filtered.map(escapeRegex).join('|')})\\b`, 'gi');
-};
+import { createId, dedupeDetections, findSpansInRange, normalizeSnippet, unionBoxes } from './utils';
 
 const getJoinedSpanText = (spans: TextSpan[]) => normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
 
@@ -74,10 +22,15 @@ const refineCoveredSpans = (coveredSpans: TextSpan[], snippet: string) => {
         continue;
       }
 
+      // Only accept candidates that *fully contain* the matched snippet.
+      // The reverse direction (snippet contains candidate) is unsafe — a
+      // one-character span like "g." is trivially contained in any longer
+      // snippet and would hijack the bounding box, shrinking the highlight
+      // to a single letter. We want the smallest window that still covers
+      // the entire match, not the smallest span that happens to be a
+      // substring of it.
       const isMatch =
-        candidateText === normalizedSnippet ||
-        candidateText.includes(normalizedSnippet) ||
-        normalizedSnippet.includes(candidateText);
+        candidateText === normalizedSnippet || candidateText.includes(normalizedSnippet);
 
       if (!isMatch) {
         continue;
@@ -128,25 +81,46 @@ const matchToDetection = (
   };
 };
 
-export const detectSensitiveData = (pageIndex: number, pageText: string, spans: TextSpan[], keywords: string[] = []) => {
+const runRule = (
+  rule: DetectionRule,
+  pageIndex: number,
+  pageText: string,
+  spans: TextSpan[],
+  detections: Detection[],
+) => {
+  rule.pattern.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = rule.pattern.exec(pageText))) {
+    if (!match[0]) {
+      // Safeguard — a zero-width match would otherwise spin forever
+      rule.pattern.lastIndex += 1;
+      continue;
+    }
+    if (rule.postFilter && !rule.postFilter(match[0])) {
+      continue;
+    }
+    const detection = matchToDetection(match, rule.type, rule.confidence, pageIndex, pageText, spans);
+    if (detection) {
+      detections.push(detection);
+    }
+  }
+};
+
+export const detectSensitiveData = (
+  pageIndex: number,
+  pageText: string,
+  spans: TextSpan[],
+  keywords: string[] = [],
+) => {
   const detections: Detection[] = [];
-  const patterns = [...RULES];
+  const rules: DetectionRule[] = [...DETECTION_RULES];
   const keywordPattern = buildKeywordPattern(keywords);
 
   if (keywordPattern) {
-    patterns.push({ type: 'keyword', pattern: keywordPattern, confidence: 0.99 });
+    rules.push({ type: 'keyword', pattern: keywordPattern, confidence: 0.99 });
   }
 
-  patterns.forEach(({ type, pattern, confidence }) => {
-    pattern.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(pageText))) {
-      const detection = matchToDetection(match, type, confidence, pageIndex, pageText, spans);
-      if (detection) {
-        detections.push(detection);
-      }
-    }
-  });
+  rules.forEach((rule) => runRule(rule, pageIndex, pageText, spans, detections));
 
   return dedupeDetections(detections);
 };

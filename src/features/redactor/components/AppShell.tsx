@@ -62,10 +62,12 @@ export function AppShell() {
     isProcessing,
     isSidebarOpen,
     keywordDraft,
+    ocrLanguages,
     progress,
     resetSession,
     setIsSidebarOpen,
     setKeywordDraft,
+    setOcrLanguages,
     setZoom,
     spans,
     ensurePreview,
@@ -337,6 +339,8 @@ export function AppShell() {
               onRemoveKeyword={handleKeywordRemove}
               onReset={resetSession}
               onToggleManualStatus={setManualStatus}
+              onChangeOcrLanguages={setOcrLanguages}
+              ocrLanguages={ocrLanguages}
               processing={isProcessing}
               progress={progress}
               warnings={warnings}

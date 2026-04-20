@@ -19,6 +19,10 @@ const DETECTION_TYPE_PRIORITY: Record<Detection['type'], number> = {
   date: 60,
   id: 85,
   number: 10,
+  postal: 75,
+  address: 75,
+  vat: 95,
+  nationalId: 100,
   keyword: 70,
   manual: 110,
 };

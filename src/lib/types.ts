@@ -1,7 +1,21 @@
 export type TextSource = 'native' | 'ocr';
 export type DetectionSource = 'rule' | 'manual';
 export type DetectionStatus = 'suggested' | 'approved' | 'rejected';
-export type DetectionType = 'email' | 'phone' | 'url' | 'iban' | 'card' | 'date' | 'id' | 'number' | 'keyword' | 'manual';
+export type DetectionType =
+  | 'email'
+  | 'phone'
+  | 'url'
+  | 'iban'
+  | 'card'
+  | 'date'
+  | 'id'
+  | 'number'
+  | 'postal'
+  | 'address'
+  | 'vat'
+  | 'nationalId'
+  | 'keyword'
+  | 'manual';
 export type ManualMode = 'text' | 'box';
 export type OcrStatus = 'idle' | 'queued' | 'running' | 'done' | 'error' | 'skipped';
 export type PageLane = 'searchable' | 'ocr';
@@ -113,6 +127,10 @@ export interface DetectionRuleConfig {
   keywords: string[];
 }
 
+export interface OcrLanguageConfig {
+  languages: string[];
+}
+
 export interface PagePreviewPayload {
   pageIndex: number;
   mimeType: 'image/png';
@@ -134,6 +152,7 @@ export interface LoadPdfRequest {
   name: string;
   size: number;
   mimeType: string;
+  ocrLanguages?: string[];
 }
 
 export interface DetectRequest {

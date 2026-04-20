@@ -3,7 +3,7 @@
 import { PDFDocument } from 'pdf-lib';
 import { createWorker as createTesseractWorker, OEM } from 'tesseract.js';
 
-import { APP_LIMITS } from '../lib/constants';
+import { APP_LIMITS, DEFAULT_OCR_LANGUAGES } from '../lib/constants';
 import { detectSensitiveData, groupDetections } from '../lib/detection';
 import { extractOcrWords } from '../lib/ocr';
 import type {
@@ -45,6 +45,7 @@ type WorkerState = {
   pyodide: PyodideLike | null;
   pyodidePromise?: Promise<PyodideLike>;
   tesseractWorker?: import('tesseract.js').Worker;
+  tesseractLangKey?: string;
   source?: SourceDocument;
   pages: PageAsset[];
   spans: TextSpan[];
@@ -300,29 +301,60 @@ const ensurePyodide = async () => {
   return state.pyodidePromise;
 };
 
-const ensureTesseractWorker = async () => {
-  if (!state.tesseractWorker) {
-    state.tesseractWorker = await createTesseractWorker('eng', OEM.LSTM_ONLY, {
-      workerPath: new URL(`${state.baseUrl}tesseract/worker.min.js`, self.location.origin).toString(),
-      langPath: new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString(),
-      corePath: new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString(),
-      logger: (message) => {
-        updateProgress({
-          phase: 'ocr',
-          progress: 0.55 + (message.progress ?? 0) * 0.15,
-          message: 'Reading text from scans…',
-        });
-      },
-    });
+const TESSDATA_CDN = 'https://tessdata.projectnaptha.com/4.0.0_fast';
+
+const normalizeLanguages = (languages: string[] | undefined) => {
+  const cleaned = Array.from(
+    new Set((languages?.length ? languages : DEFAULT_OCR_LANGUAGES).map((lang) => lang.trim()).filter(Boolean)),
+  );
+  return cleaned.length ? cleaned : [...DEFAULT_OCR_LANGUAGES];
+};
+
+const ensureTesseractWorker = async (languages: string[] | undefined) => {
+  const langs = normalizeLanguages(languages);
+  const langKey = langs.join('+');
+
+  if (state.tesseractWorker && state.tesseractLangKey === langKey) {
+    return state.tesseractWorker;
   }
+
+  // Language set changed — terminate the old worker so Tesseract re-initializes the new set.
+  if (state.tesseractWorker && state.tesseractLangKey !== langKey) {
+    try {
+      await state.tesseractWorker.terminate();
+    } catch (terminateError) {
+      // Best-effort — continue with a fresh worker even if termination fails.
+      console.warn('Could not terminate previous Tesseract worker.', terminateError);
+    }
+    state.tesseractWorker = undefined;
+  }
+
+  const localLangPath = new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString();
+  // English traineddata ships with the app; any other language is fetched on demand
+  // from the Tesseract fast-data CDN so the bundle does not grow per language.
+  const langPath = langs.every((lang) => lang === 'eng') ? localLangPath : TESSDATA_CDN;
+
+  state.tesseractWorker = await createTesseractWorker(langKey, OEM.LSTM_ONLY, {
+    workerPath: new URL(`${state.baseUrl}tesseract/worker.min.js`, self.location.origin).toString(),
+    langPath,
+    corePath: new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString(),
+    logger: (message) => {
+      updateProgress({
+        phase: 'ocr',
+        progress: 0.55 + (message.progress ?? 0) * 0.15,
+        message: langs.length > 1 ? `Reading text from scans (${langKey})…` : 'Reading text from scans…',
+      });
+    },
+  });
+  state.tesseractLangKey = langKey;
 
   return state.tesseractWorker;
 };
 
 const bytesToBlob = (bytes: Uint8Array, mimeType: string) => new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
 
-const runPageOcr = async (page: PageAsset) => {
-  const tesseractWorker = await ensureTesseractWorker();
+const runPageOcr = async (page: PageAsset, languages: string[] | undefined) => {
+  const tesseractWorker = await ensureTesseractWorker(languages);
   const imageBytes = await runPythonBytes('render_page_png(page_index_js, scale_js)', {
     page_index_js: page.pageIndex,
     scale_js: APP_LIMITS.ocrScale,
@@ -499,7 +531,7 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
     });
 
     try {
-      const ocrLayer = await runPageOcr(page);
+      const ocrLayer = await runPageOcr(page, payload.ocrLanguages);
       state.pages = state.pages.map((candidate) =>
         candidate.pageIndex === page.pageIndex
           ? {
