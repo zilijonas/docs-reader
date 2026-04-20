@@ -168,14 +168,39 @@ const SHORT_STREET_TOKENS = [
 ];
 
 const escapeToken = (token: string) => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Encodes a literal token so it matches case-insensitively inside a regex
+// that is NOT using the global `i` flag. We can't use the `i` flag on the
+// address regex because it would also flip `\p{Lu}` — turning name-word
+// detection into "match any letter", which leaks through every lowercase
+// word in a sentence. Per-character encoding keeps case-insensitivity
+// scoped to the token alternations only.
+const caseInsensitivePattern = (token: string) =>
+  Array.from(token)
+    .map((char) => {
+      const lower = char.toLowerCase();
+      const upper = char.toUpperCase();
+      if (lower === upper) {
+        return escapeToken(char);
+      }
+      return `[${escapeToken(lower)}${escapeToken(upper)}]`;
+    })
+    .join('');
+
 const makeAlternation = (tokens: string[]) =>
   Array.from(new Set(tokens.map((token) => token.toLowerCase())))
     .sort((a, b) => b.length - a.length)
     .map(escapeToken)
     .join('|');
 
-const LONG_STREET_ALT = makeAlternation(LONG_STREET_TOKENS);
-const SHORT_STREET_ALT = makeAlternation(SHORT_STREET_TOKENS);
+const makeCaseInsensitiveAlternation = (tokens: string[]) =>
+  Array.from(new Set(tokens.map((token) => token.toLowerCase())))
+    .sort((a, b) => b.length - a.length)
+    .map(caseInsensitivePattern)
+    .join('|');
+
+const LONG_STREET_ALT = makeCaseInsensitiveAlternation(LONG_STREET_TOKENS);
+const SHORT_STREET_ALT = makeCaseInsensitiveAlternation(SHORT_STREET_TOKENS);
 
 // Matches either a long token (dot optional) or a short token followed by
 // a required dot. Short-token dot is non-negotiable — the dot is what
@@ -195,11 +220,13 @@ const SHORT_CITY_MARKERS = [
   'm', 'mst', 'mstl', 'k', 'vs', 'r', 'sav', 'sen', 'pag', 'apskr', 'raj',
 ];
 
-const LONG_CITY_ALT = makeAlternation(LONG_CITY_MARKERS);
-const SHORT_CITY_ALT = makeAlternation(SHORT_CITY_MARKERS);
+const LONG_CITY_ALT = makeCaseInsensitiveAlternation(LONG_CITY_MARKERS);
+const SHORT_CITY_ALT = makeCaseInsensitiveAlternation(SHORT_CITY_MARKERS);
 
 // Connector words that sit between capitalized name tokens inside an
 // address (`rue de la Paix`, `Plaza de España`, `van der Waals laan`).
+// Kept lowercase-only — capitalized "De"/"Van" is rare and wrongly allowing
+// it lets the regex chain arbitrary lowercase sentence fragments.
 const ADDRESS_CONNECTORS = [
   'de', 'la', 'le', 'les', 'des', 'du', 'da', 'do', 'dos', 'das',
   'van', 'von', 'der', 'den', 'al', 'del', 'y', 'e', 'und', 'et', 'of', 'the',
@@ -413,8 +440,13 @@ const ADDRESS_RULE: DetectionRule = {
   pattern: new RegExp(
     // Unicode-aware boundary at the start — plain `\b` is ASCII-only so
     // it misfires on letters like `ž`, `ä`, `ß`.
+    //
+    // NOTE: no `i` flag. `i` on a regex that uses `\p{Lu}` would make the
+    // "uppercase letter" class match lowercase too, and the name chain would
+    // happily eat whole lowercase sentences. Token case-insensitivity is
+    // baked into the token alternations via `makeCaseInsensitiveAlternation`.
     `(?<![\\p{L}\\p{N}])(?:${ADDRESS_BODY})${POSTAL_TAIL}${CITY_TAIL}`,
-    'giu',
+    'gu',
   ),
   confidence: 0.72,
 };

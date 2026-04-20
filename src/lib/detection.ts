@@ -1,7 +1,30 @@
 import { DETECTION_TYPE_LABELS } from './constants';
 import { DETECTION_RULES, buildKeywordPattern, type DetectionRule } from './detection-rules';
-import type { Detection, DetectionType, TextSpan } from './types';
+import type { BoundingBox, Detection, DetectionType, TextSpan } from './types';
 import { createId, dedupeDetections, findSpansInRange, normalizeSnippet, unionBoxes } from './utils';
+
+// When a span extends beyond the matched range (common for native PDF
+// extraction, which can emit a whole sentence as a single text-run), we
+// clip its bounding box to the portion actually inside [rangeStart, rangeEnd].
+// The approximation is linear over the character count, which is good enough
+// for proportional-width fonts at typical reading sizes.
+const clipBoxToRange = (span: TextSpan, rangeStart: number, rangeEnd: number): BoundingBox => {
+  const spanLen = Math.max(1, span.end - span.start);
+  const clippedStart = Math.max(rangeStart, span.start);
+  const clippedEnd = Math.min(rangeEnd, span.end);
+  if (clippedEnd <= clippedStart) {
+    return span.box;
+  }
+  const leftFrac = Math.max(0, Math.min(1, (clippedStart - span.start) / spanLen));
+  const rightFrac = Math.max(0, Math.min(1, (clippedEnd - span.start) / spanLen));
+  const width = Math.max(0, rightFrac - leftFrac) * span.box.width;
+  return {
+    x: span.box.x + leftFrac * span.box.width,
+    y: span.box.y,
+    width,
+    height: span.box.height,
+  };
+};
 
 const getJoinedSpanText = (spans: TextSpan[]) => normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
 
@@ -66,13 +89,24 @@ const matchToDetection = (
     return null;
   }
 
+  // Clip every covered span to the actual match range — otherwise a single
+  // wide span that happens to contain the match (plus unrelated leading or
+  // trailing text) would push the bounding box out to the whole span.
+  const clippedBoxes = coveredSpans
+    .map((span) => clipBoxToRange(span, start, end))
+    .filter((box) => box.width > 0 && box.height > 0);
+
+  if (!clippedBoxes.length) {
+    return null;
+  }
+
   const snippet = pageText.slice(start, end).trim();
   return {
     id: createId('rule'),
     type,
     label: DETECTION_TYPE_LABELS[type],
     pageIndex,
-    box: unionBoxes(coveredSpans.map((span) => span.box)),
+    box: unionBoxes(clippedBoxes),
     snippet,
     normalizedSnippet: normalizeSnippet(snippet),
     source: 'rule',

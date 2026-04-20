@@ -262,6 +262,37 @@ describe('detectSensitiveData multi-locale', () => {
     expect(boxRight).toBeCloseTo(spanRight, 5);
   });
 
+  it('clips the bounding box when one wide span covers surrounding text plus the match', () => {
+    // Simulates native PDF extraction producing a single text-run that
+    // spans an entire sentence — the address match should not inherit the
+    // whole span's bounding box, only the portion it actually covers.
+    const wideText = 'į Lietuvos banką adresu Totorių g. 4, LT-01121 Vilnius.';
+    const spans: TextSpan[] = [
+      {
+        id: 'wide',
+        pageIndex: 0,
+        text: wideText,
+        box: { x: 0.1, y: 0.5, width: 0.8, height: 0.03 },
+        source: 'native',
+        confidence: 1,
+        start: 0,
+        end: wideText.length,
+      },
+    ];
+
+    const detections = detectSensitiveData(0, wideText, spans);
+    const address = detections.find((detection) => detection.type === 'address');
+
+    expect(address).toBeTruthy();
+    // Address phrase "Totorių g. 4, LT-01121 Vilnius" starts around char 24 of 55.
+    // The clipped box must be noticeably narrower than the full 0.8-wide span
+    // and must start past the span's left edge.
+    expect(address!.box.width).toBeLessThan(0.6);
+    expect(address!.box.x).toBeGreaterThan(0.2);
+    // And the right edge must lie within the original span.
+    expect(address!.box.x + address!.box.width).toBeLessThanOrEqual(0.9 + 1e-6);
+  });
+
   it('captures a French token-prefixed address with connectors', () => {
     const { text, spans } = buildPage(['rue', 'de', 'la', 'Paix', '12,', '75002', 'Paris']);
     const detections = detectSensitiveData(0, text, spans);
