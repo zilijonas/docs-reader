@@ -36,7 +36,7 @@ export interface ReviewFilterTab {
 }
 
 export interface UploadHintMeta {
-  id: 'privacy' | 'limits' | 'ocr';
+  id: 'privacy' | 'analytics' | 'limits' | 'ocr';
   label: string;
   icon: (props?: { size?: number; className?: string }) => ReactNode;
 }
@@ -166,8 +166,13 @@ export const DEFAULT_REVIEW_FILTERS: FilterState = {
 export const UPLOAD_HINTS: UploadHintMeta[] = [
   {
     id: 'privacy',
-    label: 'No uploads - ever',
+    label: 'No document uploads',
     icon: (props?: IconProps) => <Shield {...iconProps(props)} />,
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics never include document contents',
+    icon: (props?: IconProps) => <BadgeInfo {...iconProps(props)} />,
   },
   {
     id: 'limits',

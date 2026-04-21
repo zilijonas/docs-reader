@@ -10,17 +10,17 @@ const { appUrl } = Astro.props;
 ---
 
 <section class="landing-hero">
-  <div class="page-container landing-hero-inner">
-    <div aria-hidden="true" class="landing-hero-visual">
-      <div class="fade-in">
-        <LandingHeroDiagram />
-      </div>
+  <div aria-hidden="true" class="landing-hero-visual">
+    <div class="fade-in">
+      <LandingHeroDiagram />
     </div>
-
+  </div>
+  <div class="page-container landing-hero-inner">
     <div class="landing-hero-content">
       <span class="landing-hero-brand">HDDN</span>
       <h1 class="type-display-hero fade-in">
-        Redact PDFs <em class="italic-accent">locally.</em> Nothing leaves your browser.
+        Redact PDFs <em class="italic-accent">locally.</em> Keep document contents
+        in your browser.
       </h1>
       <p
         class="landing-hero-copy type-body-lg fade-in"
@@ -30,7 +30,7 @@ const { appUrl } = Astro.props;
         permanently redacted file - all inside your browser.
       </p>
       <p class="landing-hero-trust fade-in" style="animation-delay:120ms">
-        No uploads. No servers. No risk.
+        No document uploads. Local review. Safe-first export.
       </p>
       <div class="landing-hero-actions fade-in" style="animation-delay:160ms">
         <a class="landing-button" href={appUrl}>

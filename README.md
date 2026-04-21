@@ -33,6 +33,7 @@ The review UI stays responsive because the heavy extraction, OCR, preview render
 ## Privacy notes
 
 - Document contents are processed locally in the browser.
+- Google Analytics is opt-in and used only for site usage metrics. Document contents are not sent to Google Analytics.
 - Pyodide, PyMuPDF, and OCR runtime assets are synced into `public/` during install so the deployed app does not depend on runtime third-party asset fetches.
 - Detection is assistive only. Review every suggestion before export.
 
