@@ -1,16 +1,10 @@
 import { useEffect } from 'react';
 
-import { loadGoogleAnalytics } from '../../lib/googleAnalytics';
+import { updateGoogleAnalyticsConsent } from '../../lib/googleAnalytics';
 import { useConsentStore } from '../../store/consentStore';
 import { CookieConsentBanner } from './CookieConsentBanner';
 
-export function AnalyticsConsentController({
-  enabled,
-  measurementId,
-}: {
-  enabled: boolean;
-  measurementId: string;
-}) {
+export function AnalyticsConsentController({ enabled }: { enabled: boolean }) {
   const status = useConsentStore((state) => state.status);
   const isHydrated = useConsentStore((state) => state.isHydrated);
   const hydrateFromCookie = useConsentStore((state) => state.hydrateFromCookie);
@@ -22,14 +16,14 @@ export function AnalyticsConsentController({
   }, [hydrateFromCookie]);
 
   useEffect(() => {
-    if (!enabled || !isHydrated || status !== 'accepted') {
+    if (!enabled || !isHydrated || status === 'unknown') {
       return;
     }
 
-    loadGoogleAnalytics(measurementId);
-  }, [enabled, isHydrated, measurementId, status]);
+    updateGoogleAnalyticsConsent(status);
+  }, [enabled, isHydrated, status]);
 
-  if (!isHydrated || status !== 'unknown') {
+  if (!enabled || !isHydrated || status !== 'unknown') {
     return null;
   }
 

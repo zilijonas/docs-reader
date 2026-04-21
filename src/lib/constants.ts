@@ -12,7 +12,7 @@ export const APP_LIMITS = {
 
 export const PRIVACY_PROMISE = [
   'Documents stay in your browser during processing. Nothing is uploaded to an app server.',
-  'Google Analytics may collect site usage metrics, but document contents are not sent there.',
+  'Google Analytics uses denied-by-default consent mode settings, and document contents are not sent there.',
   'Pyodide, PyMuPDF, and OCR assets are served with the app so processing stays local at runtime.',
   'Review every suggestion before exporting. Detection is assistive, not guaranteed.',
 ] as const;

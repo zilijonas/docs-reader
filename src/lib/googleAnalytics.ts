@@ -1,3 +1,5 @@
+import type { ConsentStatus } from './analyticsConsent';
+
 declare global {
   interface Window {
     dataLayer?: unknown[][];
@@ -5,21 +7,18 @@ declare global {
   }
 }
 
-const injectedMeasurementIds = new Set<string>();
+type PersistedConsentStatus = Exclude<ConsentStatus, 'unknown'>;
 
-const getScriptSelector = (measurementId: string) => `script[data-ga-measurement-id="${measurementId}"]`;
+const getConsentState = (status: PersistedConsentStatus) => ({
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: status === 'accepted' ? 'granted' : 'denied',
+});
 
-export const loadGoogleAnalytics = (measurementId: string) => {
-  if (typeof document === 'undefined' || typeof window === 'undefined') {
+const ensureGoogleAnalyticsStub = () => {
+  if (typeof window === 'undefined') {
     return;
-  }
-
-  if (!document.querySelector(getScriptSelector(measurementId))) {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-    script.dataset.gaMeasurementId = measurementId;
-    document.head.append(script);
   }
 
   window.dataLayer = window.dataLayer ?? [];
@@ -29,15 +28,13 @@ export const loadGoogleAnalytics = (measurementId: string) => {
       window.dataLayer?.push(args);
     });
 
-  if (injectedMeasurementIds.has(measurementId)) {
+};
+
+export const updateGoogleAnalyticsConsent = (status: PersistedConsentStatus) => {
+  if (typeof window === 'undefined') {
     return;
   }
 
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId);
-  injectedMeasurementIds.add(measurementId);
-};
-
-export const resetGoogleAnalyticsForTests = () => {
-  injectedMeasurementIds.clear();
+  ensureGoogleAnalyticsStub();
+  window.gtag?.('consent', 'update', getConsentState(status));
 };

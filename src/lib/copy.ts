@@ -78,7 +78,7 @@ export const copy = {
     regionLabel: 'Cookie consent',
     eyebrow: 'Analytics consent',
     heading: 'Help us understand usage, not your documents.',
-    body: 'We only use analytics to understand how many people use the site and which parts work well. Even if you accept, your PDFs never leave your computer and no document contents are sent for analytics.',
+    body: 'We only use analytics to understand how many people use the site and which parts work well. Analytics starts with denied-by-default consent settings, and your PDFs never leave your computer.',
     decline: 'Decline',
     accept: 'Accept analytics',
   },

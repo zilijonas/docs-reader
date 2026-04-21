@@ -19,8 +19,8 @@ export function CookieConsentBanner({
         <div className="cookie-consent-text">
           <h2 className="type-body-lg font-semibold text-content">Help us understand usage, not your documents.</h2>
           <p className="text-sm leading-6 text-content-muted">
-            We only use analytics to understand how many people use the site and which parts work well. Even if you
-            accept, your PDFs never leave your computer and no document contents are sent for analytics.
+            We only use analytics to understand how many people use the site and which parts work well. Analytics
+            starts with denied-by-default consent settings, and your PDFs never leave your computer.
           </p>
         </div>
       </div>

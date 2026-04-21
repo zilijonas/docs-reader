@@ -1,6 +1,10 @@
 ---
 import "../styles/global.css";
 import { AnalyticsConsentController } from "../components/analytics/AnalyticsConsentController";
+import {
+  ANALYTICS_CONSENT_COOKIE_NAME,
+  ANALYTICS_CONSENT_COOKIE_VERSION,
+} from "../lib/analyticsConsent";
 
 interface Props {
   title?: string;
@@ -49,14 +53,68 @@ const enableAnalytics = import.meta.env.PROD;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    {enableAnalytics && (
+      <>
+        <script
+          is:inline
+          define:vars={{
+            analyticsConsentCookieName: ANALYTICS_CONSENT_COOKIE_NAME,
+            analyticsConsentCookieVersion: ANALYTICS_CONSENT_COOKIE_VERSION,
+          }}
+        >
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = window.gtag || function gtag() {
+            window.dataLayer.push(arguments);
+          };
+
+          function readAnalyticsConsentCookie() {
+            const encodedName = encodeURIComponent(analyticsConsentCookieName) + '=';
+            const cookieEntry = document.cookie
+              .split(';')
+              .map((entry) => entry.trim())
+              .find((entry) => entry.startsWith(encodedName));
+
+            if (!cookieEntry) {
+              return 'unknown';
+            }
+
+            const cookieValue = decodeURIComponent(cookieEntry.slice(encodedName.length));
+            const [version, status] = cookieValue.split(':');
+
+            if (version !== analyticsConsentCookieVersion) {
+              return 'unknown';
+            }
+
+            return status === 'accepted' || status === 'declined' ? status : 'unknown';
+          }
+
+          window.gtag('consent', 'default', {
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            analytics_storage: 'denied',
+          });
+
+          if (readAnalyticsConsentCookie() === 'accepted') {
+            window.gtag('consent', 'update', {
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              analytics_storage: 'granted',
+            });
+          }
+        </script>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}></script>
+        <script is:inline define:vars={{ googleAnalyticsId }}>
+          window.gtag('js', new Date());
+          window.gtag('config', googleAnalyticsId);
+        </script>
+      </>
+    )}
     <title>{title}</title>
   </head>
   <body>
     <slot />
-    <AnalyticsConsentController
-      client:load
-      enabled={enableAnalytics}
-      measurementId={googleAnalyticsId}
-    />
+    <AnalyticsConsentController client:load enabled={enableAnalytics} />
   </body>
 </html>

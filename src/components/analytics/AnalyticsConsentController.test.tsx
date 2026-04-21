@@ -5,7 +5,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { writeAnalyticsConsent } from '../../lib/analyticsConsent';
-import { resetGoogleAnalyticsForTests } from '../../lib/googleAnalytics';
 import { useConsentStore } from '../../store/consentStore';
 import { AnalyticsConsentController } from './AnalyticsConsentController';
 
@@ -20,9 +19,7 @@ const renderController = (props?: Partial<{ enabled: boolean; measurementId: str
   const root = createRoot(container);
 
   act(() => {
-    root.render(
-      <AnalyticsConsentController enabled={props?.enabled ?? true} measurementId={props?.measurementId ?? 'G-TEST'} />,
-    );
+    root.render(<AnalyticsConsentController enabled={props?.enabled ?? true} />);
   });
 
   return { container, root };
@@ -34,7 +31,6 @@ describe('AnalyticsConsentController', () => {
 
   beforeEach(() => {
     clearConsentCookie();
-    resetGoogleAnalyticsForTests();
     useConsentStore.setState({ status: 'unknown', isHydrated: false });
     document.head.innerHTML = '';
     document.body.innerHTML = '';
@@ -69,17 +65,26 @@ describe('AnalyticsConsentController', () => {
     });
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
-    expect(document.querySelector('script[data-ga-measurement-id="G-TEST"]')).not.toBeNull();
-    expect(window.dataLayer).toHaveLength(2);
+    expect(window.dataLayer).toHaveLength(1);
+    expect(window.dataLayer?.[0]).toEqual([
+      'consent',
+      'update',
+      {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'granted',
+      },
+    ]);
 
     act(() => {
       useConsentStore.getState().accept();
     });
 
-    expect(document.querySelectorAll('script[data-ga-measurement-id="G-TEST"]')).toHaveLength(1);
+    expect(window.dataLayer).toHaveLength(1);
   });
 
-  it('declines consent without loading analytics', () => {
+  it('declines consent and keeps analytics storage denied', () => {
     ({ container, root } = renderController());
 
     const declineButton = container?.querySelector('button');
@@ -90,8 +95,18 @@ describe('AnalyticsConsentController', () => {
     });
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
-    expect(document.querySelector('script[data-ga-measurement-id="G-TEST"]')).toBeNull();
-    expect(window.dataLayer).toBeUndefined();
+    expect(window.dataLayer).toEqual([
+      [
+        'consent',
+        'update',
+        {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+        },
+      ],
+    ]);
   });
 
   it('suppresses the banner when consent is already stored', () => {
@@ -100,6 +115,24 @@ describe('AnalyticsConsentController', () => {
     ({ container, root } = renderController());
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
-    expect(document.querySelector('script[data-ga-measurement-id="G-TEST"]')).not.toBeNull();
+    expect(window.dataLayer).toEqual([
+      [
+        'consent',
+        'update',
+        {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'granted',
+        },
+      ],
+    ]);
+  });
+
+  it('suppresses the banner when analytics is disabled', () => {
+    ({ container, root } = renderController({ enabled: false }));
+
+    expect(container?.textContent ?? '').not.toContain('Analytics consent');
+    expect(window.dataLayer).toBeUndefined();
   });
 });
