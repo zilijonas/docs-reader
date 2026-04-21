@@ -36,11 +36,13 @@ export function usePageBoxInteractions({
   const [draftBox, setDraftBox] = useState<BoundingBox | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null);
   const [dragState, setDragState] = useState<ManualDragState | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ id: string; box: BoundingBox } | null>(null);
   const activeDraftModeRef = useRef<'box' | 'touch-text' | null>(null);
 
   const draftBoxRef = useRef<BoundingBox | null>(null);
   const drawingStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragStateRef = useRef<ManualDragState | null>(null);
+  const dragPreviewRef = useRef<{ id: string; box: BoundingBox } | null>(null);
 
   useEffect(() => {
     draftBoxRef.current = draftBox;
@@ -55,6 +57,10 @@ export function usePageBoxInteractions({
   }, [dragState]);
 
   useEffect(() => {
+    dragPreviewRef.current = dragPreview;
+  }, [dragPreview]);
+
+  useEffect(() => {
     const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'unconfirmed');
     if (!hasPendingManual) {
       return;
@@ -66,7 +72,7 @@ export function usePageBoxInteractions({
         return;
       }
 
-      if (target.closest('[data-manual-pending="true"]')) {
+      if (target.closest('[data-manual-pending="true"]') || target.closest('[data-keep-pending-manuals="true"]')) {
         return;
       }
 
@@ -154,15 +160,15 @@ export function usePageBoxInteractions({
 
     const deltaX = (event.clientX - activeDragState.pointerX) / rect.width;
     const deltaY = (event.clientY - activeDragState.pointerY) / rect.height;
-    onUpdateManual(
-      activeDragState.id,
-      normalizeBox({
+    setDragPreview({
+      id: activeDragState.id,
+      box: normalizeBox({
         x: activeDragState.origin.x + deltaX,
         y: activeDragState.origin.y + deltaY,
         width: activeDragState.origin.width,
         height: activeDragState.origin.height,
       }),
-    );
+    });
   };
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -202,8 +208,16 @@ export function usePageBoxInteractions({
     }
 
     if (dragStateRef.current) {
+      const activeDragState = dragStateRef.current;
+      const activeDragPreview = dragPreviewRef.current;
+
+      if (activeDragPreview && !boxesOverlapExactly(activeDragPreview.box, activeDragState.origin)) {
+        onUpdateManual(activeDragState.id, activeDragPreview.box);
+      }
+
       pageRef.current?.releasePointerCapture(event.pointerId);
       setDragState(null);
+      setDragPreview(null);
     }
   };
 
@@ -263,11 +277,16 @@ export function usePageBoxInteractions({
       pointerX: event.clientX,
       pointerY: event.clientY,
     });
+    setDragPreview({
+      id: manualRedaction.id,
+      box: manualRedaction.box,
+    });
   };
 
   return {
     beginManualDrag,
     draftBox,
+    dragPreview,
     endPointer,
     handleTextSelection,
     movePointer,
@@ -277,4 +296,8 @@ export function usePageBoxInteractions({
 
 function boxesOverlap(a: BoundingBox, b: BoundingBox) {
   return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function boxesOverlapExactly(a: BoundingBox, b: BoundingBox) {
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }

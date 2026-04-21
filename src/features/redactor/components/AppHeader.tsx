@@ -12,6 +12,7 @@ export function AppHeader({
   confirmedCount = 0,
   pendingReviewCount = 0,
   totalFindings = 0,
+  canRedo = false,
   onRedo,
   onReset,
   onExport,
@@ -23,6 +24,7 @@ export function AppHeader({
   confirmedCount?: number;
   pendingReviewCount?: number;
   totalFindings?: number;
+  canRedo?: boolean;
   onRedo?: () => void;
   onReset?: () => void;
   onExport?: () => void;
@@ -157,7 +159,9 @@ export function AppHeader({
 
           <button
             aria-label="Redo"
-            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
+            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 disabled:pointer-events-none disabled:opacity-45 md:size-9"
+            data-keep-pending-manuals="true"
+            disabled={!canRedo}
             onClick={onRedo}
             type="button"
           >

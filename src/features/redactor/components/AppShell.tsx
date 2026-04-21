@@ -38,6 +38,7 @@ export function AppShell() {
     previews,
     activePage,
     toolMode,
+    canRedo,
     exportJob,
     warnings,
     setActivePage,
@@ -52,6 +53,7 @@ export function AppShell() {
     removeManualRedaction,
     clearPendingManualRedactions,
     setManualStatus,
+    redoLastChange,
   } = useReviewStore();
 
   const {
@@ -390,11 +392,13 @@ export function AppShell() {
       }
     >
       <AppHeader
+        canRedo={canRedo}
         confirmedCount={reviewCounts.confirmedCount}
         hasViewer={hasViewer}
         headerRef={appHeaderRef}
         onExport={handlePrimaryExport}
         onRenameDocument={setSourceDocumentName}
+        onRedo={redoLastChange}
         onReset={handleResetRequest}
         pendingReviewCount={reviewCounts.unconfirmedCount}
         sourceDocument={sourceDocument}
@@ -476,7 +480,9 @@ export function AppShell() {
           </div>
 
           <AppActionDock
+            canRedo={canRedo}
             toolMode={toolMode}
+            onRedo={redoLastChange}
             sidebarOpen={isMobileViewport ? isSidebarOpen : isDesktopSidebarOpen}
             onOpenReview={() => { setIsSidebarOpen(prev => !prev); setIsDesktopSidebarOpen(prev => !prev); }}
             onToolModeChange={setToolMode}

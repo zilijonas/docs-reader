@@ -1,22 +1,26 @@
 import type { ReactNode } from 'react';
-import { LassoSelect, Layers, MousePointer2, ZoomIn, ZoomOut } from 'lucide-react';
+import { LassoSelect, Layers, MousePointer2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { REDACTOR_UI } from '../../features/redactor';
 
 export function AppActionDock({
+  canRedo,
   pendingReviewCount,
   sidebarOpen,
   toolMode,
   onOpenReview,
+  onRedo,
   onToolModeChange,
   onZoomChange,
   zoom,
 }: {
+  canRedo: boolean;
   pendingReviewCount: number;
   sidebarOpen?: boolean;
   toolMode: 'select' | 'draw' | null;
   onOpenReview: () => void;
+  onRedo: () => void;
   onToolModeChange: (mode: 'select' | 'draw' | null) => void;
   onZoomChange: (value: number) => void;
   zoom: number;
@@ -52,6 +56,10 @@ export function AppActionDock({
             {pendingReviewCount > 99 ? '99+' : pendingReviewCount}
           </span>
         ) : null}
+      </DockButton>
+
+      <DockButton aria-label="Redo" data-keep-pending-manuals="true" disabled={!canRedo} onClick={onRedo}>
+        <RotateCcw size={20} strokeWidth={1.75} />
       </DockButton>
 
       <DockButton
@@ -101,6 +109,7 @@ function DockButton({
   disabled?: boolean;
   onClick: () => void;
   'aria-label': string;
+  'data-keep-pending-manuals'?: 'true';
 }) {
   return (
     <button

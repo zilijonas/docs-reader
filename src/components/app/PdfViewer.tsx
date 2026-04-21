@@ -152,6 +152,7 @@ function PagePreviewCard({
   const {
     beginManualDrag,
     draftBox,
+    dragPreview,
     endPointer,
     handleTextSelection,
     movePointer,
@@ -234,6 +235,7 @@ function PagePreviewCard({
           <DetectionOverlay detections={detections} onToggleDetection={onToggleDetection} />
           <ManualRedactionOverlay
             draftBox={draftBox}
+            dragPreview={dragPreview}
             manualRedactions={manualRedactions}
             onRemoveManual={onRemoveManual}
             onSetManualStatus={onSetManualStatus}
@@ -371,20 +373,25 @@ function DetectionOverlay({
 function ManualRedactionOverlay({
   manualRedactions,
   draftBox,
+  dragPreview,
   onStartDrag,
   onSetManualStatus,
   onRemoveManual,
 }: {
   manualRedactions: ManualRedaction[];
   draftBox: BoundingBox | null;
+  dragPreview: { id: string; box: BoundingBox } | null;
   onStartDrag: (event: ReactPointerEvent<HTMLDivElement>, manualRedaction: ManualRedaction) => void;
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
   onRemoveManual: (id: string) => void;
 }) {
   return (
     <>
-      {manualRedactions.map((manualRedaction) => (
-        <div
+      {manualRedactions.map((manualRedaction) => {
+        const box = dragPreview?.id === manualRedaction.id ? dragPreview.box : manualRedaction.box;
+
+        return (
+          <div
           className={cn(
             'pdf-box pdf-manual pointer-events-auto relative rounded-[6px] border-2',
             manualRedaction.status === 'confirmed'
@@ -401,7 +408,7 @@ function ManualRedactionOverlay({
 
             onStartDrag(event, manualRedaction);
           }}
-          style={getBoxStyle(manualRedaction.box, {
+          style={getBoxStyle(box, {
             '--review-highlight-border':
               manualRedaction.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
             '--review-highlight-fill':
@@ -448,8 +455,9 @@ function ManualRedactionOverlay({
               </IconButton>
             </div>
           ) : null}
-        </div>
-      ))}
+          </div>
+        );
+      })}
 
       {draftBox ? (
         <div
