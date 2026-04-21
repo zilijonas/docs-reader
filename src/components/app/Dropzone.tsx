@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ChangeEvent, DragEvent, RefObject } from 'react';
 import { ArrowRight, Upload } from 'lucide-react';
 
-import { Button, CircularProgress, Panel, ProgressBar } from '../../components/ui';
+import { Alert, Button, CircularProgress, Panel, ProgressBar } from '../../components/ui';
 import { cn } from '@/lib/cn';
+import { copy } from '@/lib/copy';
 import { FILE_ACCEPT } from '../../lib/constants';
 import type { ProcessingProgress } from '../../lib/types';
 import { UPLOAD_HINTS } from '../../features/redactor';
+import { useWorkflowContext } from '../../features/redactor/context/WorkflowContext';
 
 // Worker only emits a handful of progress checkpoints (5% → 20% → 24% → 100%),
 // so the bar otherwise sits idle between jumps. Trickle toward the next
@@ -70,39 +71,23 @@ function useSmoothProgress(progress: ProcessingProgress | null) {
   return smoothed;
 }
 
-export function Dropzone({
-  fileInputRef,
-  onDrop,
-  onFileChange,
-  error,
-  progress,
-  isProcessing = false,
-}: {
-  fileInputRef: RefObject<HTMLInputElement | null>;
-  onDrop: (event: DragEvent<HTMLLabelElement>) => Promise<void>;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
-  error: string | null;
-  progress: ProcessingProgress | null;
-  isProcessing?: boolean;
-}) {
+export function Dropzone() {
+  const { error, fileInputRef, handleDrop, handleFileChange, isProcessing = false, progress } = useWorkflowContext();
   const [isHovering, setIsHovering] = useState(false);
   const isBooting = progress?.phase === 'booting';
   const showLoader = isProcessing;
   const progressValue = useSmoothProgress(progress);
-  const progressMessage = progress?.message ?? 'Preparing document…';
+  const progressMessage = progress?.message ?? copy.dropzone.preparing;
 
   return (
     <div className="dropzone-shell w-full">
       <div className="dropzone-heading text-center">
-        <span className="type-eyebrow fade-in">STEP 01 - DROP A DOCUMENT</span>
-        <h1 className="type-display-hero mt-4 fade-in" style={{ animationDelay: '60ms' }}>
-          Start with a <span className="italic-accent">PDF.</span>
+        <span className="type-eyebrow fade-in">{copy.dropzone.eyebrow}</span>
+        <h1 className="type-display-hero mt-4 fade-in fade-in-delay-1">
+          {copy.dropzone.headingLead} <span className="italic-accent">{copy.dropzone.headingAccent}</span>
         </h1>
-        <p
-          className="type-body measure-copy mx-auto mt-3 fade-in"
-          style={{ animationDelay: '120ms' }}
-        >
-          Drag a document here or choose a file. Nothing leaves your browser.
+        <p className="type-body measure-copy mx-auto mt-3 fade-in fade-in-delay-2">
+          {copy.dropzone.hint}
         </p>
       </div>
 
@@ -114,7 +99,7 @@ export function Dropzone({
         >
           <div className="dropzone-loader flex flex-col items-center justify-center gap-4 text-center">
             <CircularProgress className="text-content" size={56} strokeWidth={3} value={progressValue} />
-            <div className="type-display-card">Processing your PDF…</div>
+            <div className="type-display-card">{copy.dropzone.processing}</div>
             <ProgressBar className="measure-progress w-full" value={progressValue} />
             <p className="type-body-sm measure-progress mx-auto">{progressMessage}</p>
           </div>
@@ -138,10 +123,10 @@ export function Dropzone({
             onDrop={(event) => {
               event.preventDefault();
               setIsHovering(false);
-              void onDrop(event);
+              void handleDrop(event);
             }}
           >
-            <input accept={FILE_ACCEPT} className="hidden" onChange={onFileChange} ref={fileInputRef} type="file" />
+            <input accept={FILE_ACCEPT} className="hidden" onChange={handleFileChange} ref={fileInputRef} type="file" />
 
             <div
               className={cn(
@@ -153,9 +138,9 @@ export function Dropzone({
             </div>
 
             <div className="type-display-card dropzone-title">
-              {isHovering ? 'Release to upload' : 'Drop your PDF here'}
+              {isHovering ? copy.dropzone.release : copy.dropzone.drop}
             </div>
-            <div className="dropzone-subtitle text-sm text-content-subtle">or click to browse</div>
+            <div className="dropzone-subtitle text-sm text-content-subtle">{copy.dropzone.browse}</div>
 
             <Button
               className="pointer-events-none"
@@ -164,23 +149,23 @@ export function Dropzone({
               trailingIcon={<ArrowRight size={16} strokeWidth={1.5} />}
               variant="primary"
             >
-              Choose a PDF
+              {copy.dropzone.choose}
             </Button>
           </label>
         </Panel>
       )}
 
       {error ? (
-        <div className="measure-feedback mx-auto mt-4 rounded-control border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
+        <Alert className="measure-feedback mx-auto mt-4 text-center" tone="danger">
           {error}
-        </div>
+        </Alert>
       ) : null}
 
       <div className="dropzone-hints flex flex-wrap justify-center gap-5">
         {isBooting ? (
           <div className="ui-text-control flex items-center gap-2 text-content-subtle">
             <span className="dropzone-boot-dot" aria-hidden="true" />
-            {progress?.message ?? 'Warming up engine…'}
+            {progress?.message ?? copy.dropzone.warmingEngine}
           </div>
         ) : (
           UPLOAD_HINTS.map((hint) => (

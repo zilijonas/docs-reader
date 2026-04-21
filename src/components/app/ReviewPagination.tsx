@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
+import { PageArrowButton } from './PageArrowButton';
+import { PageButton } from './PageButton';
 
 export function ReviewPagination({
   activePage = 0,
@@ -58,60 +60,6 @@ export function ReviewPagination({
         </PageArrowButton>
       ) : null}
     </div>
-  );
-}
-
-function PageButton({
-  active,
-  label,
-  onClick,
-}: {
-  active?: boolean;
-  label: number;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={cn(
-        'ui-text-caption flex size-7 items-center justify-center rounded-control border font-mono transition-colors duration-200 ease-standard',
-        active
-          ? 'border-content bg-content text-canvas'
-          : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',
-      )}
-      onClick={onClick}
-      type="button"
-    >
-      {label}
-    </button>
-  );
-}
-
-function PageArrowButton({
-  children,
-  disabled,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode;
-  disabled?: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-label={label}
-      className={cn(
-        'inline-flex size-7 items-center justify-center rounded-control border transition-colors duration-200 ease-standard',
-        disabled
-          ? 'border-border bg-canvas text-content-subtle opacity-50'
-          : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted hover:text-content',
-      )}
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
   );
 }
 

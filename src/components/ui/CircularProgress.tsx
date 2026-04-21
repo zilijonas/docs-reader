@@ -2,6 +2,18 @@ import type { CSSProperties } from 'react';
 
 import { cn } from '@/lib/cn';
 
+const getRootStyle = (size: number): CSSProperties => ({
+  width: size,
+  height: size,
+});
+
+const getIndicatorStyle = (dashOffset: number): CSSProperties => ({
+  transform: 'rotate(-90deg)',
+  transformOrigin: '50% 50%',
+  transition: 'stroke-dashoffset 400ms var(--theme-ease-standard)',
+  strokeDashoffset: dashOffset,
+});
+
 export function CircularProgress({
   className,
   size = 36,
@@ -21,7 +33,7 @@ export function CircularProgress({
   return (
     <div
       className={cn('relative inline-flex items-center justify-center', className)}
-      style={{ width: size, height: size } as CSSProperties}
+      style={getRootStyle(size)}
     >
       <svg className="absolute inset-0" height={size} width={size}>
         <circle
@@ -40,14 +52,9 @@ export function CircularProgress({
           r={radius}
           stroke="currentColor"
           strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
           strokeLinecap="round"
           strokeWidth={strokeWidth}
-          style={{
-            transform: `rotate(-90deg)`,
-            transformOrigin: '50% 50%',
-            transition: 'stroke-dashoffset 400ms var(--theme-ease-standard)',
-          }}
+          style={getIndicatorStyle(dashOffset)}
         />
       </svg>
       <span className="ui-text-label relative font-mono text-content-muted">

@@ -1,38 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent, Ref } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Check, Circle, Download, FilePenLine, RotateCcw, X as XIcon, ScanSearch } from 'lucide-react';
 
 import { BrandLogo } from '../../../components/BrandLogo';
-import type { SourceDocument } from '../../../lib/types';
+import { CircleButton, StatusPill } from '../../../components/ui';
+import { copy } from '../../../lib/copy';
 import { formatBytes } from '../../../lib/utils';
+import { useReviewContext } from '../context/ReviewContext';
+import { useWorkflowContext } from '../context/WorkflowContext';
 
-export function AppHeader({
-  sourceDocument,
-  hasViewer,
-  confirmedCount = 0,
-  pendingReviewCount = 0,
-  totalFindings = 0,
-  canRedo = false,
-  onRedo,
-  onReset,
-  onExport,
-  onRenameDocument,
-  headerRef,
-}: {
-  sourceDocument: SourceDocument | null;
-  hasViewer: boolean;
-  confirmedCount?: number;
-  pendingReviewCount?: number;
-  totalFindings?: number;
-  canRedo?: boolean;
-  onRedo?: () => void;
-  onReset?: () => void;
-  onExport?: () => void;
-  onRenameDocument?: (name: string) => void;
-  headerRef?: Ref<HTMLElement>;
-}) {
+export function AppHeader() {
   const homeHref = import.meta.env.BASE_URL;
-  const hasPending = pendingReviewCount > 0;
+  const { appHeaderRef } = useWorkflowContext();
+  const {
+    canRedo,
+    confirmedCount,
+    handlePrimaryExport,
+    handleResetRequest,
+    hasViewer,
+    redoLastChange,
+    setSourceDocumentName,
+    sourceDocument,
+    totalReviewItemCount,
+    unconfirmedCount,
+  } = useReviewContext();
+  const hasPending = unconfirmedCount > 0;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(sourceDocument?.name ?? '');
@@ -62,7 +54,7 @@ export function AppHeader({
     }
 
     if (nextName.length > 0 && nextName !== sourceDocument.name) {
-      onRenameDocument?.(nextName);
+      setSourceDocumentName(nextName);
     } else {
       setDraftName(sourceDocument.name);
     }
@@ -85,8 +77,8 @@ export function AppHeader({
 
   return (
     <header
-      className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-4 backdrop-blur-app-header"
-      ref={headerRef}
+      className="app-header sticky top-0 z-sticky flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-4 backdrop-blur-app-header"
+      ref={appHeaderRef}
     >
       <div className="flex min-w-0 items-center gap-4">
         <a href={homeHref} className="flex items-center">
@@ -104,7 +96,7 @@ export function AppHeader({
 
                 {isEditingName ? (
                   <input
-                    aria-label="Document file name"
+                    aria-label={copy.header.fileNameLabel}
                     className="app-header-doc-name measure-doc-name ui-text-button-sm min-w-0 border-0 bg-transparent p-0 text-xs outline-none"
                     onBlur={commitDocumentName}
                     onChange={(event) => setDraftName(event.target.value)}
@@ -115,7 +107,7 @@ export function AppHeader({
                   />
                 ) : (
                   <button
-                    aria-label="Rename document"
+                    aria-label={copy.header.renameDocument}
                     className="app-header-doc-name measure-doc-name ui-text-button-sm truncate text-left text-xs transition-colors hover:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20"
                     onClick={() => setIsEditingName(true)}
                     type="button"
@@ -130,7 +122,8 @@ export function AppHeader({
                 <span className="shrink-0">{formatBytes(sourceDocument.size)}</span>
                 <span aria-hidden="true">·</span>
                 <span className="truncate">
-                  {totalFindings} {totalFindings === 1 ? 'finding' : 'findings'}
+                  {totalReviewItemCount}{' '}
+                  {totalReviewItemCount === 1 ? copy.header.findingSingular : copy.header.findingPlural}
                 </span>
               </div>
             </div>
@@ -141,50 +134,38 @@ export function AppHeader({
       {hasViewer ? (
         <div className="flex items-center gap-2">
           <div className="app-header-status hidden items-center gap-2 lg:flex lg:mr-2">
-            <span className="inline-flex items-center gap-1.5 rounded-pill border border-success/30 bg-success-soft px-3 py-1.5 text-[0.8125rem] font-medium text-success-ink">
+            <StatusPill status="confirmed">
               <Check size={14} strokeWidth={2} />
-              local only
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-surface px-3 py-1.5 text-[0.8125rem] text-content-muted">
+              {copy.header.localOnly}
+            </StatusPill>
+            <StatusPill status="neutral">
               <Circle size={10} strokeWidth={2} />
-              {confirmedCount} confirmed
-            </span>
+              {confirmedCount} {copy.header.confirmedSuffix}
+            </StatusPill>
             {hasPending ? (
-              <span className="inline-flex items-center gap-1.5 rounded-pill border border-detection-ring bg-detection-soft px-3 py-1.5 text-[0.8125rem] font-medium text-content">
+              <StatusPill status="pending">
                 <span className="size-2 rounded-full bg-detection" />
-                {pendingReviewCount} to review
-              </span>
+                {unconfirmedCount} {copy.header.toReviewSuffix}
+              </StatusPill>
             ) : null}
           </div>
 
-          <button
-            aria-label="Redo"
-            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 disabled:pointer-events-none disabled:opacity-45 md:size-9"
+          <CircleButton
+            aria-label={copy.header.redo}
             data-keep-pending-manuals="true"
             disabled={!canRedo}
-            onClick={onRedo}
-            type="button"
+            onClick={redoLastChange}
           >
             <RotateCcw size={20} strokeWidth={1.75} />
-          </button>
+          </CircleButton>
 
-          <button
-            aria-label="Export"
-            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
-            onClick={onExport}
-            type="button"
-          >
+          <CircleButton aria-label={copy.header.export} onClick={handlePrimaryExport}>
             <Download size={20} strokeWidth={1.75} />
-          </button>
+          </CircleButton>
 
-          <button
-            aria-label="Reset"
-            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
-            onClick={onReset}
-            type="button"
-          >
+          <CircleButton aria-label={copy.header.reset} onClick={handleResetRequest}>
             <XIcon size={20} strokeWidth={1.75} />
-          </button>
+          </CircleButton>
         </div>
       ) : null}
     </header>

@@ -1,49 +1,39 @@
-import type { ReactNode } from 'react';
 import { LassoSelect, Layers, MousePointer2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
+import { copy } from '@/lib/copy';
+import { CircleButton } from '../../components/ui';
 import { REDACTOR_UI } from '../../features/redactor';
+import { useReviewContext } from '../../features/redactor/context/ReviewContext';
+import { useWorkflowContext } from '../../features/redactor/context/WorkflowContext';
 
-export function AppActionDock({
-  canRedo,
-  pendingReviewCount,
-  sidebarOpen,
-  toolMode,
-  onOpenReview,
-  onRedo,
-  onToolModeChange,
-  onZoomChange,
-  zoom,
-}: {
-  canRedo: boolean;
-  pendingReviewCount: number;
-  sidebarOpen?: boolean;
-  toolMode: 'select' | 'draw' | null;
-  onOpenReview: () => void;
-  onRedo: () => void;
-  onToolModeChange: (mode: 'select' | 'draw' | null) => void;
-  onZoomChange: (value: number) => void;
-  zoom: number;
-}) {
+export function AppActionDock() {
+  const { isDesktopSidebarOpen, isMobileViewport, isSidebarOpen, setZoom, toggleReviewPanel, zoom } =
+    useWorkflowContext();
+  const { canRedo, redoLastChange, setToolMode, toolMode, unconfirmedCount } = useReviewContext();
+  const sidebarOpen = isMobileViewport ? isSidebarOpen : isDesktopSidebarOpen;
   const isSelectMode = toolMode === 'select';
   const isDrawMode = toolMode === 'draw';
 
   return (
     <div
       className={cn(
-        'fixed bottom-6 z-20 flex flex-col-reverse items-center gap-2.5 transition-[right] duration-200 ease-standard',
+        'fixed bottom-6 z-sticky flex flex-col-reverse items-center gap-2.5 transition-[right] duration-200 ease-standard',
         sidebarOpen
           ? 'right-4 lg:right-[calc(var(--layout-app-sidebar)+1rem)]'
           : 'right-4',
       )}
     >
-      <DockButton
+      <CircleButton
         active={sidebarOpen}
-        aria-label={sidebarOpen ? 'Close review sidebar' : `Open review sidebar (${pendingReviewCount} pending)`}
-        onClick={onOpenReview}
+        aria-label={sidebarOpen ? copy.dock.closeReview : copy.dock.openReview(unconfirmedCount)}
+        onClick={toggleReviewPanel}
+        ring="strong"
+        size="lg"
+        tone="accent"
       >
         <Layers size={20} strokeWidth={1.75} />
-        {pendingReviewCount > 0 ? (
+        {unconfirmedCount > 0 ? (
           <span
             aria-hidden="true"
             className={cn(
@@ -53,82 +43,64 @@ export function AppActionDock({
               'border-2 border-canvas',
             )}
           >
-            {pendingReviewCount > 99 ? '99+' : pendingReviewCount}
+            {unconfirmedCount > 99 ? '99+' : unconfirmedCount}
           </span>
         ) : null}
-      </DockButton>
+      </CircleButton>
 
-      <DockButton aria-label="Redo" data-keep-pending-manuals="true" disabled={!canRedo} onClick={onRedo}>
+      <CircleButton
+        aria-label={copy.dock.redo}
+        data-keep-pending-manuals="true"
+        disabled={!canRedo}
+        onClick={redoLastChange}
+        ring="strong"
+        size="lg"
+        tone="accent"
+      >
         <RotateCcw size={20} strokeWidth={1.75} />
-      </DockButton>
+      </CircleButton>
 
-      <DockButton
-        aria-label={isSelectMode ? 'Disable select mode' : 'Enable select mode'}
+      <CircleButton
+        aria-label={isSelectMode ? copy.dock.disableSelect : copy.dock.enableSelect}
         active={isSelectMode}
-        onClick={() => onToolModeChange(isSelectMode ? null : 'select')}
+        onClick={() => setToolMode(isSelectMode ? null : 'select')}
+        ring="strong"
+        size="lg"
+        tone="accent"
       >
         <MousePointer2 size={20} strokeWidth={1.75} />
-      </DockButton>
+      </CircleButton>
 
-      <DockButton
-        aria-label={isDrawMode ? 'Disable draw mode' : 'Enable draw mode'}
+      <CircleButton
+        aria-label={isDrawMode ? copy.dock.disableDraw : copy.dock.enableDraw}
         active={isDrawMode}
-        onClick={() => onToolModeChange(isDrawMode ? null : 'draw')}
+        onClick={() => setToolMode(isDrawMode ? null : 'draw')}
+        ring="strong"
+        size="lg"
+        tone="accent"
       >
         <LassoSelect size={20} strokeWidth={1.75} />
-      </DockButton>
+      </CircleButton>
 
-      <DockButton
-        aria-label="Zoom in"
-        onClick={() => onZoomChange(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}
+      <CircleButton
+        aria-label={copy.dock.zoomIn}
+        onClick={() => setZoom(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}
+        ring="strong"
+        size="lg"
+        tone="accent"
       >
         <ZoomIn size={20} strokeWidth={1.75} />
-      </DockButton>
+      </CircleButton>
 
-      <DockButton
-        aria-label="Zoom out"
-        onClick={() => onZoomChange(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}
+      <CircleButton
+        aria-label={copy.dock.zoomOut}
+        onClick={() => setZoom(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}
+        ring="strong"
+        size="lg"
+        tone="accent"
       >
         <ZoomOut size={20} strokeWidth={1.75} />
-      </DockButton>
+      </CircleButton>
     </div>
-  );
-}
-
-function DockButton({
-  children,
-  className,
-  active,
-  disabled,
-  onClick,
-  ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  active?: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  'aria-label': string;
-  'data-keep-pending-manuals'?: 'true';
-}) {
-  return (
-    <button
-      className={cn(
-        'relative flex size-12 items-center justify-center rounded-full',
-        'border shadow-float transition-[transform,background-color,border-color,color] duration-200 ease-standard',
-        active
-          ? 'border-content bg-content text-canvas'
-          : 'border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20',
-        'disabled:pointer-events-none disabled:opacity-50',
-        className,
-      )}
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-      {...props}
-    >
-      {children}
-    </button>
   );
 }

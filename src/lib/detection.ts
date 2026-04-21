@@ -1,30 +1,8 @@
 import { DETECTION_TYPE_LABELS } from './constants';
 import { DETECTION_RULES, buildKeywordPattern, type DetectionRule } from './detection-rules';
-import type { BoundingBox, Detection, DetectionType, TextSpan } from './types';
-import { createId, dedupeDetections, findSpansInRange, normalizeSnippet, unionBoxes } from './utils';
-
-// When a span extends beyond the matched range (common for native PDF
-// extraction, which can emit a whole sentence as a single text-run), we
-// clip its bounding box to the portion actually inside [rangeStart, rangeEnd].
-// The approximation is linear over the character count, which is good enough
-// for proportional-width fonts at typical reading sizes.
-const clipBoxToRange = (span: TextSpan, rangeStart: number, rangeEnd: number): BoundingBox => {
-  const spanLen = Math.max(1, span.end - span.start);
-  const clippedStart = Math.max(rangeStart, span.start);
-  const clippedEnd = Math.min(rangeEnd, span.end);
-  if (clippedEnd <= clippedStart) {
-    return span.box;
-  }
-  const leftFrac = Math.max(0, Math.min(1, (clippedStart - span.start) / spanLen));
-  const rightFrac = Math.max(0, Math.min(1, (clippedEnd - span.start) / spanLen));
-  const width = Math.max(0, rightFrac - leftFrac) * span.box.width;
-  return {
-    x: span.box.x + leftFrac * span.box.width,
-    y: span.box.y,
-    width,
-    height: span.box.height,
-  };
-};
+import type { Detection, DetectionType, TextSpan } from './types';
+import { clipBoxToRange, unionBoxes } from './geometry';
+import { createId, dedupeDetections, findSpansInRange, normalizeSnippet } from './utils';
 
 const getJoinedSpanText = (spans: TextSpan[]) => normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
 

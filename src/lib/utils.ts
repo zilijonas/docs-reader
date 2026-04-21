@@ -1,14 +1,8 @@
-import type { BoundingBox, Detection, TextSpan } from './types';
+import type { Detection, TextSpan } from './types';
+import { OVERLAP_RATIO_THRESHOLD, boxArea, boxesClose, clamp, normalizeBox, overlapRatioToSmallerBox, overlaps, unionBoxes } from './geometry';
+import { READING_ORDER_LINE_THRESHOLD, SOURCE_CONFIDENCE_MERGE_THRESHOLD } from './detection/config';
 
-const BOX_CLOSENESS_THRESHOLD = {
-  position: 0.01,
-  size: 0.02,
-} as const;
-
-const READING_ORDER_LINE_THRESHOLD = 0.012;
-
-const SOURCE_CONFIDENCE_MERGE_THRESHOLD = 0.05;
-const OVERLAP_RATIO_THRESHOLD = 0.7;
+export { clamp, normalizeBox, overlaps, boxesClose, unionBoxes };
 
 const DETECTION_TYPE_PRIORITY: Record<Detection['type'], number> = {
   email: 90,
@@ -27,69 +21,10 @@ const DETECTION_TYPE_PRIORITY: Record<Detection['type'], number> = {
   manual: 110,
 };
 
-export const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
-
 export const toPercent = (value: number) => `${(value * 100).toFixed(3)}%`;
 
 export const createId = (prefix: string) =>
   `${prefix}_${Math.random().toString(36).slice(2, 9)}${Date.now().toString(36).slice(-4)}`;
-
-export const normalizeBox = (box: BoundingBox): BoundingBox => ({
-  x: clamp(box.x),
-  y: clamp(box.y),
-  width: clamp(box.width, 0, 1 - clamp(box.x)),
-  height: clamp(box.height, 0, 1 - clamp(box.y)),
-});
-
-export const unionBoxes = (boxes: BoundingBox[]): BoundingBox => {
-  const x = Math.min(...boxes.map((box) => box.x));
-  const y = Math.min(...boxes.map((box) => box.y));
-  const maxX = Math.max(...boxes.map((box) => box.x + box.width));
-  const maxY = Math.max(...boxes.map((box) => box.y + box.height));
-
-  return normalizeBox({
-    x,
-    y,
-    width: maxX - x,
-    height: maxY - y,
-  });
-};
-
-export const overlaps = (a: BoundingBox, b: BoundingBox) => {
-  const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
-  const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-  return overlapX > 0 && overlapY > 0;
-};
-
-const boxArea = (box: BoundingBox) => box.width * box.height;
-
-const getOverlapArea = (a: BoundingBox, b: BoundingBox) => {
-  const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
-  const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-  return overlapX * overlapY;
-};
-
-const overlapRatioToSmallerBox = (a: BoundingBox, b: BoundingBox) => {
-  const smallerArea = Math.min(boxArea(a), boxArea(b));
-  if (smallerArea === 0) {
-    return 0;
-  }
-
-  return getOverlapArea(a, b) / smallerArea;
-};
-
-export const boxesClose = (a: BoundingBox, b: BoundingBox) => {
-  const dx = Math.abs(a.x - b.x);
-  const dy = Math.abs(a.y - b.y);
-  const dw = Math.abs(a.width - b.width);
-  const dh = Math.abs(a.height - b.height);
-  return (
-    dx < BOX_CLOSENESS_THRESHOLD.position &&
-    dy < BOX_CLOSENESS_THRESHOLD.position &&
-    dw < BOX_CLOSENESS_THRESHOLD.size &&
-    dh < BOX_CLOSENESS_THRESHOLD.size
-  );
-};
 
 export const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 

@@ -12,6 +12,7 @@ import {
   isNirValid,
   isPeselValid,
 } from "./detection-validators";
+import { caseInsensitivePattern, escapeToken, makeAlternation, makeCaseInsensitiveAlternation } from "./detection/regex-utils";
 
 export interface DetectionRule {
   type: DetectionType;
@@ -622,38 +623,6 @@ const SHORT_STREET_TOKENS = [
   "sos",
 ];
 
-const escapeToken = (token: string) =>
-  token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// Encodes a literal token so it matches case-insensitively inside a regex
-// that is NOT using the global `i` flag. We can't use the `i` flag on the
-// address regex because it would also flip `\p{Lu}` — turning name-word
-// detection into "match any letter", which leaks through every lowercase
-// word in a sentence. Per-character encoding keeps case-insensitivity
-// scoped to the token alternations only.
-const caseInsensitivePattern = (token: string) =>
-  Array.from(token)
-    .map((char) => {
-      const lower = char.toLowerCase();
-      const upper = char.toUpperCase();
-      if (lower === upper) {
-        return escapeToken(char);
-      }
-      return `[${escapeToken(lower)}${escapeToken(upper)}]`;
-    })
-    .join("");
-
-const makeAlternation = (tokens: string[]) =>
-  Array.from(new Set(tokens.map((token) => token.toLowerCase())))
-    .sort((a, b) => b.length - a.length)
-    .map(escapeToken)
-    .join("|");
-
-const makeCaseInsensitiveAlternation = (tokens: string[]) =>
-  Array.from(new Set(tokens.map((token) => token.toLowerCase())))
-    .sort((a, b) => b.length - a.length)
-    .map(caseInsensitivePattern)
-    .join("|");
 
 const LONG_STREET_ALT = makeCaseInsensitiveAlternation(LONG_STREET_TOKENS);
 const SHORT_STREET_ALT = makeCaseInsensitiveAlternation(SHORT_STREET_TOKENS);

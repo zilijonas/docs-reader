@@ -35,12 +35,13 @@ export const readAnalyticsConsent = (): ConsentStatus => {
   }
 
   const [version, storedStatus] = cookieValue.split(':');
+  const normalizedStatus = storedStatus ?? '';
 
-  if (version !== ANALYTICS_CONSENT_COOKIE_VERSION || !isPersistedConsentStatus(storedStatus ?? '')) {
+  if (version !== ANALYTICS_CONSENT_COOKIE_VERSION || !isPersistedConsentStatus(normalizedStatus)) {
     return 'unknown';
   }
 
-  return storedStatus;
+  return normalizedStatus;
 };
 
 export const writeAnalyticsConsent = (status: PersistedConsentStatus) => {
