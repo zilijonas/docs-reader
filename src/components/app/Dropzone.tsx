@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, RefObject } from 'react';
-import { FileText, Upload } from 'lucide-react';
+import { ArrowRight, Upload } from 'lucide-react';
 
 import { Button, CircularProgress, Panel, ProgressBar } from '../../components/ui';
 import { cn } from '@/lib/cn';
@@ -8,104 +8,188 @@ import { FILE_ACCEPT } from '../../lib/constants';
 import type { ProcessingProgress } from '../../lib/types';
 import { UPLOAD_HINTS } from '../../features/redactor';
 
+// Worker only emits a handful of progress checkpoints (5% → 20% → 24% → 100%),
+// so the bar otherwise sits idle between jumps. Trickle toward the next
+// checkpoint to keep the fill feeling continuous; snap to the real value when
+// it arrives and finalize on completion.
+//
+// The bar must never appear to go backwards: progress can be nulled
+// mid-pipeline (e.g. when the init callback clears the booting phase right as
+// the next real event is about to arrive), and individual phases overlap in
+// value (tesseract logger emits 0.55 while runQueuedOcr is at 0.68). Freeze on
+// null instead of resetting, monotonic-max on updates, and only hard-reset
+// when a new session clearly starts (incoming value is well below what we're
+// showing).
+const NEW_SESSION_DROP = 0.25;
+
+function useSmoothProgress(progress: ProcessingProgress | null) {
+  const [smoothed, setSmoothed] = useState(0);
+  const realRef = useRef(0);
+
+  useEffect(() => {
+    if (!progress) {
+      return;
+    }
+
+    realRef.current = progress.progress;
+
+    if (progress.phase === 'complete') {
+      setSmoothed(1);
+      return;
+    }
+
+    setSmoothed((prev) =>
+      progress.progress < prev - NEW_SESSION_DROP ? progress.progress : Math.max(prev, progress.progress),
+    );
+  }, [progress]);
+
+  useEffect(() => {
+    if (!progress || progress.phase === 'complete' || progress.phase === 'error') {
+      return;
+    }
+
+    let raf = 0;
+    const tick = () => {
+      setSmoothed((prev) => {
+        const real = realRef.current;
+        // Leave a little headroom over the real value so the bar always looks
+        // like it's moving, but never reach the finish line until the worker
+        // actually reports completion.
+        const cap = Math.min(0.95, real + 0.12);
+        if (prev >= cap) {
+          return prev;
+        }
+        return Math.min(cap, prev + 0.0025);
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [progress]);
+
+  return smoothed;
+}
+
 export function Dropzone({
   fileInputRef,
   onDrop,
   onFileChange,
   error,
   progress,
+  isProcessing = false,
 }: {
   fileInputRef: RefObject<HTMLInputElement | null>;
   onDrop: (event: DragEvent<HTMLLabelElement>) => Promise<void>;
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   error: string | null;
   progress: ProcessingProgress | null;
+  isProcessing?: boolean;
 }) {
   const [isHovering, setIsHovering] = useState(false);
+  const isBooting = progress?.phase === 'booting';
+  const showLoader = isProcessing;
+  const progressValue = useSmoothProgress(progress);
+  const progressMessage = progress?.message ?? 'Preparing document…';
 
   return (
-    <div className="dropzone-shell w-full px-8 pb-12 pt-24">
-      <div className="mb-12 text-center">
-        <span className="type-eyebrow">
-          Step 01 - Drop a document
-        </span>
-        <h1 className="type-display-hero mt-4">
-          Start with a PDF.
+    <div className="dropzone-shell w-full">
+      <div className="dropzone-heading text-center">
+        <span className="type-eyebrow fade-in">STEP 01 - DROP A DOCUMENT</span>
+        <h1 className="type-display-hero mt-4 fade-in" style={{ animationDelay: '60ms' }}>
+          Start with a <span className="italic-accent">PDF.</span>
         </h1>
-        <p className="type-body measure-copy mx-auto mt-3">
-          Drag one into the frame, or choose a file. Nothing leaves your browser.
+        <p
+          className="type-body measure-copy mx-auto mt-3 fade-in"
+          style={{ animationDelay: '120ms' }}
+        >
+          Drag a document here or choose a file. Nothing leaves your browser.
         </p>
       </div>
 
-      <Panel
-        as="section"
-        className={cn(
-          'border-dashed bg-canvas shadow-none transition-colors duration-200 ease-standard',
-          isHovering && 'border-content bg-surface-muted',
-        )}
-        padding="none"
-      >
-        <label
-          className="block cursor-pointer px-12 py-24 text-center transition-colors duration-200 ease-standard"
-          onDragLeave={() => setIsHovering(false)}
-          onDragOver={(event) => {
-            event.preventDefault();
-            setIsHovering(true);
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            setIsHovering(false);
-            void onDrop(event);
-          }}
+      {showLoader ? (
+        <Panel
+          as="section"
+          className="dropzone-panel border-dashed bg-surface-muted shadow-none anim-float-in"
+          padding="none"
         >
-          <input accept={FILE_ACCEPT} className="hidden" onChange={onFileChange} ref={fileInputRef} type="file" />
-
-          <div
-            className={cn(
-              'mx-auto mb-7 flex size-18 items-center justify-center rounded-full border border-border-strong text-content transition-transform duration-200 ease-standard',
-              isHovering ? '-translate-y-0.5' : 'translate-y-0',
-            )}
-          >
-            <Upload size={26} strokeWidth={1.25} />
+          <div className="dropzone-loader flex flex-col items-center justify-center gap-4 text-center">
+            <CircularProgress className="text-content" size={56} strokeWidth={3} value={progressValue} />
+            <div className="type-display-card">Processing your PDF…</div>
+            <ProgressBar className="measure-progress w-full" value={progressValue} />
+            <p className="type-body-sm measure-progress mx-auto">{progressMessage}</p>
           </div>
-
-          <div className="type-display-card mb-2">
-            {isHovering ? 'Release to upload' : 'Drop your PDF here'}
-          </div>
-          <div className="mb-7 text-sm text-content-subtle">or click to browse</div>
-
-          <Button
-            className="pointer-events-none"
-            onClick={(event) => event.stopPropagation()}
-            leadingIcon={<FileText size={14} strokeWidth={1.5} />}
-            variant="primary"
+        </Panel>
+      ) : (
+        <Panel
+          as="section"
+          className={cn(
+            'dropzone-panel border-dashed bg-surface-muted shadow-none transition-colors duration-200 ease-standard anim-float-in',
+            isHovering && 'border-content bg-surface',
+          )}
+          padding="none"
+        >
+          <label
+            className="dropzone-label block cursor-pointer text-center transition-colors duration-200 ease-standard"
+            onDragLeave={() => setIsHovering(false)}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsHovering(true);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsHovering(false);
+              void onDrop(event);
+            }}
           >
-            Choose a PDF
-          </Button>
-        </label>
-      </Panel>
+            <input accept={FILE_ACCEPT} className="hidden" onChange={onFileChange} ref={fileInputRef} type="file" />
 
-      {progress ? (
-        <div className="measure-progress mx-auto mt-8 flex flex-col items-center gap-3">
-          <CircularProgress className="text-content" size={48} strokeWidth={3} value={progress.progress} />
-          <ProgressBar className="w-full" value={progress.progress} />
-          <p className="type-body-sm text-center">{progress.message}</p>
-        </div>
-      ) : null}
+            <div
+              className={cn(
+                'dropzone-icon mx-auto flex items-center justify-center rounded-full border border-border-strong text-content transition-transform duration-200 ease-standard',
+                isHovering ? '-translate-y-1' : 'translate-y-0',
+              )}
+            >
+              <Upload size={28} strokeWidth={1.25} />
+            </div>
+
+            <div className="type-display-card dropzone-title">
+              {isHovering ? 'Release to upload' : 'Drop your PDF here'}
+            </div>
+            <div className="dropzone-subtitle text-sm text-content-subtle">or click to browse</div>
+
+            <Button
+              className="pointer-events-none"
+              onClick={(event) => event.stopPropagation()}
+              size="pill"
+              trailingIcon={<ArrowRight size={16} strokeWidth={1.5} />}
+              variant="primary"
+            >
+              Choose a PDF
+            </Button>
+          </label>
+        </Panel>
+      )}
 
       {error ? (
-        <div className="measure-feedback mx-auto mt-6 rounded-control border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
+        <div className="measure-feedback mx-auto mt-4 rounded-control border border-danger/35 bg-danger-soft px-4 py-3 text-center text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <div className="mt-10 flex flex-wrap justify-center gap-6">
-        {UPLOAD_HINTS.map((hint) => (
-          <div key={hint.id} className="ui-text-control flex items-center gap-2 text-content-subtle">
-            {hint.icon()}
-            {hint.label}
+      <div className="dropzone-hints flex flex-wrap justify-center gap-5">
+        {isBooting ? (
+          <div className="ui-text-control flex items-center gap-2 text-content-subtle">
+            <span className="dropzone-boot-dot" aria-hidden="true" />
+            {progress?.message ?? 'Warming up engine…'}
           </div>
-        ))}
+        ) : (
+          UPLOAD_HINTS.map((hint) => (
+            <div key={hint.id} className="ui-text-control flex items-center gap-2 text-content-subtle">
+              {hint.icon()}
+              {hint.label}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

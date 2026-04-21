@@ -1,134 +1,188 @@
-import type { Ref } from 'react';
-import { ArrowRight, Download, FileText, Menu, RotateCcw, Shield } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent, Ref } from 'react';
+import { Check, Circle, Download, FilePenLine, RotateCcw, X as XIcon, ScanSearch } from 'lucide-react';
 
 import { BrandLogo } from '../../../components/BrandLogo';
-import { Badge, Button, IconButton } from '../../../components/ui';
 import type { SourceDocument } from '../../../lib/types';
 import { formatBytes } from '../../../lib/utils';
 
 export function AppHeader({
   sourceDocument,
   hasViewer,
-  pendingReviewCount,
-  approvedCount,
-  reviewItemCount,
-  isProcessing,
-  onOpenReview,
-  onExport,
+  confirmedCount = 0,
+  pendingReviewCount = 0,
+  totalFindings = 0,
+  onRedo,
   onReset,
+  onExport,
+  onRenameDocument,
   headerRef,
 }: {
   sourceDocument: SourceDocument | null;
   hasViewer: boolean;
-  pendingReviewCount: number;
-  approvedCount: number;
-  reviewItemCount: number;
-  isProcessing: boolean;
-  onOpenReview: () => void;
-  onExport: () => void;
-  onReset: () => void | Promise<void>;
+  confirmedCount?: number;
+  pendingReviewCount?: number;
+  totalFindings?: number;
+  onRedo?: () => void;
+  onReset?: () => void;
+  onExport?: () => void;
+  onRenameDocument?: (name: string) => void;
   headerRef?: Ref<HTMLElement>;
 }) {
   const homeHref = import.meta.env.BASE_URL;
+  const hasPending = pendingReviewCount > 0;
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(sourceDocument?.name ?? '');
+
+  useEffect(() => {
+    setDraftName(sourceDocument?.name ?? '');
+
+    if (!sourceDocument) {
+      setIsEditingName(false);
+    }
+  }, [sourceDocument]);
+
+  useEffect(() => {
+    if (!isEditingName || !inputRef.current) {
+      return;
+    }
+
+    inputRef.current.focus();
+    inputRef.current.select();
+  }, [isEditingName]);
+
+  const commitDocumentName = () => {
+    const nextName = draftName.trim();
+
+    if (!sourceDocument) {
+      return;
+    }
+
+    if (nextName.length > 0 && nextName !== sourceDocument.name) {
+      onRenameDocument?.(nextName);
+    } else {
+      setDraftName(sourceDocument.name);
+    }
+
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitDocumentName();
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setDraftName(sourceDocument?.name ?? '');
+      setIsEditingName(false);
+    }
+  };
 
   return (
     <header
-      className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-3.5 backdrop-blur-app-header"
+      className="app-header sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-4 backdrop-blur-app-header"
       ref={headerRef}
     >
-      <div className="app-header-group flex min-w-0 flex-1 items-center gap-4">
-        <a href={homeHref} className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-4">
+        <a href={homeHref} className="flex items-center">
           <BrandLogo className="app-brand-logo text-content" title="HDDN" />
         </a>
 
-        <div className="h-4 w-px bg-border" />
-
         {sourceDocument ? (
-          <div className="app-header-doc flex min-w-0 flex-1 items-center gap-2.5">
-            <FileText className="text-content-muted" size={14} strokeWidth={1.5} />
-            <span className="app-header-doc-name measure-doc-name ui-text-field truncate text-content">
-              {sourceDocument.name}
-            </span>
-            <span className="ui-text-label font-mono tracking-ui-tight text-content-subtle">
-              {formatBytes(sourceDocument.size)}
-            </span>
-          </div>
-        ) : (
-          <span className="ui-text-label font-mono uppercase tracking-ui-eyebrow text-content-subtle">
-            No document loaded
-          </span>
-        )}
-      </div>
+          <>
+            <div className="app-header-doc-divider h-5 w-px bg-border" />
+            <div className="app-header-doc-column flex min-w-0 flex-col">
 
-      <div className="app-header-actions flex flex-1 flex-wrap items-center justify-end gap-3">
-        <div className="app-header-status flex flex-1 items-center gap-3 whitespace-nowrap">
-          <Badge tone="safe">
-            <Shield size={10} strokeWidth={1.75} />
-            local only
-          </Badge>
 
-          {hasViewer ? (
-            <>
-              <div className="app-review-summary flex items-center gap-3 text-xs min-h-7">
-                <span className="whitespace-nowrap">
-                  <strong className="text-content">{approvedCount}</strong>{' '}
-                  <span className="text-content-subtle whitespace-nowrap">approved</span>
-                </span>
-                <span className="whitespace-nowrap">
-                  <strong className="text-warning-ink">{pendingReviewCount}</strong>{' '}
-                  <span className="text-content-subtle whitespace-nowrap">to review</span>
+              <div className="flex min-w-0 items-center gap-2">
+                <FilePenLine className="shrink-0 text-content-subtle" size={14} strokeWidth={1.75} />
+
+                {isEditingName ? (
+                  <input
+                    aria-label="Document file name"
+                    className="app-header-doc-name measure-doc-name ui-text-button-sm min-w-0 border-0 bg-transparent p-0 text-xs outline-none"
+                    onBlur={commitDocumentName}
+                    onChange={(event) => setDraftName(event.target.value)}
+                    onKeyDown={handleNameKeyDown}
+                    ref={inputRef}
+                    type="text"
+                    value={draftName}
+                  />
+                ) : (
+                  <button
+                    aria-label="Rename document"
+                    className="app-header-doc-name measure-doc-name ui-text-button-sm truncate text-left text-xs transition-colors hover:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20"
+                    onClick={() => setIsEditingName(true)}
+                    type="button"
+                  >
+                    {sourceDocument.name}
+                  </button>
+                )}
+              </div>
+
+              <div className="flex min-w-0 items-center gap-2 ui-text-button-sm leading-4 text-content-subtle">
+                <ScanSearch className="shrink-0" size={12} strokeWidth={1.75} />
+                <span className="shrink-0">{formatBytes(sourceDocument.size)}</span>
+                <span aria-hidden="true">·</span>
+                <span className="truncate">
+                  {totalFindings} {totalFindings === 1 ? 'finding' : 'findings'}
                 </span>
               </div>
-            </>
-          ) : null}
-        </div>
-
-        {hasViewer ? (
-          <div className="app-header-controls flex shrink-0 items-center justify-end gap-1.5">
-            <IconButton
-              aria-label={`Open review sidebar (${reviewItemCount} items)`}
-              className="app-mobile-review-trigger"
-              onClick={onOpenReview}
-              shape="pill"
-              size="md"
-            >
-              <Menu aria-hidden="true" size={16} strokeWidth={1.7} />
-            </IconButton>
-
-            <IconButton
-              aria-label="Reset session"
-              className="app-mobile-icon-action"
-              onClick={onReset}
-              shape="pill"
-              size="md"
-            >
-              <RotateCcw aria-hidden="true" size={16} strokeWidth={1.7} />
-            </IconButton>
-
-            <IconButton
-              aria-label="Export"
-              className="app-mobile-icon-action"
-              disabled={isProcessing}
-              onClick={onExport}
-              shape="pill"
-              size="md"
-            >
-              <Download aria-hidden="true" size={16} strokeWidth={1.7} />
-            </IconButton>
-
-            <Button onClick={onReset} size="sm" variant="ghost">
-              <RotateCcw size={14} strokeWidth={1.5} />
-              Reset session
-            </Button>
-
-            <Button disabled={isProcessing} size="sm" onClick={onExport}>
-              <Download size={14} strokeWidth={1.5} />
-              Export
-              <ArrowRight size={14} strokeWidth={1.5} />
-            </Button>
-          </div>
+            </div>
+          </>
         ) : null}
       </div>
+
+      {hasViewer ? (
+        <div className="flex items-center gap-2">
+          <div className="app-header-status hidden items-center gap-2 lg:flex lg:mr-2">
+            <span className="inline-flex items-center gap-1.5 rounded-pill border border-success/30 bg-success-soft px-3 py-1.5 text-[0.8125rem] font-medium text-success-ink">
+              <Check size={14} strokeWidth={2} />
+              local only
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-surface px-3 py-1.5 text-[0.8125rem] text-content-muted">
+              <Circle size={10} strokeWidth={2} />
+              {confirmedCount} confirmed
+            </span>
+            {hasPending ? (
+              <span className="inline-flex items-center gap-1.5 rounded-pill border border-detection-ring bg-detection-soft px-3 py-1.5 text-[0.8125rem] font-medium text-content">
+                <span className="size-2 rounded-full bg-detection" />
+                {pendingReviewCount} to review
+              </span>
+            ) : null}
+          </div>
+
+          <button
+            aria-label="Redo"
+            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
+            onClick={onRedo}
+            type="button"
+          >
+            <RotateCcw size={20} strokeWidth={1.75} />
+          </button>
+
+          <button
+            aria-label="Export"
+            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
+            onClick={onExport}
+            type="button"
+          >
+            <Download size={20} strokeWidth={1.75} />
+          </button>
+
+          <button
+            aria-label="Reset"
+            className="flex size-10 items-center justify-center rounded-full text-content transition-colors duration-200 ease-standard hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-9"
+            onClick={onReset}
+            type="button"
+          >
+            <XIcon size={20} strokeWidth={1.75} />
+          </button>
+        </div>
+      ) : null}
     </header>
   );
 }

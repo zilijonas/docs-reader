@@ -3,7 +3,6 @@ import { APP_LIMITS } from '../../lib/constants';
 export const landingNavLinks = [
   { href: '#how', label: 'How it works' },
   { href: '#privacy', label: 'Privacy' },
-  { href: '#limits', label: 'Limits' },
 ] as const;
 
 export const howSteps = [

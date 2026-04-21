@@ -1,103 +1,131 @@
 import type { ReactNode, Ref } from 'react';
 import { LassoSelect, MousePointer2, ZoomIn, ZoomOut } from 'lucide-react';
 
-import { ReviewPagination } from './ReviewPagination';
 import { cn } from '@/lib/cn';
 import { REDACTOR_UI } from '../../features/redactor';
 
 export function ReviewToolbar({
-  drawMode,
-  onToggleDrawMode,
+  toolMode,
+  onToolModeChange,
   zoom,
   onZoomChange,
-  pageCount,
-  activePage,
-  onActivatePage,
   toolbarRef,
 }: {
-  drawMode: boolean;
-  onToggleDrawMode: () => void;
+  toolMode: 'select' | 'draw' | null;
+  onToolModeChange: (mode: 'select' | 'draw' | null) => void;
   zoom: number;
   onZoomChange: (value: number) => void;
-  pageCount?: number;
-  activePage?: number;
-  onActivatePage?: (pageIndex: number) => void;
   toolbarRef?: Ref<HTMLDivElement>;
 }) {
+  const isSelectMode = toolMode === 'select';
+  const isDrawMode = toolMode === 'draw';
+
   return (
     <>
       <div
-        className="review-toolbar sticky z-10 grid items-center border-b border-border bg-canvas/95 px-6 py-2.5 backdrop-blur-app-header"
+        className="review-toolbar review-toolbar-chrome sticky z-10 flex flex-col gap-3 border-b border-border bg-canvas/95 px-6 py-4 backdrop-blur-app-header"
         ref={toolbarRef}
       >
-        <div className="review-toolbar-group flex items-center gap-1.5">
-          <ToolButton active={!drawMode} label="Select" onClick={onToggleDrawMode}>
-            <MousePointer2 size={13} strokeWidth={1.5} />
-          </ToolButton>
-          <ToolButton active={drawMode} label="Draw" onClick={onToggleDrawMode}>
-            <LassoSelect size={13} strokeWidth={1.5} />
-          </ToolButton>
-        </div>
-
-        {pageCount && pageCount > 0 ? (
-          <ReviewPagination
-            activePage={activePage}
-            className="review-toolbar-pages review-toolbar-pages-desktop"
-            onActivatePage={onActivatePage}
-            pageCount={pageCount}
-          />
-        ) : null}
-
-        <div className="review-toolbar-actions flex items-center gap-1.5">
-          <div className="review-toolbar-zoom flex items-center">
-            <ToolButton onClick={() => onZoomChange(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}>
-              <ZoomOut size={13} strokeWidth={1.5} />
-            </ToolButton>
-            <span className="ui-text-caption min-w-7 text-center font-mono text-content-subtle">
-              {Math.round(zoom * 100)}%
-            </span>
-            <ToolButton onClick={() => onZoomChange(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}>
-              <ZoomIn size={13} strokeWidth={1.5} />
-            </ToolButton>
+        <div className="review-toolbar-controls">
+          <div className="review-toolbar-mode">
+            <ZoomControls compact={false} onZoomChange={onZoomChange} zoom={zoom} />
+            <div className="review-toolbar-mode-controls">
+              <SegmentedButton active={isSelectMode} onClick={() => onToolModeChange(isSelectMode ? null : 'select')}>
+                <MousePointer2 size={14} strokeWidth={1.75} />
+                Select
+              </SegmentedButton>
+              <SegmentedButton active={isDrawMode} onClick={() => onToolModeChange(isDrawMode ? null : 'draw')}>
+                <LassoSelect size={14} strokeWidth={1.75} />
+                Draw
+              </SegmentedButton>
+            </div>
           </div>
         </div>
       </div>
-
-      {pageCount && pageCount > 0 ? (
-        <div className="review-toolbar-pages review-toolbar-pages-mobile fixed inset-x-0 bottom-4 z-20 flex justify-center px-4">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-canvas/95 px-2.5 py-2 shadow-[0_16px_40px_-24px_rgba(20,16,10,0.28)] backdrop-blur-app-header">
-            <ReviewPagination activePage={activePage} compact onActivatePage={onActivatePage} pageCount={pageCount} />
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
 
-function ToolButton({
+function ZoomControls({
+  compact = false,
+  onZoomChange,
+  zoom,
+}: {
+  compact?: boolean;
+  onZoomChange: (value: number) => void;
+  zoom: number;
+}) {
+  return (
+    <div className={cn('review-toolbar-zoom', compact && 'review-toolbar-zoom-compact')}>
+      <div className="flex items-center gap-1">
+        <IconRing
+          aria-label="Zoom out"
+          onClick={() => onZoomChange(Math.max(REDACTOR_UI.minZoom, zoom - REDACTOR_UI.zoomStep))}
+        >
+          <ZoomOut size={14} strokeWidth={1.75} />
+        </IconRing>
+
+        <span className="review-toolbar-zoom-value font-mono text-[0.8125rem] tabular-nums text-content">
+          {Math.round(zoom * 100)}%
+        </span>
+
+        <IconRing
+          aria-label="Zoom in"
+          onClick={() => onZoomChange(Math.min(REDACTOR_UI.maxZoom, zoom + REDACTOR_UI.zoomStep))}
+        >
+          <ZoomIn size={14} strokeWidth={1.75} />
+        </IconRing>
+      </div>
+    </div>
+  );
+}
+
+function SegmentedButton({
   active,
+  compact,
+  iconOnly,
   onClick,
-  label,
   children,
 }: {
   active?: boolean;
+  compact?: boolean;
+  iconOnly?: boolean;
   onClick: () => void;
-  label?: string;
   children: ReactNode;
 }) {
   return (
     <button
       className={cn(
-        'ui-text-button-sm inline-flex h-7 items-center gap-1.5 rounded-control border px-2.5 font-medium transition-colors duration-200 ease-standard',
+        'inline-flex h-8 items-center justify-center gap-1.25 rounded-pill px-3 text-[0.8125rem] font-medium transition-colors duration-200 ease-standard',
+        compact && 'h-8 px-3 text-[0.8125rem]',
+        iconOnly && 'aspect-square px-0',
         active
-          ? 'border-content bg-content text-canvas'
-          : 'border-transparent bg-transparent text-content-muted hover:bg-surface-muted hover:text-content',
+          ? 'bg-content text-canvas'
+          : 'text-content-muted hover:bg-surface-muted hover:text-content',
       )}
       onClick={onClick}
       type="button"
     >
       {children}
-      {label ? <span>{label}</span> : null}
+    </button>
+  );
+}
+
+function IconRing({
+  children,
+  ...props
+}: {
+  children: ReactNode;
+  'aria-label': string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="flex size-10 items-center justify-center rounded-full text-content-muted transition-colors duration-200 ease-standard hover:bg-surface-muted hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:size-8"
+      type="button"
+      {...props}
+    >
+      {children}
     </button>
   );
 }

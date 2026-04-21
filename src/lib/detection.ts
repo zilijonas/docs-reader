@@ -111,7 +111,7 @@ const matchToDetection = (
     normalizedSnippet: normalizeSnippet(snippet),
     source: 'rule',
     confidence,
-    status: 'suggested',
+    status: 'unconfirmed',
   };
 };
 

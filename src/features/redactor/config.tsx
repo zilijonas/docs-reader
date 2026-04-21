@@ -146,12 +146,11 @@ export const DETECTION_TYPE_META: Record<DetectionType, DetectionTypeMeta> = Obj
 
 export const DETECTION_TYPE_LABELS = BASE_DETECTION_TYPE_LABELS;
 
-export const REVIEW_STATUS_ORDER: DetectionStatus[] = ['suggested', 'approved', 'rejected'];
+export const REVIEW_STATUS_ORDER: DetectionStatus[] = ['unconfirmed', 'confirmed'];
 export const REVIEW_SOURCE_ORDER: DetectionSource[] = ['rule', 'manual'];
 export const REVIEW_STATUS_LABELS: Record<DetectionStatus, string> = {
-  suggested: 'Queue',
-  approved: 'Approved',
-  rejected: 'Rejected',
+  unconfirmed: 'Unconfirmed',
+  confirmed: 'Confirmed',
 };
 export const REVIEW_FILTER_TABS: ReviewFilterTab[] = REVIEW_STATUS_ORDER.map((status) => ({
   label: REVIEW_STATUS_LABELS[status],
@@ -182,15 +181,11 @@ export const UPLOAD_HINTS: UploadHintMeta[] = [
   },
 ] as const;
 
-export const KEYBOARD_SHORTCUTS = [
-  { key: 'A', label: 'approve' },
-  { key: 'R', label: 'reject' },
-  { key: 'J/K', label: 'navigate' },
-] as const;
-
 export const REDACTOR_PAGE_ID_PREFIX = 'page';
+export const REVIEW_ITEM_ID_PREFIX = 'review-item';
 
 export const getPageAnchorId = (pageIndex: number) => `${REDACTOR_PAGE_ID_PREFIX}-${pageIndex}`;
+export const getReviewItemAnchorId = (itemId: string) => `${REVIEW_ITEM_ID_PREFIX}-${itemId}`;
 
 export const EXPORT_MODE_META: Record<
   ExportMode,

@@ -1,6 +1,7 @@
 import type { ChangeEvent, DragEvent } from 'react';
 import { startTransition, useEffect, useRef, useState } from 'react';
 
+import { DEFAULT_OCR_LANGUAGES } from '../../../lib/constants';
 import { dedupeDetections } from '../../../lib/utils';
 import { getRedactorWorkerClient } from '../../../lib/worker-client';
 import type { ExportMode, ProcessingProgress, TextSpan, WorkerResponse } from '../../../lib/types';
@@ -55,6 +56,15 @@ const writeBlobToFile = async (blob: Blob, fileName: string) => {
   triggerAnchorDownload(blob, fileName);
 };
 
+const buildExportFileName = (documentName: string, suffix: string) => {
+  const trimmedName = documentName.trim();
+  const safeName = trimmedName.length > 0 ? trimmedName : 'document.pdf';
+  const hasPdfExtension = /\.pdf$/i.test(safeName);
+  const baseName = hasPdfExtension ? safeName.replace(/\.pdf$/i, '') : safeName;
+
+  return `${baseName}${suffix}`;
+};
+
 export function useRedactorWorkflow() {
   const {
     sourceDocument,
@@ -62,10 +72,10 @@ export function useRedactorWorkflow() {
     detections,
     manualRedactions,
     customKeywords,
-    ocrLanguages,
     previews,
     exportJob,
     setDocument,
+    setSourceDocumentName,
     setDetections,
     setActivePage,
     setExportJob,
@@ -73,7 +83,6 @@ export function useRedactorWorkflow() {
     appendWarning,
     setFallbackExportReady,
     setCustomKeywords,
-    setOcrLanguages,
     reset,
   } = useReviewStore();
 
@@ -88,6 +97,8 @@ export function useRedactorWorkflow() {
   const [zoom, setZoom] = useState<number>(REDACTOR_UI.defaultZoom);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOcrLanguageModalOpen, setIsOcrLanguageModalOpen] = useState(false);
+  const [selectedOcrLanguages, setSelectedOcrLanguages] = useState<string[]>([...DEFAULT_OCR_LANGUAGES]);
 
   useEffect(() => {
     const client = clientRef.current;
@@ -165,6 +176,8 @@ export function useRedactorWorkflow() {
     try {
       validateSelectedFile(selectedFile);
       setIsProcessing(true);
+      setIsOcrLanguageModalOpen(false);
+      setSelectedOcrLanguages([...DEFAULT_OCR_LANGUAGES]);
       await clientRef.current.reset();
       reset();
       fileRef.current = selectedFile;
@@ -174,22 +187,36 @@ export function useRedactorWorkflow() {
         name: selectedFile.name,
         size: selectedFile.size,
         mimeType: selectedFile.type || 'application/pdf',
-        ocrLanguages,
       });
 
-      setSpans(response.payload.spans);
-      setDocument({
-        sourceDocument: response.payload.source,
-        pages: response.payload.pages,
-        detections: [],
-        warnings: response.payload.warnings,
-      });
+      setSelectedOcrLanguages(
+        response.payload.ocrLanguages.length > 0 ? response.payload.ocrLanguages : [...DEFAULT_OCR_LANGUAGES],
+      );
 
-      await runDetections(customKeywords, [], [], true);
+      if (response.payload.needsOcrLanguageSelection) {
+        // Defer committing the document to the store until OCR finishes so the
+        // viewer doesn't mount behind the language modal.
+        setProgress(null);
+        setIsOcrLanguageModalOpen(true);
+      } else {
+        setSpans(response.payload.spans);
+        setDocument({
+          sourceDocument: response.payload.source,
+          pages: response.payload.pages,
+          detections: [],
+          warnings: response.payload.warnings,
+        });
+
+        if (response.payload.ocrCompleted) {
+          await runDetections(customKeywords, [], [], true);
+        }
+      }
     } catch (caughtError) {
       fileRef.current = null;
       reset();
       setSpans([]);
+      setIsOcrLanguageModalOpen(false);
+      setSelectedOcrLanguages([...DEFAULT_OCR_LANGUAGES]);
       setError(caughtError instanceof Error ? caughtError.message : 'Could not process that PDF.');
       setProgress(null);
     } finally {
@@ -232,19 +259,51 @@ export function useRedactorWorkflow() {
     await syncKeywords(customKeywords.filter((entry) => entry !== keyword));
   };
 
-  const handleExport = async (mode: ExportMode, options?: { approveAllSuggested?: boolean }) => {
+  const handleContinueOcr = async () => {
+    setError(null);
+    // Close the modal immediately so the dropzone loader (isProcessing) is
+    // visible while Tesseract works — otherwise the modal sits frozen for the
+    // duration of OCR and the viewer only appears at the very end.
+    setIsOcrLanguageModalOpen(false);
+    setIsProcessing(true);
+    setProgress({ phase: 'ocr', progress: 0.3, message: 'Starting OCR…' });
+
+    try {
+      const response = await clientRef.current.continueOcr({
+        ocrLanguages: selectedOcrLanguages,
+      });
+
+      setSpans(response.payload.spans);
+      setDocument({
+        sourceDocument: response.payload.source,
+        pages: response.payload.pages,
+        detections: [],
+        warnings: response.payload.warnings,
+      });
+      setSelectedOcrLanguages(response.payload.ocrLanguages);
+
+      await runDetections(customKeywords, [], [], true);
+    } catch (caughtError) {
+      setProgress(null);
+      setError(caughtError instanceof Error ? caughtError.message : 'Could not finish OCR.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleExport = async (mode: ExportMode, options?: { confirmAllUnconfirmed?: boolean }) => {
     if (!sourceDocument) {
       return;
     }
 
-    const exportDetections = options?.approveAllSuggested
+    const exportDetections = options?.confirmAllUnconfirmed
       ? detections.map((detection) =>
-          detection.status === 'suggested' ? { ...detection, status: 'approved' as const } : detection,
+          detection.status === 'unconfirmed' ? { ...detection, status: 'confirmed' as const } : detection,
         )
       : detections;
-    const exportManualRedactions = options?.approveAllSuggested
+    const exportManualRedactions = options?.confirmAllUnconfirmed
       ? manualRedactions.map((redaction) =>
-          redaction.status === 'suggested' ? { ...redaction, status: 'approved' as const } : redaction,
+          redaction.status === 'unconfirmed' ? { ...redaction, status: 'confirmed' as const } : redaction,
         )
       : manualRedactions;
 
@@ -277,12 +336,11 @@ export function useRedactorWorkflow() {
       setFallbackExportReady(false);
 
       const loadedFile = fileRef.current;
-      if (loadedFile) {
-        await writeBlobToFile(
-          blob,
-          loadedFile.name.replace(/\.pdf$/i, '') + EXPORT_MODE_META[mode].filenameSuffix,
-        );
-      }
+      const exportFileName = buildExportFileName(
+        sourceDocument.name || loadedFile?.name || 'document.pdf',
+        EXPORT_MODE_META[mode].filenameSuffix,
+      );
+      await writeBlobToFile(blob, exportFileName);
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : 'Export failed.';
       setExportJob({
@@ -309,6 +367,8 @@ export function useRedactorWorkflow() {
     reset();
     fileRef.current = null;
     setIsSidebarOpen(false);
+    setIsOcrLanguageModalOpen(false);
+    setSelectedOcrLanguages([...DEFAULT_OCR_LANGUAGES]);
     setSpans([]);
     setProgress(null);
     setError(null);
@@ -359,17 +419,21 @@ export function useRedactorWorkflow() {
     handleKeywordRemove,
     handleKeywordSubmit,
     handleSidebarJump,
+    handleContinueOcr,
     isProcessing,
+    isOcrLanguageModalOpen,
     isSidebarOpen,
     keywordDraft,
-    ocrLanguages,
     pages,
     progress,
     resetSession,
     setError,
     setIsSidebarOpen,
     setKeywordDraft,
-    setOcrLanguages,
+    setIsOcrLanguageModalOpen,
+    setSelectedOcrLanguages,
+    setSourceDocumentName,
+    selectedOcrLanguages,
     setZoom,
     spans,
     ensurePreview,

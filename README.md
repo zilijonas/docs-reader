@@ -69,7 +69,7 @@ The project includes a GitHub Pages workflow in `.github/workflows/deploy.yml`.
 - PDF only for ingestion
 - 25 MB max file size
 - 30 page max document size
-- OCR currently ships with English language assets
+- English OCR assets ship with the app; extra OCR languages can be auto-selected from searchable text and fetched on demand when needed
 - Review-first workflow with no auto-export
 
 ## UI styling

@@ -21,7 +21,7 @@ const detections: Detection[] = [
     normalizedSnippet: 'alice@example.com',
     source: 'rule',
     confidence: 0.98,
-    status: 'suggested',
+    status: 'unconfirmed',
   },
   {
     id: 'detection_2',
@@ -33,7 +33,7 @@ const detections: Detection[] = [
     normalizedSnippet: '+1 202 555 0101',
     source: 'rule',
     confidence: 0.88,
-    status: 'approved',
+    status: 'confirmed',
   },
 ];
 
@@ -43,15 +43,14 @@ const manualRedactions: ManualRedaction[] = [
     pageIndex: 0,
     mode: 'box',
     box: { x: 0.3, y: 0.3, width: 0.12, height: 0.08 },
-    status: 'rejected',
+    status: 'unconfirmed',
   },
 ];
 
 describe('review helpers', () => {
   it('cycles review status predictably', () => {
-    expect(nextDetectionStatus('suggested')).toBe('approved');
-    expect(nextDetectionStatus('approved')).toBe('rejected');
-    expect(nextDetectionStatus('rejected')).toBe('suggested');
+    expect(nextDetectionStatus('unconfirmed')).toBe('confirmed');
+    expect(nextDetectionStatus('confirmed')).toBe('unconfirmed');
   });
 
   it('filters review items with shared filters', () => {
@@ -62,7 +61,7 @@ describe('review helpers', () => {
           type: 'email',
           label: 'Email',
           source: 'rule',
-          status: 'suggested',
+          status: 'unconfirmed',
           pageIndex: 1,
           snippet: 'alice@example.com',
           confidence: 1,
@@ -73,7 +72,7 @@ describe('review helpers', () => {
           type: 'manual',
           label: 'Manual',
           source: 'manual',
-          status: 'approved',
+          status: 'confirmed',
           pageIndex: 0,
           snippet: 'Manual box',
           confidence: 1,
@@ -83,7 +82,7 @@ describe('review helpers', () => {
       ],
       {
         ...DEFAULT_REVIEW_FILTERS,
-        statuses: ['approved'],
+        statuses: ['confirmed'],
         sources: ['manual'],
         types: ['manual'],
       },
@@ -95,10 +94,9 @@ describe('review helpers', () => {
 
   it('derives counts across rule detections and manual redactions', () => {
     expect(getReviewCounts(detections, manualRedactions)).toEqual({
-      suggestedCount: 1,
-      approvedCount: 1,
-      rejectedCount: 1,
-      reviewCount: 2,
+      unconfirmedCount: 2,
+      confirmedCount: 1,
+      reviewCount: 3,
     });
   });
 
@@ -115,7 +113,7 @@ describe('review helpers', () => {
     expect(manualRedaction.box.y).toBe(0.92);
     expect(manualRedaction.box.width).toBeCloseTo(0.05);
     expect(manualRedaction.box.height).toBeCloseTo(0.08);
-    expect(manualRedaction.status).toBe('suggested');
+    expect(manualRedaction.status).toBe('unconfirmed');
   });
 
   it('updates preview state without losing previous metadata', () => {

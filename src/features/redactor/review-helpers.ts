@@ -11,9 +11,8 @@ import { normalizeBox } from '../../lib/utils';
 import { DETECTION_TYPE_LABELS, DETECTION_TYPE_ORDER } from './config';
 
 export interface ReviewCounts {
-  approvedCount: number;
-  suggestedCount: number;
-  rejectedCount: number;
+  confirmedCount: number;
+  unconfirmedCount: number;
   reviewCount: number;
 }
 
@@ -39,15 +38,7 @@ export const initialExportJob = () => ({
 });
 
 export const nextDetectionStatus = (status: DetectionStatus): DetectionStatus => {
-  if (status === 'suggested') {
-    return 'approved';
-  }
-
-  if (status === 'approved') {
-    return 'rejected';
-  }
-
-  return 'suggested';
+  return status === 'unconfirmed' ? 'confirmed' : 'unconfirmed';
 };
 
 export const buildSpansByPage = (spans: TextSpan[]) => {
@@ -119,21 +110,17 @@ export const groupReviewItemsByType = (reviewItems: ReviewItem[]) =>
   }, {});
 
 export const getReviewCounts = (detections: Detection[], manualRedactions: ManualRedaction[]): ReviewCounts => {
-  const suggestedCount =
-    detections.filter((detection) => detection.status === 'suggested').length +
-    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'suggested').length;
-  const approvedCount =
-    detections.filter((detection) => detection.status === 'approved').length +
-    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'approved').length;
-  const rejectedCount =
-    detections.filter((detection) => detection.status === 'rejected').length +
-    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'rejected').length;
+  const unconfirmedCount =
+    detections.filter((detection) => detection.status === 'unconfirmed').length +
+    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'unconfirmed').length;
+  const confirmedCount =
+    detections.filter((detection) => detection.status === 'confirmed').length +
+    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'confirmed').length;
 
   return {
-    suggestedCount,
-    approvedCount,
-    rejectedCount,
-    reviewCount: suggestedCount + approvedCount,
+    unconfirmedCount,
+    confirmedCount,
+    reviewCount: unconfirmedCount + confirmedCount,
   };
 };
 
@@ -172,7 +159,7 @@ export const createManualRedactionRecord = ({
   mode,
   snippet,
   note,
-  status: 'suggested',
+  status: 'unconfirmed',
 });
 
 export const preserveRuleStatuses = (nextDetections: Detection[], previousDetections: Detection[]) =>

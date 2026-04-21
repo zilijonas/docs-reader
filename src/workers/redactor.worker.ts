@@ -5,9 +5,11 @@ import { createWorker as createTesseractWorker, OEM } from 'tesseract.js';
 
 import { APP_LIMITS, DEFAULT_OCR_LANGUAGES } from '../lib/constants';
 import { detectSensitiveData, groupDetections } from '../lib/detection';
+import { planOcrLanguageFlow } from '../lib/ocr-language-inference';
 import { extractOcrWords } from '../lib/ocr';
 import type {
   BoundingBox,
+  ContinueOcrRequest,
   Detection,
   ExportMode,
   LoadPdfRequest,
@@ -50,6 +52,7 @@ type WorkerState = {
   pages: PageAsset[];
   spans: TextSpan[];
   warnings: string[];
+  ocrLanguages: string[];
 };
 
 const state: WorkerState = {
@@ -58,6 +61,7 @@ const state: WorkerState = {
   pages: [],
   spans: [],
   warnings: [],
+  ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
 };
 
 let pythonTaskQueue = Promise.resolve();
@@ -430,10 +434,10 @@ const exportFlattenedPdf = async (detections: Detection[], manualRedactions: Man
   for (const page of state.pages) {
     const boxes = [
       ...detections
-        .filter((detection) => detection.pageIndex === page.pageIndex && detection.status === 'approved')
+        .filter((detection) => detection.pageIndex === page.pageIndex && detection.status === 'confirmed')
         .map((detection) => detection.box),
       ...manualRedactions
-        .filter((redaction) => redaction.pageIndex === page.pageIndex && redaction.status === 'approved')
+        .filter((redaction) => redaction.pageIndex === page.pageIndex && redaction.status === 'confirmed')
         .map((redaction) => redaction.box),
     ];
 
@@ -458,11 +462,87 @@ const exportFlattenedPdf = async (detections: Detection[], manualRedactions: Man
   return output.save();
 };
 
+const buildPdfLoadedPayload = (options: {
+  ocrLanguages?: string[];
+  needsOcrLanguageSelection: boolean;
+  ocrCompleted: boolean;
+}) => ({
+  source: state.source!,
+  pages: state.pages,
+  spans: state.spans,
+  warnings: state.warnings,
+  ocrLanguages: options.ocrLanguages ?? state.ocrLanguages,
+  needsOcrLanguageSelection: options.needsOcrLanguageSelection,
+  ocrCompleted: options.ocrCompleted,
+});
+
+const postPdfLoaded = (
+  requestId: number,
+  options: {
+    ocrLanguages?: string[];
+    needsOcrLanguageSelection: boolean;
+    ocrCompleted: boolean;
+  },
+) => {
+  postMessageSafe({
+    requestId,
+    type: 'PDF_LOADED',
+    payload: buildPdfLoadedPayload(options),
+  });
+};
+
+const applyOcrLayer = (page: PageAsset, ocrLayer: { text: string; spans: TextSpan[] }) => {
+  state.pages = state.pages.map((candidate) =>
+    candidate.pageIndex === page.pageIndex
+      ? {
+          ...candidate,
+          textContent: ocrLayer.text,
+          textLayerStatus: ocrLayer.text ? 'ocr' : 'missing',
+          ocrStatus: 'done',
+          charCount: ocrLayer.text.length,
+          spanCount: ocrLayer.spans.length,
+        }
+      : candidate,
+  );
+  state.spans = [...state.spans.filter((span) => span.pageIndex !== page.pageIndex), ...ocrLayer.spans];
+};
+
+const runQueuedOcr = async (languages: string[]) => {
+  const normalizedLanguages = normalizeLanguages(languages);
+  const ocrPages = state.pages.filter((page) => page.lane === 'ocr' && page.ocrStatus === 'queued');
+
+  state.ocrLanguages = normalizedLanguages;
+
+  for (let index = 0; index < ocrPages.length; index += 1) {
+    const page = ocrPages[index];
+
+    updateProgress({
+      phase: 'ocr',
+      progress: 0.38 + (index / Math.max(1, ocrPages.length)) * 0.3,
+      pageIndex: page.pageIndex,
+      message: `Reading page ${page.pageIndex + 1}…`,
+    });
+
+    try {
+      const ocrLayer = await runPageOcr(page, normalizedLanguages);
+      applyOcrLayer(page, ocrLayer);
+    } catch (error) {
+      state.pages = state.pages.map((candidate) =>
+        candidate.pageIndex === page.pageIndex ? { ...candidate, ocrStatus: 'error' } : candidate,
+      );
+      pushWarning(
+        `Could not read page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+};
+
 const resetDocumentState = () => {
   state.source = undefined;
   state.pages = [];
   state.spans = [];
   state.warnings = [];
+  state.ocrLanguages = [...DEFAULT_OCR_LANGUAGES];
 };
 
 const handleInit = async (requestId: number, payload: { baseUrl: string }) => {
@@ -517,42 +597,22 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
   };
   state.pages = summary.pages;
   state.spans = summary.spans;
-  state.warnings = ['Please review detections before exporting.'];
+  state.warnings = [];
 
-  const ocrPages = state.pages.filter((page) => page.lane === 'ocr');
-  for (let index = 0; index < ocrPages.length; index += 1) {
-    const page = ocrPages[index];
+  const ocrPlan = planOcrLanguageFlow(state.pages);
+  state.ocrLanguages = normalizeLanguages(ocrPlan.resolvedLanguages);
 
-    updateProgress({
-      phase: 'ocr',
-      progress: 0.38 + (index / Math.max(1, ocrPages.length)) * 0.3,
-      pageIndex: page.pageIndex,
-      message: `Reading page ${page.pageIndex + 1}…`,
+  if (ocrPlan.needsLanguageSelection) {
+    postPdfLoaded(requestId, {
+      ocrLanguages: state.ocrLanguages,
+      needsOcrLanguageSelection: true,
+      ocrCompleted: false,
     });
+    return;
+  }
 
-    try {
-      const ocrLayer = await runPageOcr(page, payload.ocrLanguages);
-      state.pages = state.pages.map((candidate) =>
-        candidate.pageIndex === page.pageIndex
-          ? {
-              ...candidate,
-              textContent: ocrLayer.text,
-              textLayerStatus: ocrLayer.text ? 'ocr' : 'missing',
-              ocrStatus: 'done',
-              charCount: ocrLayer.text.length,
-              spanCount: ocrLayer.spans.length,
-            }
-          : candidate,
-      );
-      state.spans = [...state.spans.filter((span) => span.pageIndex !== page.pageIndex), ...ocrLayer.spans];
-    } catch (error) {
-      state.pages = state.pages.map((candidate) =>
-        candidate.pageIndex === page.pageIndex ? { ...candidate, ocrStatus: 'error' } : candidate,
-      );
-      pushWarning(
-        `Could not read page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
+  if (ocrPlan.hasOcrPages) {
+    await runQueuedOcr(state.ocrLanguages);
   }
 
   updateProgress({
@@ -561,15 +621,30 @@ const handleLoadPdf = async (requestId: number, payload: LoadPdfRequest) => {
     message: 'Document ready.',
   });
 
-  postMessageSafe({
-    requestId,
-    type: 'PDF_LOADED',
-    payload: {
-      source: state.source,
-      pages: state.pages,
-      spans: state.spans,
-      warnings: state.warnings,
-    },
+  postPdfLoaded(requestId, {
+    ocrLanguages: state.ocrLanguages,
+    needsOcrLanguageSelection: false,
+    ocrCompleted: true,
+  });
+};
+
+const handleContinueOcr = async (requestId: number, payload: ContinueOcrRequest) => {
+  if (!state.source || state.pages.length === 0) {
+    throw new Error('Load a PDF before continuing OCR.');
+  }
+
+  await runQueuedOcr(payload.ocrLanguages);
+
+  updateProgress({
+    phase: 'complete',
+    progress: 1,
+    message: 'Document ready.',
+  });
+
+  postPdfLoaded(requestId, {
+    ocrLanguages: state.ocrLanguages,
+    needsOcrLanguageSelection: false,
+    ocrCompleted: true,
   });
 };
 
@@ -614,12 +689,12 @@ const handleGetPagePreview = async (requestId: number, pageIndex: number, scale:
 };
 
 const filterExportBoxes = (detections: Detection[], manualRedactions: ManualRedaction[]) => [
-  ...detections.filter((detection) => detection.status === 'approved').map((detection) => ({
+  ...detections.filter((detection) => detection.status === 'confirmed').map((detection) => ({
     pageIndex: detection.pageIndex,
     box: detection.box,
   })),
   ...manualRedactions
-    .filter((redaction) => redaction.status === 'approved')
+    .filter((redaction) => redaction.status === 'confirmed')
     .map((redaction) => ({ pageIndex: redaction.pageIndex, box: redaction.box })),
 ];
 
@@ -630,7 +705,7 @@ const handleApplyRedactions = async (
   const boxes = filterExportBoxes(payload.detections, payload.manualRedactions);
 
   if (!boxes.length) {
-    throw new Error('Approve or add at least one redaction before exporting.');
+    throw new Error('Confirm or add at least one redaction before exporting.');
   }
 
   updateProgress({
@@ -673,6 +748,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         break;
       case 'LOAD_PDF':
         await handleLoadPdf(message.requestId, message.payload);
+        break;
+      case 'CONTINUE_OCR':
+        await handleContinueOcr(message.requestId, message.payload);
         break;
       case 'DETECT':
         await handleDetect(message.requestId, message.payload.rules.keywords);

@@ -43,6 +43,9 @@ class FakeWorker {
               pages: [],
               spans: [],
               warnings: [],
+              ocrLanguages: ['eng'],
+              needsOcrLanguageSelection: false,
+              ocrCompleted: true,
             },
           }
         : {

@@ -16,14 +16,15 @@ import type {
 } from '../../lib/types';
 import { toPercent } from '../../lib/utils';
 import { usePageBoxInteractions } from '../../features/redactor/hooks/usePageBoxInteractions';
-import { getPageAnchorId, getPreviewDisplayState } from '../../features/redactor';
+import { getPageAnchorId, getPreviewDisplayState, getReviewItemAnchorId } from '../../features/redactor';
 
 export function PdfViewer({
   pages,
   activePage,
   viewerContentWidth,
   zoom,
-  drawMode,
+  toolMode,
+  isMobileViewport,
   previews,
   spansByPage,
   detections,
@@ -41,7 +42,8 @@ export function PdfViewer({
   activePage: number;
   viewerContentWidth: number;
   zoom: number;
-  drawMode: boolean;
+  toolMode: 'select' | 'draw' | null;
+  isMobileViewport: boolean;
   previews: Record<number, PreviewAsset>;
   spansByPage: Map<number, TextSpan[]>;
   detections: Detection[];
@@ -61,8 +63,9 @@ export function PdfViewer({
         <PagePreviewCard
           active={activePage === page.pageIndex}
           detections={detections.filter((detection) => detection.pageIndex === page.pageIndex)}
-          drawMode={drawMode}
+          toolMode={toolMode}
           id={getPageAnchorId(page.pageIndex)}
+          isMobileViewport={isMobileViewport}
           key={page.pageIndex}
           manualRedactions={manualRedactions.filter((manualRedaction) => manualRedaction.pageIndex === page.pageIndex)}
           onActivate={() => onActivatePage(page.pageIndex)}
@@ -108,7 +111,8 @@ function PagePreviewCard({
   active,
   viewerContentWidth,
   zoom,
-  drawMode,
+  toolMode,
+  isMobileViewport,
   spans,
   detections,
   manualRedactions,
@@ -128,7 +132,8 @@ function PagePreviewCard({
   active: boolean;
   viewerContentWidth: number;
   zoom: number;
-  drawMode: boolean;
+  toolMode: 'select' | 'draw' | null;
+  isMobileViewport: boolean;
   spans: TextSpan[];
   detections: Detection[];
   manualRedactions: ManualRedaction[];
@@ -152,12 +157,14 @@ function PagePreviewCard({
     movePointer,
     startDrawing,
   } = usePageBoxInteractions({
-    drawMode,
+    toolMode,
+    isMobileViewport,
     manualRedactions,
     onCreateManual,
     onDismissPendingManuals,
     onUpdateManual,
     pageRef,
+    spans,
     textLayerRef,
   });
 
@@ -172,7 +179,11 @@ function PagePreviewCard({
   const pageBaseWidth = page.width * page.previewScale * fitWidthScale;
   const pageDisplayWidth = pageBaseWidth * zoom;
   const pageDisplayHeight = page.height * page.previewScale * fitWidthScale * zoom;
-  const pendingCount = detections.filter((detection) => detection.status === 'suggested').length;
+  const pendingCount =
+    detections.filter((detection) => detection.status === 'unconfirmed').length +
+    manualRedactions.filter((manualRedaction) => manualRedaction.status === 'unconfirmed').length;
+  const isDrawMode = toolMode === 'draw';
+  const isMobileTouchToolActive = isMobileViewport && (toolMode === 'select' || toolMode === 'draw');
 
   return (
     <div id={id} onClick={onActivate}>
@@ -189,7 +200,8 @@ function PagePreviewCard({
         ref={pageRef}
         className={cn(
           'viewer-page-surface relative inline-block w-[var(--page-display-width)] overflow-hidden',
-          drawMode ? 'cursor-crosshair' : 'cursor-default',
+          isMobileTouchToolActive && 'touch-none',
+          isDrawMode ? 'cursor-crosshair' : 'cursor-default',
         )}
         onMouseUp={handleTextSelection}
         onPointerCancel={endPointer}
@@ -202,7 +214,7 @@ function PagePreviewCard({
 
         <div
           ref={textLayerRef}
-          className={cn('selection-text-layer absolute inset-0', drawMode && 'pointer-events-none select-none')}
+          className={cn('selection-text-layer absolute inset-0', isDrawMode && 'pointer-events-none select-none')}
         >
           {spans.map((span) => (
             <span
@@ -329,23 +341,28 @@ function DetectionOverlay({
     <>
       {detections.map((detection) => (
         <button
-          aria-label={`Toggle ${detection.snippet}`}
+          aria-label={`${detection.status === 'confirmed' ? 'Unconfirm' : 'Confirm'} ${detection.snippet}`}
           className={cn(
-            'pdf-box pdf-detection pointer-events-auto rounded-sm border transition',
-            detection.status === 'approved'
+            'pdf-box pdf-detection pointer-events-auto relative rounded-[6px] border anim-draw-in transition',
+            detection.status === 'confirmed'
               ? 'border-success bg-success/[0.18]'
-              : detection.status === 'suggested'
-                ? 'border-warning bg-warning/[0.14]'
-                : 'border-border-strong bg-border-strong/[0.18]',
+              : 'border-detection-ring bg-detection/[0.18] ring-1 ring-detection-ring',
           )}
           key={detection.id}
           onClick={(event) => {
             event.stopPropagation();
             onToggleDetection(detection.id);
           }}
-          style={getBoxStyle(detection.box)}
+          id={getReviewItemAnchorId(detection.id)}
+          style={getBoxStyle(detection.box, {
+            '--review-highlight-border': detection.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
+            '--review-highlight-fill':
+              detection.status === 'confirmed' ? 'rgb(16 185 129 / 0.18)' : 'rgb(217 119 6 / 0.18)',
+          })}
           type="button"
-        />
+        >
+          <span aria-hidden="true" className="pdf-review-pulse-layer" />
+        </button>
       ))}
     </>
   );
@@ -369,35 +386,40 @@ function ManualRedactionOverlay({
       {manualRedactions.map((manualRedaction) => (
         <div
           className={cn(
-            'pdf-box pdf-manual pointer-events-auto rounded-sm border-2',
-            manualRedaction.status === 'approved'
+            'pdf-box pdf-manual pointer-events-auto relative rounded-[6px] border-2',
+            manualRedaction.status === 'confirmed'
               ? 'border-success bg-success/[0.18]'
-              : manualRedaction.status === 'rejected'
-                ? 'border-border-strong bg-border-strong/20'
-                : 'border-warning border-dashed bg-warning/[0.14]',
+              : 'border-detection-ring border-dashed bg-detection/[0.18]',
           )}
           key={manualRedaction.id}
-          data-manual-pending={manualRedaction.status === 'suggested' ? 'true' : undefined}
+          data-manual-pending={manualRedaction.status === 'unconfirmed' ? 'true' : undefined}
+          id={getReviewItemAnchorId(manualRedaction.id)}
           onPointerDown={(event) => {
-            if (manualRedaction.status !== 'suggested') {
+            if (manualRedaction.status !== 'unconfirmed') {
               return;
             }
 
             onStartDrag(event, manualRedaction);
           }}
-          style={getBoxStyle(manualRedaction.box)}
+          style={getBoxStyle(manualRedaction.box, {
+            '--review-highlight-border':
+              manualRedaction.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
+            '--review-highlight-fill':
+              manualRedaction.status === 'confirmed' ? 'rgb(16 185 129 / 0.18)' : 'rgb(217 119 6 / 0.18)',
+          })}
         >
-          {manualRedaction.status === 'suggested' ? (
+          <span aria-hidden="true" className="pdf-review-pulse-layer" />
+          {manualRedaction.status === 'unconfirmed' ? (
             <div
               className="absolute bottom-full right-0 z-10 mb-1.5 flex gap-1 rounded-full bg-canvas/92 p-1 shadow-lg ring-1 ring-border-strong backdrop-blur-sm"
               data-manual-pending="true"
             >
               <IconButton
-                aria-label="Approve manual highlight"
+                aria-label="Confirm manual highlight"
                 className="opacity-100 shadow-sm"
                 onClick={(event) => {
                   event.stopPropagation();
-                  onSetManualStatus(manualRedaction.id, 'approved');
+                  onSetManualStatus(manualRedaction.id, 'confirmed');
                 }}
                 onPointerDown={(event) => {
                   event.stopPropagation();

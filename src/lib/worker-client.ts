@@ -1,5 +1,6 @@
 import type {
   ApplyRedactionsRequest,
+  ContinueOcrRequest,
   DetectRequest,
   GetPagePreviewRequest,
   InitRequest,
@@ -13,6 +14,7 @@ type EventListener = (message: WorkerResponse) => void;
 type RequestMap = {
   INIT: Extract<WorkerResponse, { type: 'READY' }>;
   LOAD_PDF: Extract<WorkerResponse, { type: 'PDF_LOADED' }>;
+  CONTINUE_OCR: Extract<WorkerResponse, { type: 'PDF_LOADED' }>;
   DETECT: Extract<WorkerResponse, { type: 'DETECTIONS' }>;
   GET_PAGE_PREVIEW: Extract<WorkerResponse, { type: 'PAGE_PREVIEW' }>;
   APPLY_REDACTIONS: Extract<WorkerResponse, { type: 'REDACTED_FILE' }>;
@@ -115,6 +117,10 @@ export class RedactorWorkerClient {
     return this.dispatch({ requestId: 0, type: 'LOAD_PDF', payload }) as Promise<RequestMap['LOAD_PDF']>;
   }
 
+  continueOcr(payload: ContinueOcrRequest): Promise<RequestMap['CONTINUE_OCR']> {
+    return this.dispatch({ requestId: 0, type: 'CONTINUE_OCR', payload }) as Promise<RequestMap['CONTINUE_OCR']>;
+  }
+
   detect(payload: DetectRequest): Promise<RequestMap['DETECT']> {
     return this.dispatch({ requestId: 0, type: 'DETECT', payload }) as Promise<RequestMap['DETECT']>;
   }
@@ -142,4 +148,4 @@ export const getRedactorWorkerClient = () => {
   return sharedClient;
 };
 
-export type { ApplyRedactionsRequest, DetectRequest, GetPagePreviewRequest, InitRequest, LoadPdfRequest };
+export type { ApplyRedactionsRequest, ContinueOcrRequest, DetectRequest, GetPagePreviewRequest, InitRequest, LoadPdfRequest };

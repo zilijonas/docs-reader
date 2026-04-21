@@ -105,7 +105,7 @@ describe('groupDetections', () => {
         normalizedSnippet: 'alice@example.com',
         source: 'rule',
         confidence: 0.98,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
       {
         id: 'b',
@@ -117,7 +117,7 @@ describe('groupDetections', () => {
         normalizedSnippet: 'alice@example.com',
         source: 'rule',
         confidence: 0.98,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
     ]);
 
@@ -318,7 +318,7 @@ describe('dedupeDetections', () => {
         normalizedSnippet: '110051834',
         source: 'rule',
         confidence: 0.78,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
       {
         id: 'tight-id',
@@ -330,7 +330,7 @@ describe('dedupeDetections', () => {
         normalizedSnippet: '110051834',
         source: 'rule',
         confidence: 0.9,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
     ]);
 
@@ -351,7 +351,7 @@ describe('dedupeDetections', () => {
         normalizedSnippet: '110051834',
         source: 'rule',
         confidence: 0.78,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
       {
         id: 'right',
@@ -363,7 +363,7 @@ describe('dedupeDetections', () => {
         normalizedSnippet: '110051834',
         source: 'rule',
         confidence: 0.78,
-        status: 'suggested',
+        status: 'unconfirmed',
       },
     ]);
 

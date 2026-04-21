@@ -13,17 +13,21 @@ type ManualDragState = {
 };
 
 export function usePageBoxInteractions({
-  drawMode,
+  toolMode,
+  isMobileViewport,
   manualRedactions,
   pageRef,
+  spans,
   textLayerRef,
   onCreateManual,
   onDismissPendingManuals,
   onUpdateManual,
 }: {
-  drawMode: boolean;
+  toolMode: 'select' | 'draw' | null;
+  isMobileViewport: boolean;
   manualRedactions: ManualRedaction[];
   pageRef: RefObject<HTMLDivElement | null>;
+  spans: Array<{ box: BoundingBox; text: string }>;
   textLayerRef: RefObject<HTMLDivElement | null>;
   onCreateManual: (payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void;
   onDismissPendingManuals: () => void;
@@ -32,6 +36,7 @@ export function usePageBoxInteractions({
   const [draftBox, setDraftBox] = useState<BoundingBox | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null);
   const [dragState, setDragState] = useState<ManualDragState | null>(null);
+  const activeDraftModeRef = useRef<'box' | 'touch-text' | null>(null);
 
   const draftBoxRef = useRef<BoundingBox | null>(null);
   const drawingStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -50,7 +55,7 @@ export function usePageBoxInteractions({
   }, [dragState]);
 
   useEffect(() => {
-    const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'suggested');
+    const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'unconfirmed');
     if (!hasPendingManual) {
       return;
     }
@@ -87,7 +92,7 @@ export function usePageBoxInteractions({
   };
 
   const startDrawing = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drawMode || event.button !== 0) {
+    if (event.button !== 0) {
       return;
     }
 
@@ -96,7 +101,20 @@ export function usePageBoxInteractions({
       return;
     }
 
+    if (toolMode === null) {
+      return;
+    }
+
+    if (toolMode === 'select' && !isMobileViewport) {
+      return;
+    }
+
+    if (isMobileViewport) {
+      event.preventDefault();
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
+    activeDraftModeRef.current = toolMode === 'draw' ? 'box' : 'touch-text';
     setDrawingStart(point);
     setDraftBox({ x: point.x, y: point.y, width: 0, height: 0 });
   };
@@ -104,6 +122,10 @@ export function usePageBoxInteractions({
   const movePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     const activeDrawingStart = drawingStartRef.current;
     if (activeDrawingStart) {
+      if (isMobileViewport) {
+        event.preventDefault();
+      }
+
       const point = getNormalizedPoint(event.clientX, event.clientY);
       if (!point) {
         return;
@@ -121,7 +143,7 @@ export function usePageBoxInteractions({
     }
 
     const activeDragState = dragStateRef.current;
-    if (!activeDragState || drawMode) {
+    if (!activeDragState || toolMode === 'draw') {
       return;
     }
 
@@ -145,14 +167,36 @@ export function usePageBoxInteractions({
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (drawingStartRef.current && draftBoxRef.current) {
+      if (isMobileViewport) {
+        event.preventDefault();
+      }
+
       if (
+        activeDraftModeRef.current === 'box' &&
         draftBoxRef.current.width > REDACTOR_INTERACTION.minManualBoxSize &&
         draftBoxRef.current.height > REDACTOR_INTERACTION.minManualBoxSize
       ) {
         onCreateManual({ box: draftBoxRef.current, mode: 'box' });
       }
 
+      if (
+        activeDraftModeRef.current === 'touch-text' &&
+        draftBoxRef.current.width > REDACTOR_INTERACTION.minTextSelectionBoxSize &&
+        draftBoxRef.current.height > REDACTOR_INTERACTION.minTextSelectionBoxSize
+      ) {
+        const selectedSpans = spans.filter((span) => boxesOverlap(span.box, draftBoxRef.current!));
+
+        if (selectedSpans.length > 0) {
+          onCreateManual({
+            box: unionBoxes(selectedSpans.map((span) => span.box)),
+            mode: 'text',
+            snippet: selectedSpans.map((span) => span.text).join(' ').replace(/\s+/g, ' ').trim(),
+          });
+        }
+      }
+
       event.currentTarget.releasePointerCapture(event.pointerId);
+      activeDraftModeRef.current = null;
       setDrawingStart(null);
       setDraftBox(null);
     }
@@ -164,7 +208,7 @@ export function usePageBoxInteractions({
   };
 
   const handleTextSelection = () => {
-    if (drawMode || !pageRef.current || !textLayerRef.current) {
+    if (toolMode !== 'select' || !pageRef.current || !textLayerRef.current) {
       return;
     }
 
@@ -207,7 +251,7 @@ export function usePageBoxInteractions({
   };
 
   const beginManualDrag = (event: ReactPointerEvent<HTMLDivElement>, manualRedaction: ManualRedaction) => {
-    if (drawMode || event.button !== 0) {
+    if (toolMode === 'draw' || event.button !== 0) {
       return;
     }
 
@@ -229,4 +273,8 @@ export function usePageBoxInteractions({
     movePointer,
     startDrawing,
   };
+}
+
+function boxesOverlap(a: BoundingBox, b: BoundingBox) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }

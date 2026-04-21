@@ -1,28 +1,56 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { ArrowRight, Check, CheckCheck, ChevronDown, Download, Plus, RotateCcw, Trash2, X, XCircle } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Circle, CircleCheck, Download, Plus, RotateCcw, Trash2, X as XIcon } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 
-import { Button, Chip, CircularProgress, EmptyState, IconButton, Input, Kbd, ProgressBar, StatusDot } from '../../components/ui';
+import { Button, Chip, CircularProgress, EmptyState, IconButton, Input, ProgressBar, StatusDot } from '../../components/ui';
 import type { DetectionStatus, FilterState, ProcessingProgress } from '../../lib/types';
 import {
   DETECTION_TYPE_META,
   DETECTION_TYPE_ORDER,
-  KEYBOARD_SHORTCUTS,
   REVIEW_FILTER_TABS,
   groupReviewItemsByType,
   type ReviewItem,
 } from '../../features/redactor';
-import { OcrLanguagePicker } from '../../features/redactor/components/OcrLanguagePicker';
 
 export type SidebarItem = ReviewItem;
 
+function SidebarActionRow({
+  disabledExport,
+  onExport,
+  onReset,
+}: {
+  disabledExport: boolean;
+  onExport: () => void;
+  onReset: () => void | Promise<void>;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2">
+      <Button className="justify-between" onClick={() => void onReset()} size="sm" variant="secondary">
+        <span className="inline-flex items-center gap-2">
+          <XIcon size={14} strokeWidth={1.5} />
+          Remove file
+        </span>
+      </Button>
+      <Button className="justify-between" disabled={disabledExport} onClick={onExport} size="sm" variant="primary">
+        <span className="inline-flex items-center gap-2">
+          <Download size={14} strokeWidth={1.5} />
+          Export
+        </span>
+        <ArrowRight size={14} strokeWidth={1.5} />
+      </Button>
+    </div>
+  );
+}
+
 export function DetectionSidebar({
+  confirmedCount,
+  unconfirmedCount,
   mobileOpen,
   onClose,
-  onApproveAll,
-  onRejectAll,
+  onConfirmAll,
+  onUnconfirmAll,
   onExport,
   onReset,
   processing,
@@ -34,22 +62,21 @@ export function DetectionSidebar({
   onDraftChange,
   onAddKeyword,
   onRemoveKeyword,
-  ocrLanguages,
-  onChangeOcrLanguages,
   filters,
   onChangeFilters,
-  onApproveGroup,
-  onApproveDetection,
-  onRejectDetection,
+  onConfirmDetection,
+  onUnconfirmDetection,
   onToggleManualStatus,
   onDeleteManual,
-  onJumpToPage,
+  onJumpToItem,
   items,
 }: {
+  confirmedCount: number;
+  unconfirmedCount: number;
   mobileOpen: boolean;
   onClose: () => void;
-  onApproveAll: () => void;
-  onRejectAll: () => void;
+  onConfirmAll: () => void;
+  onUnconfirmAll: () => void;
   onExport: () => void;
   onReset: () => void | Promise<void>;
   processing: boolean;
@@ -61,23 +88,19 @@ export function DetectionSidebar({
   onDraftChange: (value: string) => void;
   onAddKeyword: () => void | Promise<void>;
   onRemoveKeyword: (keyword: string) => void | Promise<void>;
-  ocrLanguages: string[];
-  onChangeOcrLanguages: (next: string[]) => void;
   filters: FilterState;
   onChangeFilters: (next: Partial<FilterState>) => void;
-  onApproveGroup: (groupId: string) => void;
-  onApproveDetection: (id: string) => void;
-  onRejectDetection: (id: string) => void;
+  onConfirmDetection: (id: string) => void;
+  onUnconfirmDetection: (id: string) => void;
   onToggleManualStatus: (id: string, status: DetectionStatus) => void;
   onDeleteManual: (id: string) => void;
-  onJumpToPage: (pageIndex: number) => void;
+  onJumpToItem: (id: string, pageIndex: number) => void;
   items: SidebarItem[];
 }) {
   const groupedItems = groupReviewItemsByType(items);
   const counts = {
-    suggested: items.filter((item) => item.status === 'suggested').length,
-    approved: items.filter((item) => item.status === 'approved').length,
-    rejected: items.filter((item) => item.status === 'rejected').length,
+    unconfirmed: items.filter((item) => item.status === 'unconfirmed').length,
+    confirmed: items.filter((item) => item.status === 'confirmed').length,
   };
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(DETECTION_TYPE_ORDER.map((type) => [type, true])),
@@ -94,93 +117,15 @@ export function DetectionSidebar({
             Review queue
           </span>
           <IconButton className="size-ui-close" onClick={onClose} shape="pill" tone="surface">
-            <X size={14} strokeWidth={1.5} />
+            <XIcon size={14} strokeWidth={1.5} />
           </IconButton>
         </div>
 
-        <div className="sidebar-mobile-actions mt-3 gap-2">
-          <Button onClick={onReset} size="sm" variant="ghost">
-            <RotateCcw size={14} strokeWidth={1.5} />
-            Reset session
-          </Button>
-          <Button disabled={processing} onClick={onExport} size="sm">
-            <Download size={14} strokeWidth={1.5} />
-            Export
-            <ArrowRight size={14} strokeWidth={1.5} />
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex gap-0 border-b border-border px-5 pt-3.5">
-        {REVIEW_FILTER_TABS.map(({ label, status }) => {
-          const isActive = filters.statuses.includes(status);
-
-          return (
-            <button
-              className={cn(
-                'ui-text-control -mb-px mr-5 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 transition-colors duration-200 ease-standard',
-                isActive
-                  ? 'border-content text-content'
-                  : 'border-transparent text-content-subtle hover:text-content-muted',
-              )}
-              key={label}
-              onClick={() => {
-                const nextStatuses = filters.statuses.includes(status)
-                  ? filters.statuses.filter((currentStatus) => currentStatus !== status)
-                  : [...filters.statuses, status];
-
-                onChangeFilters({ statuses: nextStatuses.length > 0 ? nextStatuses : [status] });
-              }}
-              type="button"
-            >
-              {label}
-              <span
-                className={cn(
-                  'ui-text-label rounded-full px-1.5 py-0.25 font-mono',
-                  isActive ? 'bg-content text-canvas' : 'bg-surface-muted text-content-subtle',
-                )}
-              >
-                {counts[status]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="border-b border-border px-5 py-3">
-        {(() => {
-          const totalItems = counts.approved + counts.rejected + counts.suggested;
-          const allApproved = totalItems > 0 && counts.approved === totalItems;
-
-          if (allApproved) {
-            return (
-              <Button
-                className="border-danger/25 bg-danger-soft text-danger hover:border-danger/40 hover:bg-danger/10"
-                fullWidth
-                onClick={onRejectAll}
-                size="sm"
-                variant="secondary"
-              >
-                <XCircle size={14} strokeWidth={1.75} />
-                Reject all
-              </Button>
-            );
-          }
-
-          return (
-            <Button
-              className="border-success/25 bg-success-soft text-success-ink hover:border-success/40 hover:bg-success/10"
-              disabled={totalItems === 0}
-              fullWidth
-              onClick={onApproveAll}
-              size="sm"
-              variant="secondary"
-            >
-              <CheckCheck size={14} strokeWidth={1.75} />
-              Approve all
-            </Button>
-          );
-        })()}
+        <SidebarActionRow
+          disabledExport={processing}
+          onExport={onExport}
+          onReset={onReset}
+        />
       </div>
 
       {(warnings.length > 0 || error) ? (
@@ -222,7 +167,7 @@ export function DetectionSidebar({
           </span>
         </div>
 
-        <div className="mb-2.5 flex gap-1.5">
+        <div className="mb-2.5 flex gap-1.5 items-center">
           <Input
             className="ui-text-field flex-1"
             onChange={(event) => onDraftChange(event.target.value)}
@@ -248,7 +193,7 @@ export function DetectionSidebar({
               onClick={() => void onRemoveKeyword(keyword)}
             >
               <span className="whitespace-nowrap font-mono text-xs">{keyword}</span>
-              <X className="text-content-subtle" size={10} strokeWidth={1.5} />
+              <XIcon className="text-content-subtle" size={10} strokeWidth={1.5} />
             </Chip>
           ))}
           {keywords.length === 0 ? (
@@ -257,9 +202,71 @@ export function DetectionSidebar({
         </div>
       </div>
 
-      <OcrLanguagePicker onChange={onChangeOcrLanguages} selected={ocrLanguages} />
+      <div className="flex gap-0 px-5 pt-3.5">
+        {REVIEW_FILTER_TABS.map(({ label, status }) => {
+          const isActive = filters.statuses.includes(status);
 
-      <div className="flex-1 overflow-auto">
+          return (
+            <button
+              className={cn(
+                'ui-text-control mb-4 mr-5 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 transition-colors duration-200 ease-standard',
+                isActive
+                  ? 'border-content text-content'
+                  : 'border-transparent text-content-subtle hover:text-content-muted',
+              )}
+              key={label}
+              onClick={() => {
+                const nextStatuses = filters.statuses.includes(status)
+                  ? filters.statuses.filter((currentStatus) => currentStatus !== status)
+                  : [...filters.statuses, status];
+
+                onChangeFilters({ statuses: nextStatuses.length > 0 ? nextStatuses : [status] });
+              }}
+              type="button"
+            >
+              {label}
+              <span
+                className={cn(
+                  'ui-text-label rounded-full px-1.5 py-0.25 font-mono',
+                  isActive ? 'bg-content text-canvas' : 'bg-surface-muted text-content-subtle',
+                )}
+              >
+                {counts[status]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {unconfirmedCount > 0 || confirmedCount > 0 ? (
+        <div className="px-5 pb-3">
+          <button
+            className="flex gap-1 items-center justify-between ui-text-note w-full rounded-control border border-dashed border-border-strong bg-transparent px-2.5 py-1.5 text-left font-mono tracking-ui-wide text-content-muted transition-colors duration-200 ease-standard hover:border-content-subtle hover:text-content"
+            onClick={() => {
+              if (unconfirmedCount > 0) {
+                onConfirmAll();
+              } else {
+                onUnconfirmAll();
+              }
+            }}
+            type="button"
+          >
+            {unconfirmedCount > 0 ? (
+              <>
+                {`→ Confirm all ${unconfirmedCount} on all pages`}
+                <Check size={12} strokeWidth={1.5} />
+              </>
+            ) : (
+              <>
+                {`→ Unconfirm all ${confirmedCount} on all pages`}
+                <XIcon size={12} strokeWidth={1.5} />
+              </>
+            )}
+          </button>
+        </div>
+      ) : null}
+
+      <div>
         {DETECTION_TYPE_ORDER.map((type) => {
           const typeItems = groupedItems[type] || [];
           if (typeItems.length === 0) {
@@ -267,7 +274,7 @@ export function DetectionSidebar({
           }
 
           const isExpanded = expandedGroups[type];
-          const pendingCount = typeItems.filter((item) => item.status === 'suggested').length;
+          const unconfirmedCount = typeItems.filter((item) => item.status === 'unconfirmed').length;
           const meta = DETECTION_TYPE_META[type];
 
           return (
@@ -284,7 +291,7 @@ export function DetectionSidebar({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {pendingCount > 0 ? <StatusDot tone="warning" /> : null}
+                  {unconfirmedCount > 0 ? <StatusDot tone="warning" /> : null}
                   <ChevronDown
                     className={cn(
                       'size-ui-icon text-content-subtle transition-transform duration-200 ease-standard',
@@ -297,39 +304,81 @@ export function DetectionSidebar({
 
               {isExpanded ? (
                 <div className="pb-2.5">
-                  {pendingCount > 1 && type !== 'manual' ? (
+                  {typeItems.length > 1 && type !== 'manual' ? (
                     <div className="px-5 pb-2.5">
                       <button
-                        className="ui-text-note w-full rounded-control border border-dashed border-border-strong bg-transparent px-2.5 py-1.5 text-left font-mono tracking-ui-wide text-content-muted transition-colors duration-200 ease-standard hover:border-content-subtle hover:text-content"
+                        className="flex gap-1 items-center justify-between ui-text-note w-full rounded-control border border-dashed border-border-strong bg-transparent px-2.5 py-1.5 text-left font-mono tracking-ui-wide text-content-muted transition-colors duration-200 ease-standard hover:border-content-subtle hover:text-content"
                         onClick={() => {
                           typeItems.forEach((item) => {
-                            if (item.status === 'suggested' && !item.manual) {
-                              onApproveDetection(item.id);
+                            if (item.manual) {
+                              return;
+                            }
+
+                            if (unconfirmedCount > 0 && item.status === 'unconfirmed') {
+                              onConfirmDetection(item.id);
+                            }
+
+                            if (unconfirmedCount === 0 && item.status === 'confirmed') {
+                              onUnconfirmDetection(item.id);
                             }
                           });
                         }}
                         type="button"
                       >
-                        → Approve all {pendingCount} in this group
+                        {unconfirmedCount > 0
+                          ? `→ Confirm all ${unconfirmedCount} in this group`
+                          : `→ Reject all ${typeItems.length} in this group`}
+                        {unconfirmedCount > 0 ? <Check size={12} strokeWidth={1.5} /> : <XIcon size={12} strokeWidth={1.5} />}
                       </button>
                     </div>
                   ) : null}
 
-                  {typeItems.map((item) => (
-                    <DetectionRow
-                      item={item}
-                      key={item.id}
-                      onApprove={() => (item.manual ? onToggleManualStatus(item.id, 'approved') : onApproveDetection(item.id))}
-                      onApproveAll={
-                        item.groupId && (item.matchCount ?? 0) > 1
-                          ? () => onApproveGroup(item.groupId!)
-                          : undefined
-                      }
-                      onDelete={item.manual ? () => onDeleteManual(item.id) : undefined}
-                      onJump={() => onJumpToPage(item.pageIndex)}
-                      onReject={() => (item.manual ? onToggleManualStatus(item.id, 'rejected') : onRejectDetection(item.id))}
-                    />
-                  ))}
+                  {typeItems.map((item) => {
+                    const matchGroupItems =
+                      item.groupId && (item.matchCount ?? 0) > 1
+                        ? typeItems.filter((candidate) => candidate.groupId === item.groupId)
+                        : [];
+                    const matchGroupUnconfirmedCount = matchGroupItems.filter(
+                      (candidate) => candidate.status === 'unconfirmed',
+                    ).length;
+
+                    return (
+                      <DetectionRow
+                        item={item}
+                        key={item.id}
+                        onConfirm={() =>
+                          item.manual ? onToggleManualStatus(item.id, 'confirmed') : onConfirmDetection(item.id)
+                        }
+                        onConfirmAll={
+                          matchGroupItems.length > 0
+                            ? () => {
+                                matchGroupItems.forEach((candidate) => {
+                                  if (matchGroupUnconfirmedCount > 0 && candidate.status === 'unconfirmed') {
+                                    onConfirmDetection(candidate.id);
+                                  }
+
+                                  if (matchGroupUnconfirmedCount === 0 && candidate.status === 'confirmed') {
+                                    onUnconfirmDetection(candidate.id);
+                                  }
+                                });
+                              }
+                            : undefined
+                        }
+                        onConfirmAllLabel={
+                          matchGroupItems.length > 0
+                            ? matchGroupUnconfirmedCount > 0
+                              ? `confirm all ${matchGroupUnconfirmedCount}`
+                              : `reject all ${matchGroupItems.length}`
+                            : undefined
+                        }
+                        onDelete={item.manual ? () => onDeleteManual(item.id) : undefined}
+                        onJump={() => onJumpToItem(item.id, item.pageIndex)}
+                        onUnconfirm={() =>
+                          item.manual ? onToggleManualStatus(item.id, 'unconfirmed') : onUnconfirmDetection(item.id)
+                        }
+                      />
+                    );
+                  })}
                 </div>
               ) : null}
             </div>
@@ -345,27 +394,6 @@ export function DetectionSidebar({
         ) : null}
       </div>
 
-      <div className="border-t border-border bg-surface-muted px-5 py-3">
-        <div className="ui-text-label flex items-center gap-4 font-mono tracking-ui-wide text-content-subtle">
-          {KEYBOARD_SHORTCUTS.map((shortcut) => (
-            <span className="inline-flex items-center gap-1" key={shortcut.key}>
-              {shortcut.key.includes('/') ? (
-                <>
-                  {shortcut.key.split('/').map((key, index) => (
-                    <span className="inline-flex items-center gap-1" key={key}>
-                      {index > 0 ? <span>/</span> : null}
-                      <Kbd>{key}</Kbd>
-                    </span>
-                  ))}
-                </>
-              ) : (
-                <Kbd>{shortcut.key}</Kbd>
-              )}
-              {shortcut.label}
-            </span>
-          ))}
-        </div>
-      </div>
     </aside>
   );
 }
@@ -373,24 +401,21 @@ export function DetectionSidebar({
 function DetectionRow({
   item,
   onJump,
-  onApprove,
-  onReject,
+  onConfirm,
+  onUnconfirm,
   onDelete,
-  onApproveAll,
+  onConfirmAll,
+  onConfirmAllLabel,
 }: {
   item: SidebarItem;
   onJump: () => void;
-  onApprove: () => void;
-  onReject: () => void;
+  onConfirm: () => void;
+  onUnconfirm: () => void;
   onDelete?: () => void;
-  onApproveAll?: () => void;
+  onConfirmAll?: () => void;
+  onConfirmAllLabel?: string;
 }) {
-  const statusTone =
-    item.status === 'approved'
-      ? 'safe'
-      : item.status === 'rejected'
-        ? 'muted'
-        : 'warning';
+  const isConfirmed = item.status === 'confirmed';
 
   return (
     <div className="flex items-stretch transition-[background-color] duration-200 ease-standard">
@@ -400,7 +425,6 @@ function DetectionRow({
         type="button"
       >
         <div className="flex items-center gap-2">
-          <StatusDot tone={statusTone} />
           <span
             className={cn(
               'measure-review-snippet overflow-hidden text-ellipsis whitespace-nowrap text-content',
@@ -412,40 +436,43 @@ function DetectionRow({
         </div>
 
         <div className="ui-text-label flex items-center gap-2.5 font-mono text-content-subtle">
+          <RowStatusIcon status={item.status} />
           <span>p.{item.pageIndex + 1}</span>
           {!item.manual ? (
-            <>
-              <span>·</span>
-              <span>{Math.round(item.confidence * 100)}%</span>
-            </>
+            <span>{Math.round(item.confidence * 100)}%</span>
           ) : null}
-          {onApproveAll ? (
-            <>
-              <span>·</span>
-              <button
-                className="text-content-muted underline transition-colors duration-200 ease-standard hover:text-content"
-                onClick={(event) => {
+          {onConfirmAll && onConfirmAllLabel ? (
+            <span
+              className="cursor-pointer text-content-muted underline transition-colors duration-200 ease-standard hover:text-content"
+              onClick={(event) => {
+                event.stopPropagation();
+                onConfirmAll();
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
                   event.stopPropagation();
-                  onApproveAll();
-                }}
-                type="button"
-              >
-                approve all {item.matchCount}
-              </button>
-            </>
+                  onConfirmAll();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              {onConfirmAllLabel}
+            </span>
           ) : null}
         </div>
       </button>
 
-      <div className="flex items-center gap-0.5 pr-2.5">
-        <StatusActionButton active={item.status === 'approved'} activeTone="safe" onClick={onApprove} title="Approve (A)">
-          <Check size={12} strokeWidth={2} />
-        </StatusActionButton>
-        <StatusActionButton active={item.status === 'rejected'} activeTone="muted" onClick={onReject} title="Reject (R)">
-          <X size={12} strokeWidth={2} />
+      <div className="flex items-center gap-0.5 mr-5">
+        <StatusActionButton
+          onClick={isConfirmed ? onUnconfirm : onConfirm}
+          size="lg"
+          title={isConfirmed ? 'Unconfirm (R)' : 'Confirm (A)'}
+        >
+          {isConfirmed ? <XIcon size={14} strokeWidth={2} className="text-danger/70" /> : <Check size={14} strokeWidth={2} className="text-success" />}
         </StatusActionButton>
         {onDelete ? (
-          <StatusActionButton active={false} activeTone="danger" onClick={onDelete} title="Remove">
+          <StatusActionButton onClick={onDelete} title="Remove">
             <Trash2 size={12} strokeWidth={2} />
           </StatusActionButton>
         ) : null}
@@ -455,21 +482,27 @@ function DetectionRow({
 }
 
 function StatusActionButton({
-  active,
-  activeTone,
   onClick,
+  size = 'md',
   title,
   children,
 }: {
-  active: boolean;
-  activeTone: 'safe' | 'muted' | 'danger';
   onClick: () => void;
+  size?: 'md' | 'lg';
   title: string;
   children: ReactNode;
 }) {
   return (
-    <IconButton onClick={onClick} title={title} tone={active ? activeTone : 'neutral'}>
+    <IconButton onClick={onClick} size={size} title={title} tone="surface" shape="pill">
       {children}
     </IconButton>
+  );
+}
+
+function RowStatusIcon({ status }: { status: DetectionStatus }) {
+  return status === 'confirmed' ? (
+    <CircleCheck className="shrink-0 text-success" size={12} strokeWidth={2} />
+  ) : (
+    <Circle className="shrink-0 text-warning" size={12} strokeWidth={2} />
   );
 }

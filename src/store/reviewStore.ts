@@ -12,7 +12,6 @@ import type {
   SourceDocument,
 } from '../lib/types';
 import { createId, normalizeBox } from '../lib/utils';
-import { DEFAULT_OCR_LANGUAGES } from '../lib/constants';
 import {
   DEFAULT_REVIEW_FILTERS,
   createManualRedactionRecord,
@@ -27,11 +26,10 @@ interface ReviewState {
   detections: Detection[];
   manualRedactions: ManualRedaction[];
   customKeywords: string[];
-  ocrLanguages: string[];
   filters: FilterState;
   previews: Record<number, PreviewAsset>;
   activePage: number;
-  drawMode: boolean;
+  toolMode: 'select' | 'draw' | null;
   exportJob: ExportJob;
   warnings: string[];
   fallbackExportReady: boolean;
@@ -41,15 +39,16 @@ interface ReviewState {
     detections: Detection[];
     warnings: string[];
   }) => void;
+  setSourceDocumentName: (name: string) => void;
   setDetections: (detections: Detection[]) => void;
   setActivePage: (pageIndex: number) => void;
   toggleDetectionStatus: (id: string) => void;
   setDetectionStatus: (id: string, status: DetectionStatus) => void;
-  approveGroup: (groupId: string) => void;
-  approveAll: () => void;
-  rejectAll: () => void;
+  confirmGroup: (groupId: string) => void;
+  confirmAll: () => void;
+  revertAll: () => void;
   setFilters: (next: Partial<FilterState>) => void;
-  setDrawMode: (enabled: boolean) => void;
+  setToolMode: (mode: 'select' | 'draw' | null) => void;
   addManualRedaction: (payload: {
     pageIndex: number;
     box: ManualRedaction['box'];
@@ -62,8 +61,6 @@ interface ReviewState {
   clearPendingManualRedactions: () => void;
   setManualStatus: (id: string, status: DetectionStatus) => void;
   setCustomKeywords: (keywords: string[]) => void;
-  setOcrLanguages: (languages: string[]) => void;
-  rejectPage: (pageIndex: number) => void;
   clearManualPage: (pageIndex: number) => void;
   setExportJob: (payload: Partial<ExportJob>) => void;
   setPreviewState: (pageIndex: number, preview: Partial<PreviewAsset>) => void;
@@ -85,11 +82,10 @@ export const useReviewStore = create<ReviewState>((set) => ({
   detections: [],
   manualRedactions: [],
   customKeywords: [],
-  ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
   filters: createInitialFilters(),
   previews: {},
   activePage: 0,
-  drawMode: false,
+  toolMode: null,
   exportJob: createInitialExportJob(),
   warnings: [],
   fallbackExportReady: false,
@@ -113,6 +109,10 @@ export const useReviewStore = create<ReviewState>((set) => ({
         fallbackExportReady: false,
       };
     }),
+  setSourceDocumentName: (name) =>
+    set((state) => ({
+      sourceDocument: state.sourceDocument ? { ...state.sourceDocument, name } : null,
+    })),
   setDetections: (detections) => set({ detections }),
   setActivePage: (pageIndex) => set({ activePage: pageIndex }),
   toggleDetectionStatus: (id) =>
@@ -128,24 +128,24 @@ export const useReviewStore = create<ReviewState>((set) => ({
     set((state) => ({
       detections: state.detections.map((detection) => (detection.id === id ? { ...detection, status } : detection)),
     })),
-  approveGroup: (groupId) =>
+  confirmGroup: (groupId) =>
     set((state) => ({
       detections: state.detections.map((detection) =>
-        detection.groupId === groupId ? { ...detection, status: 'approved' } : detection,
+        detection.groupId === groupId ? { ...detection, status: 'confirmed' } : detection,
       ),
     })),
-  approveAll: () =>
+  confirmAll: () =>
     set((state) => ({
-      detections: state.detections.map((detection) => ({ ...detection, status: 'approved' as const })),
-      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'approved' as const })),
+      detections: state.detections.map((detection) => ({ ...detection, status: 'confirmed' as const })),
+      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'confirmed' as const })),
     })),
-  rejectAll: () =>
+  revertAll: () =>
     set((state) => ({
-      detections: state.detections.map((detection) => ({ ...detection, status: 'rejected' as const })),
-      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'rejected' as const })),
+      detections: state.detections.map((detection) => ({ ...detection, status: 'unconfirmed' as const })),
+      manualRedactions: state.manualRedactions.map((redaction) => ({ ...redaction, status: 'unconfirmed' as const })),
     })),
   setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
-  setDrawMode: (enabled) => set({ drawMode: enabled }),
+  setToolMode: (mode) => set({ toolMode: mode }),
   addManualRedaction: ({ pageIndex, box, mode, snippet, note }) =>
     set((state) => ({
       manualRedactions: [
@@ -172,7 +172,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
     })),
   clearPendingManualRedactions: () =>
     set((state) => ({
-      manualRedactions: state.manualRedactions.filter((redaction) => redaction.status !== 'suggested'),
+      manualRedactions: state.manualRedactions.filter((redaction) => redaction.status !== 'unconfirmed'),
     })),
   setManualStatus: (id, status) =>
     set((state) => ({
@@ -181,19 +181,6 @@ export const useReviewStore = create<ReviewState>((set) => ({
       ),
     })),
   setCustomKeywords: (keywords) => set({ customKeywords: keywords }),
-  setOcrLanguages: (languages) => {
-    const unique = Array.from(new Set(languages.filter(Boolean)));
-    set({ ocrLanguages: unique.length > 0 ? unique : [...DEFAULT_OCR_LANGUAGES] });
-  },
-  rejectPage: (pageIndex) =>
-    set((state) => ({
-      detections: state.detections.map((detection) =>
-        detection.pageIndex === pageIndex ? { ...detection, status: 'rejected' } : detection,
-      ),
-      manualRedactions: state.manualRedactions.map((redaction) =>
-        redaction.pageIndex === pageIndex ? { ...redaction, status: 'rejected' } : redaction,
-      ),
-    })),
   clearManualPage: (pageIndex) =>
     set((state) => ({
       manualRedactions: state.manualRedactions.filter((redaction) => redaction.pageIndex !== pageIndex),
@@ -228,11 +215,10 @@ export const useReviewStore = create<ReviewState>((set) => ({
         detections: [],
         manualRedactions: [],
         customKeywords: [],
-        ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
         filters: createInitialFilters(),
         previews: {},
         activePage: 0,
-        drawMode: false,
+        toolMode: null,
         exportJob: createInitialExportJob(),
         warnings: [],
         fallbackExportReady: false,

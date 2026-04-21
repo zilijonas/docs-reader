@@ -9,29 +9,40 @@ interface Props {
 const { appUrl } = Astro.props;
 ---
 
-<section class="page-container landing-hero">
-  <h1 class="type-display-hero measure-landing-hero">
-    <span class="landing-hero-brand">HDDN</span><br />
-    Redact PDFs locally. Nothing leaves your browser.
-  </h1>
-  <p class="landing-hero-copy type-body-lg">
-    Drop a PDF. We detect sensitive data. You approve. Export a clean,
-    permanently redacted file - all inside your browser.
-  </p>
-  <p class="landing-hero-trust">No uploads. No servers. No risk.</p>
-  <div class="landing-hero-actions">
-    <a class="landing-button" href={appUrl}>
-      <span>Try it now</span>
-      <ArrowRight size={16} strokeWidth={1.5} />
-    </a>
-    <a class="landing-button-secondary" href="#how">
-      <Eye size={16} strokeWidth={1.5} />
-      <span>See how it works</span>
-    </a>
-  </div>
-  <p class="landing-hero-microcopy type-caption">
-    Free to try. No signup required.
-  </p>
+<section class="landing-hero">
+  <div class="page-container landing-hero-inner">
+    <div aria-hidden="true" class="landing-hero-visual fade-in">
+      <LandingHeroDiagram />
+    </div>
 
-  <LandingHeroDiagram />
+    <div class="landing-hero-content">
+      <span class="landing-hero-brand">HDDN</span>
+      <h1 class="type-display-hero fade-in">
+        Redact PDFs <em class="italic-accent">locally.</em> Nothing leaves your browser.
+      </h1>
+      <p
+        class="landing-hero-copy type-body-lg fade-in"
+        style="animation-delay:80ms"
+      >
+        Drop a PDF. We detect sensitive data. You approve. Export a clean,
+        permanently redacted file - all inside your browser.
+      </p>
+      <p class="landing-hero-trust fade-in" style="animation-delay:120ms">
+        No uploads. No servers. No risk.
+      </p>
+      <div class="landing-hero-actions fade-in" style="animation-delay:160ms">
+        <a class="landing-button" href={appUrl}>
+          <span>Redact your PDF</span>
+          <ArrowRight size={16} strokeWidth={1.5} />
+        </a>
+        <a class="landing-button-secondary" href="#how">
+          <Eye size={16} strokeWidth={1.5} />
+          <span>See how it works</span>
+        </a>
+      </div>
+      <p class="landing-hero-microcopy type-caption">
+        Free to try. No signup required.
+      </p>
+    </div>
+  </div>
 </section>

@@ -25,6 +25,7 @@ const buttonVariants = cva(
         sm: 'h-7 px-2.5 ui-text-button-sm',
         md: 'h-9 px-4 text-sm',
         lg: 'h-11 px-5 text-sm',
+        pill: 'h-11 px-6 rounded-pill text-sm',
         icon: 'size-7 p-0',
       },
       fullWidth: {
