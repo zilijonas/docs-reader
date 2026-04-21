@@ -6,7 +6,7 @@ import type {
   ManualRedaction,
   PreviewAsset,
   TextSpan,
-} from '../../lib/types';
+} from '../../types';
 import { normalizeBox } from '../../lib/utils';
 import { DETECTION_TYPE_LABELS, DETECTION_TYPE_ORDER } from './config';
 
@@ -32,8 +32,6 @@ export interface ReviewItem {
 }
 
 export const initialExportJob = () => ({
-  totalPages: 0,
-  completedPages: 0,
   status: 'idle' as const,
 });
 

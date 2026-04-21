@@ -1,6 +1,6 @@
 import { cn } from '@/lib/cn';
 
-import type { Detection } from '../../lib/types';
+import type { Detection } from '../../types';
 import { getReviewItemAnchorId } from '../../features/redactor';
 import { getBoxStyle } from './pdf-viewer-utils';
 

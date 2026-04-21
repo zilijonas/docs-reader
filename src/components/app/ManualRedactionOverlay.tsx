@@ -3,7 +3,7 @@ import { Check, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { IconButton } from '../../components/ui';
-import type { BoundingBox, DetectionStatus, ManualRedaction } from '../../lib/types';
+import type { BoundingBox, DetectionStatus, ManualRedaction } from '../../types';
 import { getReviewItemAnchorId } from '../../features/redactor';
 import { getBoxStyle } from './pdf-viewer-utils';
 

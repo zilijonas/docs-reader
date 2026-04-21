@@ -1,6 +1,7 @@
-import { DETECTION_TYPE_LABELS } from './constants';
-import { DETECTION_RULES, buildKeywordPattern, type DetectionRule } from './detection-rules';
-import type { Detection, DetectionType, TextSpan } from './types';
+import { DETECTION_TYPE_LABELS } from './app-config';
+import { DETECTION_RULES, buildKeywordPattern } from './detection/rules';
+import type { DetectionRule } from './detection/rule';
+import type { Detection, DetectionType, TextSpan } from '../types';
 import { clipBoxToRange, unionBoxes } from './geometry';
 import { createId, dedupeDetections, findSpansInRange, normalizeSnippet } from './utils';
 

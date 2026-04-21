@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
 
-import type { ExportMode, ManualRedaction, ProcessingProgress, SourceDocument } from '../../../lib/types';
-import type { Detection, ExportJob } from '../../../lib/types';
+import type { ExportMode, ManualRedaction, ProcessingProgress, SourceDocument } from '../../../types';
+import type { Detection, ExportJob } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 import { PRIMARY_EXPORT_MODE, EXPORT_MODE_META } from '../config';
 
@@ -11,6 +11,7 @@ const triggerAnchorDownload = (blob: Blob, fileName: string) => {
   anchor.href = downloadUrl;
   anchor.download = fileName;
   anchor.rel = 'noopener';
+  anchor.style.display = 'none';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -24,9 +25,10 @@ const writeBlobToFile = async (blob: Blob, fileName: string) => {
       types?: Array<{ description?: string; accept: Record<string, string[]> }>;
     }) => Promise<{
       createWritable: () => Promise<{
-        write: (data: Blob) => Promise<void>;
+        write: (data: Blob | BufferSource) => Promise<void>;
         close: () => Promise<void>;
       }>;
+      getFile?: () => Promise<File>;
     }>;
   };
 
@@ -37,14 +39,23 @@ const writeBlobToFile = async (blob: Blob, fileName: string) => {
         types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
       });
       const writable = await handle.createWritable();
-      await writable.write(blob);
+      const bytes = await blob.arrayBuffer();
+      await writable.write(bytes);
       await writable.close();
+
+      if (handle.getFile) {
+        const writtenFile = await handle.getFile();
+        if (writtenFile.size !== blob.size) {
+          throw new Error(`Saved file size mismatch: expected ${blob.size} bytes, got ${writtenFile.size}.`);
+        }
+      }
+
       return;
     } catch (pickerError) {
       if (pickerError instanceof DOMException && pickerError.name === 'AbortError') {
         return;
       }
-      console.warn('showSaveFilePicker failed, falling back to download anchor.', pickerError);
+      console.warn('showSaveFilePicker failed, falling back to browser download.', pickerError);
     }
   }
 
@@ -76,7 +87,7 @@ export function useExportRunner({
   fileRef: MutableRefObject<File | null>;
   manualRedactions: ManualRedaction[];
   setError: (message: string | null) => void;
-  setExportJob: (payload: Partial<ExportJob>) => void;
+  setExportJob: (payload: ExportJob) => void;
   setFallbackExportReady: (enabled: boolean) => void;
   setProgress: (progress: ProcessingProgress | null) => void;
   sourceDocument: SourceDocument | null;
@@ -102,8 +113,6 @@ export function useExportRunner({
       status: 'running',
       completedPages: 0,
       totalPages: sourceDocument.pageCount,
-      error: undefined,
-      downloadUrl: undefined,
       mode,
     });
 
@@ -117,10 +126,12 @@ export function useExportRunner({
       });
       const blob = new Blob([response.payload.file], { type: 'application/pdf' });
 
+      if (blob.size === 0) {
+        throw new Error('Export produced an empty PDF.');
+      }
+
       setExportJob({
         status: 'done',
-        completedPages: sourceDocument.pageCount,
-        downloadUrl: undefined,
         mode,
       });
       setFallbackExportReady(false);

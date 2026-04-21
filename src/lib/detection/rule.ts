@@ -1,4 +1,4 @@
-import type { DetectionType } from '../types';
+import type { DetectionType } from '../../types';
 
 export interface DetectionRule {
   type: DetectionType;

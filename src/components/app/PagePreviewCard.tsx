@@ -10,7 +10,7 @@ import type {
   PageAsset,
   PreviewAsset,
   TextSpan,
-} from '../../lib/types';
+} from '../../types';
 import { usePageBoxInteractions } from '../../features/redactor/hooks/usePageBoxInteractions';
 import { DetectionOverlay } from './DetectionOverlay';
 import { ManualRedactionOverlay } from './ManualRedactionOverlay';

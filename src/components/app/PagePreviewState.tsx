@@ -1,4 +1,4 @@
-import type { PreviewAsset } from '../../lib/types';
+import type { PreviewAsset } from '../../types';
 import { getPreviewDisplayState } from '../../features/redactor';
 
 export function PagePreviewState({

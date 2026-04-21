@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import type { BoundingBox } from '../../lib/types';
+import type { BoundingBox } from '../../types';
 import { toPercent } from '../../lib/utils';
 
 export function getBoxStyle(box: BoundingBox, extra?: Record<string, string>): CSSProperties {

@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, DragEvent, PropsWithChildren, RefObject } from 'react';
 
-import { DEFAULT_OCR_LANGUAGES } from '../../../lib/constants';
-import type { ExportMode, ProcessingProgress, TextSpan } from '../../../lib/types';
+import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
+import type { ExportMode, ProcessingProgress, TextSpan, WorkflowPhase } from '../../../types';
 import { useReviewStore } from '../../../store/reviewStore';
 import { useDetectionRunner } from '../hooks/useDetectionRunner';
 import { useExportRunner } from '../hooks/useExportRunner';
@@ -25,7 +25,7 @@ interface WorkflowContextValue {
   error: string | null;
   fileInputRef: RefObject<HTMLInputElement | null>;
   handleContinueOcr: () => Promise<void>;
-  handleDrop: (event: DragEvent<HTMLLabelElement>) => Promise<void>;
+  handleDrop: (event: DragEvent<HTMLDivElement>) => Promise<void>;
   handleExport: (mode: ExportMode, options?: { confirmAllUnconfirmed?: boolean }) => Promise<void>;
   handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleKeywordRemove: (keyword: string) => Promise<void>;
@@ -54,6 +54,7 @@ interface WorkflowContextValue {
   toggleReviewPanel: () => void;
   viewerColumnRef: RefObject<HTMLDivElement | null>;
   viewerContentWidth: number;
+  workflowPhase: WorkflowPhase;
   zoom: number;
 }
 
@@ -183,13 +184,29 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setDesktopSidebarOpen(true);
   }, [closeReviewPanel, hasViewer, setDesktopSidebarOpen]);
 
-  useEffect(() => {
-    return () => {
-      if (exportJob.downloadUrl) {
-        URL.revokeObjectURL(exportJob.downloadUrl);
-      }
-    };
-  }, [exportJob.downloadUrl]);
+  const workflowPhase = useMemo<WorkflowPhase>(() => {
+    if (error) {
+      return 'error';
+    }
+
+    if (exportJob.status === 'running') {
+      return 'exporting';
+    }
+
+    if (state.isOcrLanguageModalOpen) {
+      return 'awaitingOcr';
+    }
+
+    if (isProcessing) {
+      return progress?.phase === 'rules' ? 'detecting' : 'uploading';
+    }
+
+    if (sourceDocument && pages.length > 0) {
+      return 'reviewing';
+    }
+
+    return 'idle';
+  }, [error, exportJob.status, isProcessing, pages.length, progress?.phase, sourceDocument, state.isOcrLanguageModalOpen]);
 
   const handleKeywordSubmit = async () => {
     const nextKeyword = state.keywordDraft.trim();
@@ -217,14 +234,22 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
         ocrLanguages: state.selectedOcrLanguages,
       });
 
-      setSpans(response.payload.spans);
+      const nextSpans = Array.isArray(response.payload.spans) ? response.payload.spans : [];
+      const nextPages = Array.isArray(response.payload.pages) ? response.payload.pages : [];
+      const nextWarnings = Array.isArray(response.payload.warnings) ? response.payload.warnings : [];
+      const nextOcrLanguages =
+        Array.isArray(response.payload.ocrLanguages) && response.payload.ocrLanguages.length > 0
+          ? response.payload.ocrLanguages
+          : [...DEFAULT_OCR_LANGUAGES];
+
+      setSpans(nextSpans);
       setDocument({
         sourceDocument: response.payload.source,
-        pages: response.payload.pages,
+        pages: nextPages,
         detections: [],
-        warnings: response.payload.warnings,
+        warnings: nextWarnings,
       });
-      setSelectedOcrLanguages(response.payload.ocrLanguages);
+      setSelectedOcrLanguages(nextOcrLanguages);
 
       await runDetections(customKeywords, [], [], true);
     } catch (caughtError) {
@@ -236,10 +261,6 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
   };
 
   const resetSession = async () => {
-    if (exportJob.downloadUrl) {
-      URL.revokeObjectURL(exportJob.downloadUrl);
-    }
-
     await clientRef.current.reset();
     reset();
     fileRef.current = null;
@@ -295,6 +316,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
       toggleReviewPanel,
       viewerColumnRef,
       viewerContentWidth: state.viewerContentWidth,
+      workflowPhase,
       zoom: state.zoom,
     }),
     [
@@ -339,6 +361,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
       state.zoom,
       toggleReviewPanel,
       viewerColumnRef,
+      workflowPhase,
     ],
   );
 

@@ -1,4 +1,4 @@
-export { DETECTION_TYPE_LABELS } from './detectionMetadata';
+import type { DetectionType } from '../types';
 
 export const APP_LIMITS = {
   maxPages: 30,
@@ -12,16 +12,13 @@ export const APP_LIMITS = {
 
 export const PRIVACY_PROMISE = [
   'Documents stay in your browser during processing. Nothing is uploaded to an app server.',
-  'Google Analytics uses denied-by-default consent mode settings, and document contents are not sent there.',
+  'Google Analytics may collect site usage metrics, but document contents are not sent there.',
   'Pyodide, PyMuPDF, and OCR assets are served with the app so processing stays local at runtime.',
   'Review every suggestion before exporting. Detection is assistive, not guaranteed.',
 ] as const;
 
 export const FILE_ACCEPT = 'application/pdf';
 
-// Tesseract.js language codes (tessdata "fast" traineddata).
-// `traineddata` for each language is fetched lazily by Tesseract.js the first time
-// it is selected, then cached by the browser's HTTP cache / IndexedDB.
 export const OCR_LANGUAGES = [
   { code: 'eng', label: 'English' },
   { code: 'deu', label: 'German' },
@@ -50,3 +47,42 @@ export const OCR_LANGUAGES = [
 ] as const;
 
 export const DEFAULT_OCR_LANGUAGES: string[] = ['eng'];
+
+export const ANALYTICS = {
+  enabled: import.meta.env.PROD,
+  measurementId: import.meta.env.PUBLIC_GA_MEASUREMENT_ID || 'G-X1ZEX4LY01',
+} as const;
+
+export const DETECTION_TYPE_ORDER: DetectionType[] = [
+  'email',
+  'phone',
+  'url',
+  'iban',
+  'card',
+  'nationalId',
+  'vat',
+  'postal',
+  'address',
+  'date',
+  'id',
+  'number',
+  'keyword',
+  'manual',
+];
+
+export const DETECTION_TYPE_LABELS: Record<DetectionType, string> = {
+  email: 'Email',
+  phone: 'Phone',
+  url: 'URL',
+  iban: 'IBAN',
+  card: 'Card number',
+  date: 'Date',
+  id: 'ID',
+  number: 'Number',
+  postal: 'Postal code',
+  address: 'Address',
+  vat: 'VAT number',
+  nationalId: 'National ID',
+  keyword: 'Custom keyword',
+  manual: 'Manual',
+};

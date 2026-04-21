@@ -4,8 +4,9 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { writeAnalyticsConsent } from '../../lib/analyticsConsent';
-import { useConsentStore } from '../../store/consentStore';
+import { writeAnalyticsConsent } from '../cookie';
+import { resetGoogleAnalyticsForTests } from '../googleAnalytics';
+import { useConsentStore } from '../../../store/consentStore';
 import { AnalyticsConsentController } from './AnalyticsConsentController';
 
 const clearConsentCookie = () => {
@@ -19,7 +20,12 @@ const renderController = (props?: Partial<{ enabled: boolean; measurementId: str
   const root = createRoot(container);
 
   act(() => {
-    root.render(<AnalyticsConsentController enabled={props?.enabled ?? true} />);
+    root.render(
+      <AnalyticsConsentController
+        enabled={props?.enabled ?? true}
+        measurementId={props?.measurementId ?? 'G-TEST1234'}
+      />,
+    );
   });
 
   return { container, root };
@@ -36,6 +42,7 @@ describe('AnalyticsConsentController', () => {
     document.body.innerHTML = '';
     window.dataLayer = undefined;
     window.gtag = undefined;
+    resetGoogleAnalyticsForTests();
   });
 
   afterEach(() => {
@@ -45,6 +52,7 @@ describe('AnalyticsConsentController', () => {
     root = null;
     container = null;
     clearConsentCookie();
+    resetGoogleAnalyticsForTests();
   });
 
   it('renders the banner on first visit', () => {
@@ -65,8 +73,9 @@ describe('AnalyticsConsentController', () => {
     });
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
-    expect(window.dataLayer).toHaveLength(1);
-    expect(window.dataLayer?.[0]).toEqual([
+    expect(document.head.querySelector('script[data-measurement-id="G-TEST1234"]')).not.toBeNull();
+    expect(window.dataLayer).toHaveLength(3);
+    expect(window.dataLayer?.[2]).toEqual([
       'consent',
       'update',
       {
@@ -81,7 +90,7 @@ describe('AnalyticsConsentController', () => {
       useConsentStore.getState().accept();
     });
 
-    expect(window.dataLayer).toHaveLength(1);
+    expect(document.head.querySelectorAll('script[data-measurement-id="G-TEST1234"]')).toHaveLength(1);
   });
 
   it('declines consent and keeps analytics storage denied', () => {
@@ -95,6 +104,7 @@ describe('AnalyticsConsentController', () => {
     });
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
+    expect(document.head.querySelector('script[data-measurement-id]')).toBeNull();
     expect(window.dataLayer).toEqual([
       [
         'consent',
@@ -115,17 +125,16 @@ describe('AnalyticsConsentController', () => {
     ({ container, root } = renderController());
 
     expect(container?.textContent ?? '').not.toContain('Analytics consent');
-    expect(window.dataLayer).toEqual([
-      [
-        'consent',
-        'update',
-        {
-          ad_storage: 'denied',
-          ad_user_data: 'denied',
-          ad_personalization: 'denied',
-          analytics_storage: 'granted',
-        },
-      ],
+    expect(document.head.querySelector('script[data-measurement-id="G-TEST1234"]')).not.toBeNull();
+    expect(window.dataLayer?.at(-1)).toEqual([
+      'consent',
+      'update',
+      {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'granted',
+      },
     ]);
   });
 
@@ -136,3 +145,4 @@ describe('AnalyticsConsentController', () => {
     expect(window.dataLayer).toBeUndefined();
   });
 });
+

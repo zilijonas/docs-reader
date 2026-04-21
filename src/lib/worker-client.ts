@@ -7,7 +7,7 @@ import type {
   LoadPdfRequest,
   WorkerRequest,
   WorkerResponse,
-} from './types';
+} from '../types';
 
 type EventListener = (message: WorkerResponse) => void;
 
@@ -22,6 +22,7 @@ type RequestMap = {
 };
 
 type PendingRequest = {
+  expectedType: WorkerResponse['type'];
   resolve: (value: WorkerResponse) => void;
   reject: (reason?: unknown) => void;
 };
@@ -71,13 +72,18 @@ export class RedactorWorkerClient {
   private handleMessage = (event: MessageEvent<WorkerResponse>) => {
     const message = event.data;
 
-    if (typeof message.requestId === 'number' && this.pending.has(message.requestId)) {
+    if (!message || typeof message.requestId !== 'number') {
+      return;
+    }
+
+    if (this.pending.has(message.requestId)) {
       const pending = this.pending.get(message.requestId)!;
-      this.pending.delete(message.requestId);
 
       if (message.type === 'ERROR') {
+        this.pending.delete(message.requestId);
         pending.reject(new Error(message.payload.message));
-      } else {
+      } else if (message.type === pending.expectedType) {
+        this.pending.delete(message.requestId);
         pending.resolve(message);
       }
     }
@@ -100,9 +106,22 @@ export class RedactorWorkerClient {
 
   private async dispatch(message: WorkerRequest) {
     const payloadMessage: WorkerRequest = { ...message, requestId: this.requestId += 1 };
+    const expectedTypeByRequest: Record<WorkerRequest['type'], WorkerResponse['type']> = {
+      INIT: 'READY',
+      LOAD_PDF: 'PDF_LOADED',
+      CONTINUE_OCR: 'PDF_LOADED',
+      DETECT: 'DETECTIONS',
+      GET_PAGE_PREVIEW: 'PAGE_PREVIEW',
+      APPLY_REDACTIONS: 'REDACTED_FILE',
+      RESET: 'READY',
+    };
 
     const response = await new Promise<WorkerResponse>((resolve, reject) => {
-      this.pending.set(payloadMessage.requestId, { resolve, reject });
+      this.pending.set(payloadMessage.requestId, {
+        expectedType: expectedTypeByRequest[payloadMessage.type],
+        resolve,
+        reject,
+      });
       this.worker.postMessage(payloadMessage, extractTransferables(payloadMessage));
     });
 

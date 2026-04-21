@@ -12,14 +12,14 @@ import {
   isNinoValid,
   isNirValid,
   isPeselValid,
-} from './detection-validators';
+} from './index';
 
 describe('isLuhnValid', () => {
   it('accepts well-known valid card numbers', () => {
-    expect(isLuhnValid('4539 1488 0343 6467')).toBe(true); // Visa test
-    expect(isLuhnValid('4111111111111111')).toBe(true); // Visa test
-    expect(isLuhnValid('5500-0000-0000-0004')).toBe(true); // MasterCard test
-    expect(isLuhnValid('340000000000009')).toBe(true); // Amex test
+    expect(isLuhnValid('4539 1488 0343 6467')).toBe(true);
+    expect(isLuhnValid('4111111111111111')).toBe(true);
+    expect(isLuhnValid('5500-0000-0000-0004')).toBe(true);
+    expect(isLuhnValid('340000000000009')).toBe(true);
   });
 
   it('rejects malformed or checksum-broken values', () => {
@@ -64,7 +64,7 @@ describe('isBsnValid', () => {
 
   it('rejects invalid BSN numbers', () => {
     expect(isBsnValid('111222334')).toBe(false);
-    expect(isBsnValid('000000000')).toBe(true); // edge: 0 passes 11-test
+    expect(isBsnValid('000000000')).toBe(true);
     expect(isBsnValid('12345')).toBe(false);
   });
 });
@@ -129,7 +129,7 @@ describe('isEstonianPersonalCodeValid', () => {
 
 describe('isNinoValid', () => {
   it('accepts valid UK NINO', () => {
-    expect(isNinoValid('QQ123456A')).toBe(false); // QQ begins with 'Q' blacklisted in char
+    expect(isNinoValid('QQ123456A')).toBe(false);
     expect(isNinoValid('AB123456C')).toBe(true);
     expect(isNinoValid('AB 12 34 56 C')).toBe(true);
   });
@@ -151,3 +151,4 @@ describe('isGermanSteuerIdValid', () => {
     expect(isGermanSteuerIdValid('12345678901')).toBe(false);
   });
 });
+

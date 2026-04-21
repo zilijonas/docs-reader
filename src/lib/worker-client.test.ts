@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RedactorWorkerClient, extractTransferables } from './worker-client';
-import type { WorkerRequest, WorkerResponse } from './types';
+import type { WorkerRequest, WorkerResponse } from '../types';
 
 class FakeWorker {
   static instances: FakeWorker[] = [];
@@ -57,6 +57,10 @@ class FakeWorker {
       this.listeners.message.forEach((listener) => listener({ data: response } as MessageEvent<WorkerResponse>));
     });
   }
+
+  emitMessage(message: WorkerResponse | (Omit<WorkerResponse, 'requestId'> & { requestId?: never })) {
+    this.listeners.message.forEach((listener) => listener({ data: message } as MessageEvent<WorkerResponse>));
+  }
 }
 
 describe('extractTransferables', () => {
@@ -101,5 +105,41 @@ describe('RedactorWorkerClient', () => {
     expect(worker.lastPosted?.message.type === 'LOAD_PDF' && worker.lastPosted.message.payload.file.byteLength).toBe(
       fixture.byteLength,
     );
+  });
+
+  it('waits for PDF_LOADED instead of resolving from intermediate progress events', async () => {
+    const client = new RedactorWorkerClient();
+    const worker = FakeWorker.instances[0];
+
+    const promise = client.loadPdf({
+      file: new ArrayBuffer(8),
+      name: 'fixture.pdf',
+      size: 8,
+      mimeType: 'application/pdf',
+    });
+
+    worker.emitMessage({
+      requestId: worker.lastPosted!.message.requestId,
+      type: 'PROGRESS',
+      payload: {
+        phase: 'loading',
+        progress: 0.24,
+        message: 'Opening document…',
+      },
+    });
+
+    const response = await promise;
+    expect(response.type).toBe('PDF_LOADED');
+  });
+
+  it('ignores malformed worker messages without a requestId', async () => {
+    const client = new RedactorWorkerClient();
+    const listener = vi.fn();
+    client.subscribe(listener);
+
+    const worker = FakeWorker.instances[0];
+    worker.emitMessage({ type: 'READY' });
+
+    expect(listener).not.toHaveBeenCalled();
   });
 });

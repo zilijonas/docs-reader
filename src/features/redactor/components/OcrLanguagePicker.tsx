@@ -1,4 +1,4 @@
-import { OCR_LANGUAGES } from '../../../lib/constants';
+import { OCR_LANGUAGES } from '../../../lib/app-config';
 import { Chip } from '../../../components/ui';
 
 interface OcrLanguagePickerProps {

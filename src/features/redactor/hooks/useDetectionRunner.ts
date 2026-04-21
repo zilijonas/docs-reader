@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
 
 import { dedupeDetections } from '../../../lib/utils';
-import type { Detection, ProcessingProgress } from '../../../lib/types';
+import type { Detection, ProcessingProgress } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 import { preserveRuleStatuses } from '../review-helpers';
 

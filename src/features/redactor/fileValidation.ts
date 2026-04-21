@@ -1,4 +1,4 @@
-import { APP_LIMITS, FILE_ACCEPT } from '../../lib/constants';
+import { APP_LIMITS, FILE_ACCEPT } from '../../lib/app-config';
 
 export function validateSelectedFile(file: File) {
   if (file.type && file.type !== FILE_ACCEPT) {

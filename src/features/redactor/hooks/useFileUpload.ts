@@ -1,8 +1,8 @@
 import type { ChangeEvent, DragEvent, MutableRefObject } from 'react';
 import { useRef } from 'react';
 
-import { DEFAULT_OCR_LANGUAGES } from '../../../lib/constants';
-import type { ExportJob, ProcessingProgress, TextSpan } from '../../../lib/types';
+import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
+import type { ExportJob, ProcessingProgress, TextSpan } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 import { validateSelectedFile } from '../fileValidation';
 
@@ -31,18 +31,18 @@ export function useFileUpload({
   resetWorkflowUi: () => void;
   runDetections: (
     keywords: string[],
-    existingRuleDetections?: import('../../../lib/types').Detection[],
-    existingNonRuleDetections?: import('../../../lib/types').Detection[],
+    existingRuleDetections?: import('../../../types').Detection[],
+    existingNonRuleDetections?: import('../../../types').Detection[],
     hasLoadedDocumentOverride?: boolean,
   ) => Promise<void>;
   setDocument: (payload: {
-    sourceDocument: import('../../../lib/types').SourceDocument;
-    pages: import('../../../lib/types').PageAsset[];
-    detections: import('../../../lib/types').Detection[];
+    sourceDocument: import('../../../types').SourceDocument;
+    pages: import('../../../types').PageAsset[];
+    detections: import('../../../types').Detection[];
     warnings: string[];
   }) => void;
   setError: (message: string | null) => void;
-  setExportJob: (payload: Partial<ExportJob>) => void;
+  setExportJob: (payload: ExportJob) => void;
   setFallbackExportReady: (enabled: boolean) => void;
   setIsProcessing: (value: boolean) => void;
   setProgress: (progress: ProcessingProgress | null) => void;
@@ -55,12 +55,7 @@ export function useFileUpload({
   const loadFile = async (selectedFile: File) => {
     setError(null);
     setFallbackExportReady(false);
-
-    if (exportJob.downloadUrl) {
-      URL.revokeObjectURL(exportJob.downloadUrl);
-    }
-
-    setExportJob({ status: 'idle', completedPages: 0, downloadUrl: undefined, error: undefined, mode: undefined });
+    setExportJob({ status: 'idle' });
 
     try {
       validateSelectedFile(selectedFile);
@@ -78,24 +73,30 @@ export function useFileUpload({
         mimeType: selectedFile.type || 'application/pdf',
       });
 
-      setSelectedOcrLanguages(
-        response.payload.ocrLanguages.length > 0 ? response.payload.ocrLanguages : [...DEFAULT_OCR_LANGUAGES],
-      );
+      const nextOcrLanguages =
+        Array.isArray(response.payload.ocrLanguages) && response.payload.ocrLanguages.length > 0
+          ? response.payload.ocrLanguages
+          : [...DEFAULT_OCR_LANGUAGES];
+      const nextSpans = Array.isArray(response.payload.spans) ? response.payload.spans : [];
+      const nextPages = Array.isArray(response.payload.pages) ? response.payload.pages : [];
+      const nextWarnings = Array.isArray(response.payload.warnings) ? response.payload.warnings : [];
+
+      setSelectedOcrLanguages(nextOcrLanguages);
 
       if (response.payload.needsOcrLanguageSelection) {
         setProgress(null);
         openOcrLanguageModal();
       } else {
-        setSpans(response.payload.spans);
+        setSpans(nextSpans);
         setDocument({
           sourceDocument: response.payload.source,
-          pages: response.payload.pages,
+          pages: nextPages,
           detections: [],
-          warnings: response.payload.warnings,
+          warnings: nextWarnings,
         });
 
         if (response.payload.ocrCompleted) {
-          await runDetections(customKeywords, [], []);
+          await runDetections(customKeywords, [], [], true);
         }
       }
     } catch (caughtError) {
@@ -121,7 +122,7 @@ export function useFileUpload({
     event.target.value = '';
   };
 
-  const handleDrop = async (event: DragEvent<HTMLLabelElement>) => {
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const selectedFile = event.dataTransfer.files?.[0];
     if (!selectedFile) {

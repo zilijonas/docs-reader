@@ -4,8 +4,8 @@ import { ArrowRight, Upload } from 'lucide-react';
 import { Alert, Button, CircularProgress, Panel, ProgressBar } from '../../components/ui';
 import { cn } from '@/lib/cn';
 import { copy } from '@/lib/copy';
-import { FILE_ACCEPT } from '../../lib/constants';
-import type { ProcessingProgress } from '../../lib/types';
+import { FILE_ACCEPT } from '../../lib/app-config';
+import type { ProcessingProgress } from '../../types';
 import { UPLOAD_HINTS } from '../../features/redactor';
 import { useWorkflowContext } from '../../features/redactor/context/WorkflowContext';
 
@@ -78,6 +78,14 @@ export function Dropzone() {
   const showLoader = isProcessing;
   const progressValue = useSmoothProgress(progress);
   const progressMessage = progress?.message ?? copy.dropzone.preparing;
+  const openFilePicker = () => {
+    const input = fileInputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.click();
+  };
 
   return (
     <div className="dropzone-shell w-full">
@@ -113,20 +121,38 @@ export function Dropzone() {
           )}
           padding="none"
         >
-          <label
+          <div
             className="dropzone-label block cursor-pointer text-center transition-colors duration-200 ease-standard"
             onDragLeave={() => setIsHovering(false)}
             onDragOver={(event) => {
               event.preventDefault();
               setIsHovering(true);
             }}
+            onClick={() => openFilePicker()}
             onDrop={(event) => {
               event.preventDefault();
               setIsHovering(false);
               void handleDrop(event);
             }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+              }
+
+              event.preventDefault();
+              openFilePicker();
+            }}
+            role="button"
+            tabIndex={0}
           >
-            <input accept={FILE_ACCEPT} className="hidden" onChange={handleFileChange} ref={fileInputRef} type="file" />
+            <input
+              accept={FILE_ACCEPT}
+              className="hidden"
+              onChange={handleFileChange}
+              onClick={(event) => event.stopPropagation()}
+              ref={fileInputRef}
+              type="file"
+            />
 
             <div
               className={cn(
@@ -143,15 +169,17 @@ export function Dropzone() {
             <div className="dropzone-subtitle text-sm text-content-subtle">{copy.dropzone.browse}</div>
 
             <Button
-              className="pointer-events-none"
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                openFilePicker();
+              }}
               size="pill"
               trailingIcon={<ArrowRight size={16} strokeWidth={1.5} />}
               variant="primary"
             >
               {copy.dropzone.choose}
             </Button>
-          </label>
+          </div>
         </Panel>
       )}
 

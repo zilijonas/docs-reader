@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { Detection, FilterState, ManualRedaction, TextSpan } from '../../../lib/types';
+import type { Detection, FilterState, ManualRedaction, TextSpan } from '../../../types';
 import { buildReviewItems, buildSpansByPage, filterReviewItems, getReviewCounts } from '../review-helpers';
 
 export function useRedactorReviewModel({

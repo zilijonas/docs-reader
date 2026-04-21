@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Detection, ManualRedaction } from '../../lib/types';
+import type { Detection, ManualRedaction } from '../../types';
 import { DEFAULT_REVIEW_FILTERS } from './config';
 import {
   createManualRedactionRecord,

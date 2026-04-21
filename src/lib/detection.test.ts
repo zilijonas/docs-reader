@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { detectSensitiveData, groupDetections } from './detection';
 import { dedupeDetections } from './utils';
-import type { TextSpan } from './types';
+import type { TextSpan } from '../types';
 
 const spans: TextSpan[] = [
   {

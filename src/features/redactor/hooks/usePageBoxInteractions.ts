@@ -1,7 +1,7 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import type { BoundingBox, ManualRedaction } from '../../../lib/types';
+import type { BoundingBox, ManualRedaction } from '../../../types';
 import { clamp, normalizeBox, unionBoxes } from '../../../lib/utils';
 import { REDACTOR_INTERACTION } from '../config';
 
@@ -38,27 +38,37 @@ export function usePageBoxInteractions({
   const [dragState, setDragState] = useState<ManualDragState | null>(null);
   const [dragPreview, setDragPreview] = useState<{ id: string; box: BoundingBox } | null>(null);
   const activeDraftModeRef = useRef<'box' | 'touch-text' | null>(null);
+  const interactionStateRef = useRef<{
+    draftBox: BoundingBox | null;
+    drawingStart: { x: number; y: number } | null;
+    dragState: ManualDragState | null;
+    dragPreview: { id: string; box: BoundingBox } | null;
+  }>({
+    draftBox: null,
+    drawingStart: null,
+    dragState: null,
+    dragPreview: null,
+  });
 
-  const draftBoxRef = useRef<BoundingBox | null>(null);
-  const drawingStartRef = useRef<{ x: number; y: number } | null>(null);
-  const dragStateRef = useRef<ManualDragState | null>(null);
-  const dragPreviewRef = useRef<{ id: string; box: BoundingBox } | null>(null);
+  const setInteractionDraftBox = (value: BoundingBox | null) => {
+    interactionStateRef.current.draftBox = value;
+    setDraftBox(value);
+  };
 
-  useEffect(() => {
-    draftBoxRef.current = draftBox;
-  }, [draftBox]);
+  const setInteractionDrawingStart = (value: { x: number; y: number } | null) => {
+    interactionStateRef.current.drawingStart = value;
+    setDrawingStart(value);
+  };
 
-  useEffect(() => {
-    drawingStartRef.current = drawingStart;
-  }, [drawingStart]);
+  const setInteractionDragState = (value: ManualDragState | null) => {
+    interactionStateRef.current.dragState = value;
+    setDragState(value);
+  };
 
-  useEffect(() => {
-    dragStateRef.current = dragState;
-  }, [dragState]);
-
-  useEffect(() => {
-    dragPreviewRef.current = dragPreview;
-  }, [dragPreview]);
+  const setInteractionDragPreview = (value: { id: string; box: BoundingBox } | null) => {
+    interactionStateRef.current.dragPreview = value;
+    setDragPreview(value);
+  };
 
   useEffect(() => {
     const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'unconfirmed');
@@ -121,12 +131,12 @@ export function usePageBoxInteractions({
 
     event.currentTarget.setPointerCapture(event.pointerId);
     activeDraftModeRef.current = toolMode === 'draw' ? 'box' : 'touch-text';
-    setDrawingStart(point);
-    setDraftBox({ x: point.x, y: point.y, width: 0, height: 0 });
+    setInteractionDrawingStart(point);
+    setInteractionDraftBox({ x: point.x, y: point.y, width: 0, height: 0 });
   };
 
   const movePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const activeDrawingStart = drawingStartRef.current;
+    const activeDrawingStart = interactionStateRef.current.drawingStart;
     if (activeDrawingStart) {
       if (isMobileViewport) {
         event.preventDefault();
@@ -137,7 +147,7 @@ export function usePageBoxInteractions({
         return;
       }
 
-      setDraftBox(
+      setInteractionDraftBox(
         normalizeBox({
           x: Math.min(activeDrawingStart.x, point.x),
           y: Math.min(activeDrawingStart.y, point.y),
@@ -148,7 +158,7 @@ export function usePageBoxInteractions({
       return;
     }
 
-    const activeDragState = dragStateRef.current;
+    const activeDragState = interactionStateRef.current.dragState;
     if (!activeDragState || toolMode === 'draw') {
       return;
     }
@@ -160,7 +170,7 @@ export function usePageBoxInteractions({
 
     const deltaX = (event.clientX - activeDragState.pointerX) / rect.width;
     const deltaY = (event.clientY - activeDragState.pointerY) / rect.height;
-    setDragPreview({
+    setInteractionDragPreview({
       id: activeDragState.id,
       box: normalizeBox({
         x: activeDragState.origin.x + deltaX,
@@ -172,25 +182,25 @@ export function usePageBoxInteractions({
   };
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (drawingStartRef.current && draftBoxRef.current) {
+    if (interactionStateRef.current.drawingStart && interactionStateRef.current.draftBox) {
       if (isMobileViewport) {
         event.preventDefault();
       }
 
       if (
         activeDraftModeRef.current === 'box' &&
-        draftBoxRef.current.width > REDACTOR_INTERACTION.minManualBoxSize &&
-        draftBoxRef.current.height > REDACTOR_INTERACTION.minManualBoxSize
+        interactionStateRef.current.draftBox.width > REDACTOR_INTERACTION.minManualBoxSize &&
+        interactionStateRef.current.draftBox.height > REDACTOR_INTERACTION.minManualBoxSize
       ) {
-        onCreateManual({ box: draftBoxRef.current, mode: 'box' });
+        onCreateManual({ box: interactionStateRef.current.draftBox, mode: 'box' });
       }
 
       if (
         activeDraftModeRef.current === 'touch-text' &&
-        draftBoxRef.current.width > REDACTOR_INTERACTION.minTextSelectionBoxSize &&
-        draftBoxRef.current.height > REDACTOR_INTERACTION.minTextSelectionBoxSize
+        interactionStateRef.current.draftBox.width > REDACTOR_INTERACTION.minTextSelectionBoxSize &&
+        interactionStateRef.current.draftBox.height > REDACTOR_INTERACTION.minTextSelectionBoxSize
       ) {
-        const selectedSpans = spans.filter((span) => boxesOverlap(span.box, draftBoxRef.current!));
+        const selectedSpans = spans.filter((span) => boxesOverlap(span.box, interactionStateRef.current.draftBox!));
 
         if (selectedSpans.length > 0) {
           onCreateManual({
@@ -203,21 +213,21 @@ export function usePageBoxInteractions({
 
       event.currentTarget.releasePointerCapture(event.pointerId);
       activeDraftModeRef.current = null;
-      setDrawingStart(null);
-      setDraftBox(null);
+      setInteractionDrawingStart(null);
+      setInteractionDraftBox(null);
     }
 
-    if (dragStateRef.current) {
-      const activeDragState = dragStateRef.current;
-      const activeDragPreview = dragPreviewRef.current;
+    if (interactionStateRef.current.dragState) {
+      const activeDragState = interactionStateRef.current.dragState;
+      const activeDragPreview = interactionStateRef.current.dragPreview;
 
       if (activeDragPreview && !boxesOverlapExactly(activeDragPreview.box, activeDragState.origin)) {
         onUpdateManual(activeDragState.id, activeDragPreview.box);
       }
 
       pageRef.current?.releasePointerCapture(event.pointerId);
-      setDragState(null);
-      setDragPreview(null);
+      setInteractionDragState(null);
+      setInteractionDragPreview(null);
     }
   };
 
@@ -271,13 +281,13 @@ export function usePageBoxInteractions({
 
     event.stopPropagation();
     pageRef.current?.setPointerCapture(event.pointerId);
-    setDragState({
+    setInteractionDragState({
       id: manualRedaction.id,
       origin: manualRedaction.box,
       pointerX: event.clientX,
       pointerY: event.clientY,
     });
-    setDragPreview({
+    setInteractionDragPreview({
       id: manualRedaction.id,
       box: manualRedaction.box,
     });

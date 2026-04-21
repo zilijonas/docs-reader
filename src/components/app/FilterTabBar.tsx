@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn';
-import type { DetectionStatus, FilterState } from '../../lib/types';
+import type { DetectionStatus, FilterState } from '../../types';
 import { REVIEW_FILTER_TABS } from '../../features/redactor';
 
 export function FilterTabBar({

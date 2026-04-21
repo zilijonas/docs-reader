@@ -1,5 +1,5 @@
-import { DEFAULT_OCR_LANGUAGES } from './constants';
-import type { PageAsset } from './types';
+import { DEFAULT_OCR_LANGUAGES } from './app-config';
+import type { PageAsset } from '../types';
 
 const MAX_EXTRA_LANGUAGES = 3;
 const GREEK_REGEX = /\p{Script=Greek}/gu;

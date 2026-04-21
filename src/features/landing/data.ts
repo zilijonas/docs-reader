@@ -1,4 +1,4 @@
-import { APP_LIMITS } from '../../lib/constants';
+import { APP_LIMITS } from '../../lib/app-config';
 
 export const landingNavLinks = [
   { href: '#how', label: 'How it works' },

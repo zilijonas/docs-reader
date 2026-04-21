@@ -63,3 +63,4 @@ export const writeAnalyticsConsent = (status: PersistedConsentStatus) => {
     .filter(Boolean)
     .join('; ');
 };
+

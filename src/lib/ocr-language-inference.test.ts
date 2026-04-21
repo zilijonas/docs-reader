@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PageAsset } from './types';
+import type { PageAsset } from '../types';
 import { inferOcrLanguagesFromText, planOcrLanguageFlow } from './ocr-language-inference';
 
 const createPage = (overrides: Partial<PageAsset>): PageAsset => ({

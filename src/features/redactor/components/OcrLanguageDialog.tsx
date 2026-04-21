@@ -1,6 +1,6 @@
 import { Languages } from 'lucide-react';
 
-import { DEFAULT_OCR_LANGUAGES } from '../../../lib/constants';
+import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
 import { Button, Dialog } from '../../../components/ui';
 import { copy } from '../../../lib/copy';
 import { useWorkflowContext } from '../context/WorkflowContext';

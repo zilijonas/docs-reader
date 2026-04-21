@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { Detection } from '../lib/types';
+import type { Detection } from '../types';
 import { createManualRedactionRecord } from '../features/redactor';
 import { useReviewStore } from './reviewStore';
 

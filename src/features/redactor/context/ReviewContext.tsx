@@ -11,7 +11,7 @@ import type {
   PageAsset,
   PreviewAsset,
   SourceDocument,
-} from '../../../lib/types';
+} from '../../../types';
 import { useReviewStore } from '../../../store/reviewStore';
 import { PRIMARY_EXPORT_MODE } from '../config';
 import { useRedactorReviewModel } from '../hooks/useRedactorReviewModel';

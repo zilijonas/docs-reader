@@ -1,150 +1,27 @@
 import { create } from 'zustand';
 
-import type {
-  Detection,
-  DetectionStatus,
-  ExportJob,
-  FilterState,
-  ManualMode,
-  ManualRedaction,
-  PageAsset,
-  PreviewAsset,
-  SourceDocument,
-} from '../lib/types';
-import { createId, normalizeBox } from '../lib/utils';
 import {
-  DEFAULT_REVIEW_FILTERS,
+  boxesEqual,
+  createId,
+  createInitialFilters,
   createManualRedactionRecord,
-  initialExportJob,
+  createRedactionsSlice,
   nextDetectionStatus,
-  updatePreviewRecord,
-} from '../features/redactor';
-
-interface ReviewState {
-  sourceDocument: SourceDocument | null;
-  pages: PageAsset[];
-  detections: Detection[];
-  manualRedactions: ManualRedaction[];
-  customKeywords: string[];
-  filters: FilterState;
-  previews: Record<number, PreviewAsset>;
-  activePage: number;
-  toolMode: 'select' | 'draw' | null;
-  canRedo: boolean;
-  exportJob: ExportJob;
-  warnings: string[];
-  fallbackExportReady: boolean;
-  setDocument: (payload: {
-    sourceDocument: SourceDocument;
-    pages: PageAsset[];
-    detections: Detection[];
-    warnings: string[];
-  }) => void;
-  setSourceDocumentName: (name: string) => void;
-  setDetections: (detections: Detection[]) => void;
-  setActivePage: (pageIndex: number) => void;
-  toggleDetectionStatus: (id: string) => void;
-  setDetectionStatus: (id: string, status: DetectionStatus) => void;
-  confirmGroup: (groupId: string) => void;
-  confirmAll: () => void;
-  revertAll: () => void;
-  setFilters: (next: Partial<FilterState>) => void;
-  setToolMode: (mode: 'select' | 'draw' | null) => void;
-  addManualRedaction: (payload: {
-    pageIndex: number;
-    box: ManualRedaction['box'];
-    mode: ManualMode;
-    snippet?: string;
-    note?: string;
-  }) => void;
-  updateManualRedaction: (id: string, box: ManualRedaction['box']) => void;
-  removeManualRedaction: (id: string) => void;
-  clearPendingManualRedactions: () => void;
-  setManualStatus: (id: string, status: DetectionStatus) => void;
-  setCustomKeywords: (keywords: string[]) => void;
-  clearManualPage: (pageIndex: number) => void;
-  setExportJob: (payload: Partial<ExportJob>) => void;
-  setPreviewState: (pageIndex: number, preview: Partial<PreviewAsset>) => void;
-  appendWarning: (message: string) => void;
-  setFallbackExportReady: (enabled: boolean) => void;
-  redoLastChange: () => void;
-  reset: () => void;
-}
-
-interface ReviewSnapshot {
-  detections: Detection[];
-  manualRedactions: ManualRedaction[];
-}
-
-interface ReviewStoreState extends ReviewState {
-  redoHistory: ReviewSnapshot[];
-}
-
-const createInitialExportJob = (): ExportJob => initialExportJob();
-const createInitialFilters = (): FilterState => ({
-  statuses: [...DEFAULT_REVIEW_FILTERS.statuses],
-  sources: [...DEFAULT_REVIEW_FILTERS.sources],
-  types: [...DEFAULT_REVIEW_FILTERS.types],
-});
-const MAX_REDO_HISTORY = 100;
-
-const createReviewSnapshot = (state: Pick<ReviewStoreState, 'detections' | 'manualRedactions'>): ReviewSnapshot => ({
-  detections: state.detections,
-  manualRedactions: state.manualRedactions,
-});
-
-const clearRedoHistory = () => ({
-  canRedo: false,
-  redoHistory: [] as ReviewSnapshot[],
-});
-
-const pushRedoHistory = (
-  state: ReviewStoreState,
-  nextReviewState: Partial<Pick<ReviewStoreState, 'detections' | 'manualRedactions'>>,
-) => {
-  const detections = nextReviewState.detections ?? state.detections;
-  const manualRedactions = nextReviewState.manualRedactions ?? state.manualRedactions;
-
-  if (detections === state.detections && manualRedactions === state.manualRedactions) {
-    return state;
-  }
-
-  const redoHistory = [...state.redoHistory, createReviewSnapshot(state)].slice(-MAX_REDO_HISTORY);
-
-  return {
-    ...nextReviewState,
-    detections,
-    manualRedactions,
-    canRedo: redoHistory.length > 0,
-    redoHistory,
-  };
-};
-
-const boxesEqual = (left: ManualRedaction['box'], right: ManualRedaction['box']) =>
-  left.x === right.x && left.y === right.y && left.width === right.width && left.height === right.height;
+  normalizeBox,
+} from './slices/redactions';
+import { createExportJobSlice, createInitialExportJob } from './slices/exportJob';
+import { clearRedoHistory, createHistorySlice, pushRedoHistory } from './slices/history';
+import { createPreviewAssetsSlice, releasePreviewUrls, updatePreviewRecord } from './slices/previewAssets';
+import type { ReviewStoreState } from './slices/types';
 
 export const useReviewStore = create<ReviewStoreState>((set) => ({
-  sourceDocument: null,
-  pages: [],
-  detections: [],
-  manualRedactions: [],
-  customKeywords: [],
-  filters: createInitialFilters(),
-  previews: {},
-  activePage: 0,
-  toolMode: null,
-  canRedo: false,
-  exportJob: createInitialExportJob(),
-  warnings: [],
-  fallbackExportReady: false,
-  redoHistory: [],
+  ...createRedactionsSlice(),
+  ...createPreviewAssetsSlice(),
+  ...createHistorySlice(),
+  ...createExportJobSlice(),
   setDocument: ({ sourceDocument, pages, detections, warnings }) =>
     set((state) => {
-      Object.values(state.previews).forEach((preview) => {
-        if (preview.url) {
-          URL.revokeObjectURL(preview.url);
-        }
-      });
+      releasePreviewUrls(state.previews);
 
       return {
         sourceDocument,
@@ -154,7 +31,7 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
         manualRedactions: [],
         activePage: 0,
         previews: {},
-        exportJob: { ...createInitialExportJob(), totalPages: pages.length },
+        exportJob: createInitialExportJob(),
         fallbackExportReady: false,
         ...clearRedoHistory(),
       };
@@ -322,13 +199,7 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
     set((state) => ({
       manualRedactions: state.manualRedactions.filter((redaction) => redaction.pageIndex !== pageIndex),
     })),
-  setExportJob: (payload) =>
-    set((state) => ({
-      exportJob: {
-        ...state.exportJob,
-        ...payload,
-      },
-    })),
+  setExportJob: (payload) => set({ exportJob: payload }),
   setPreviewState: (pageIndex, preview) =>
     set((state) => ({
       previews: updatePreviewRecord(state.previews, pageIndex, preview),
@@ -357,11 +228,7 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
     }),
   reset: () =>
     set((state) => {
-      Object.values(state.previews).forEach((preview) => {
-        if (preview.url) {
-          URL.revokeObjectURL(preview.url);
-        }
-      });
+      releasePreviewUrls(state.previews);
 
       return {
         sourceDocument: null,

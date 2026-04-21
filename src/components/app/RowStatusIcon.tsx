@@ -1,6 +1,6 @@
 import { Circle, CircleCheck } from 'lucide-react';
 
-import type { DetectionStatus } from '../../lib/types';
+import type { DetectionStatus } from '../../types';
 
 export function RowStatusIcon({ status }: { status: DetectionStatus }) {
   return status === 'confirmed' ? (

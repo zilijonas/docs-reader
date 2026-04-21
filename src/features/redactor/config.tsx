@@ -19,9 +19,12 @@ import {
   Shield,
 } from 'lucide-react';
 
-import { APP_LIMITS } from '../../lib/constants';
-import { DETECTION_TYPE_LABELS as BASE_DETECTION_TYPE_LABELS, DETECTION_TYPE_ORDER as BASE_DETECTION_TYPE_ORDER } from '../../lib/detectionMetadata';
-import type { DetectionSource, DetectionStatus, DetectionType, ExportMode, FilterState } from '../../lib/types';
+import {
+  APP_LIMITS,
+  DETECTION_TYPE_LABELS as BASE_DETECTION_TYPE_LABELS,
+  DETECTION_TYPE_ORDER as BASE_DETECTION_TYPE_ORDER,
+} from '../../lib/app-config';
+import type { DetectionSource, DetectionStatus, DetectionType, ExportMode, FilterState } from '../../types';
 
 export interface DetectionTypeMeta {
   type: DetectionType;

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { writeAnalyticsConsent } from '../lib/analyticsConsent';
+import { writeAnalyticsConsent } from '../features/consent/cookie';
 import { useConsentStore } from './consentStore';
 
 const clearConsentCookie = () => {

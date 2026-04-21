@@ -1,6 +1,6 @@
 import { startTransition, useEffect, useRef } from 'react';
 
-import type { ProcessingProgress, WorkerResponse } from '../../../lib/types';
+import type { ProcessingProgress, WorkerResponse } from '../../../types';
 import { getRedactorWorkerClient, type RedactorWorkerClient } from '../../../lib/worker-client';
 
 export function useWorkerClient({

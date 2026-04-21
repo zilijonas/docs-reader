@@ -1,6 +1,6 @@
 import type { MutableRefObject } from 'react';
 
-import type { PreviewAsset } from '../../../lib/types';
+import type { PreviewAsset } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 
 export function usePreviewCache({

@@ -1,4 +1,4 @@
-import type { BoundingBox } from './types';
+import type { BoundingBox } from '../types';
 
 type OcrWordLike = {
   text?: string | null;
