@@ -56,32 +56,36 @@ export const landingHero = {
     "Use a browser-based PDF redactor to find sensitive information, review every redaction, and export a permanently redacted PDF. Everything stays on your device - your file is never uploaded.",
   primaryCta: "Redact your PDF",
   secondaryCta: "See how it works",
-  quickPoints: ["Local PDF redaction", "No file uploads", "Review before export"],
+  quickPoints: [
+    "Local PDF redaction",
+    "No file uploads",
+    "Review before export",
+  ],
 } as const;
 
 export const heroTrustBadges = [
   {
     label: "No file uploads",
     mobileLabel: "No uploads",
-    note: "Redaction happens in your browser, not on an app server.",
+    note: "Processed in your browser.",
     icon: "cloudOff",
   },
   {
     label: "Runs on your device",
     mobileLabel: "Local",
-    note: "Your browser opens, reviews, and prepares the file locally.",
+    note: "PDF stays on your device.",
     icon: "monitor",
   },
   {
     label: "Review before export",
     mobileLabel: "Review",
-    note: "You approve every suggested change before the final download.",
+    note: "Approve every redaction.",
     icon: "eye",
   },
   {
     label: "Permanent redaction",
     mobileLabel: "Irreversible",
-    note: "Selected data is removed in the exported PDF.",
+    note: "Export removes selected data.",
     icon: "shield",
   },
 ] as const;

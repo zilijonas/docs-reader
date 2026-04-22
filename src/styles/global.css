@@ -1292,10 +1292,6 @@ a {
 
 .landing-trust-badges-compact {
   display: none;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .landing-trust-badge {
@@ -2545,7 +2541,11 @@ a {
   }
 
   .landing-trust-badges-compact {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .landing-trust-badge {
