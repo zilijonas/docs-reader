@@ -1,5 +1,6 @@
 ---
-import { ArrowRight, Eye } from "lucide-react";
+import { ArrowRight, CloudOff, Eye, Monitor, Shield } from "lucide-react";
+import { heroTrustBadges, landingHero } from "../data";
 import LandingHeroDiagram from "./LandingHeroDiagram.astro";
 
 interface Props {
@@ -16,32 +17,52 @@ const { appUrl } = Astro.props;
     </div>
   </div>
   <div class="page-container landing-hero-inner">
-    <div class="landing-hero-content">
-      <span class="landing-hero-brand">HDDN</span>
-      <h1 class="type-display-hero fade-in">
-        Redact PDFs <em class="italic-accent">locally.</em> Keep document contents
-        in your browser.
-      </h1>
-      <p class="landing-hero-copy type-body-lg fade-in fade-in-delay-1">
-        Drop a PDF. We detect sensitive data. You approve. Export a clean,
-        permanently redacted file - all inside your browser.
-      </p>
-      <p class="landing-hero-trust fade-in fade-in-delay-2">
-        No document uploads. Local review. Safe-first export.
-      </p>
-      <div class="landing-hero-actions fade-in fade-in-delay-3">
-        <a class="landing-button" href={appUrl}>
-          <span>Redact your PDF</span>
-          <ArrowRight size={16} strokeWidth={1.5} />
-        </a>
-        <a class="landing-button-secondary" href="#how">
-          <Eye size={16} strokeWidth={1.5} />
-          <span>See how it works</span>
-        </a>
+    <div class="landing-hero-panel">
+      <div class="landing-hero-content">
+        <span class="landing-hero-brand">{landingHero.eyebrow}</span>
+        <h1 class="type-display-hero fade-in">
+          {landingHero.headlineLead} Redact <em class="italic-accent">
+            {landingHero.headlineAccent}
+          </em> {landingHero.headlineTrail}
+        </h1>
+        <p class="landing-hero-copy type-body-lg fade-in fade-in-delay-1">
+          {landingHero.subtext}
+        </p>
+        <div class="landing-hero-actions fade-in fade-in-delay-3">
+          <a class="landing-button" href={appUrl}>
+            <span>{landingHero.primaryCta}</span>
+            <ArrowRight size={16} strokeWidth={1.5} />
+          </a>
+          <a class="landing-button-secondary" href="#how">
+            <Eye size={16} strokeWidth={1.5} />
+            <span>{landingHero.secondaryCta}</span>
+          </a>
+        </div>
+        <p class="landing-hero-microcopy type-caption fade-in fade-in-delay-2">{landingHero.trustLine}</p>
       </div>
-      <p class="landing-hero-microcopy type-caption">
-        Free to try. No signup required.
-      </p>
+      <ul class="landing-trust-badges fade-in fade-in-delay-3" aria-label="Key trust points">
+        {
+          heroTrustBadges.map((badge) => (
+            <li class="landing-trust-badge">
+              <span class="landing-trust-badge-icon" aria-hidden="true">
+                {badge.icon === "cloudOff" ? (
+                  <CloudOff size={18} strokeWidth={1.6} />
+                ) : badge.icon === "monitor" ? (
+                  <Monitor size={18} strokeWidth={1.6} />
+                ) : badge.icon === "eye" ? (
+                  <Eye size={18} strokeWidth={1.6} />
+                ) : (
+                  <Shield size={18} strokeWidth={1.6} />
+                )}
+              </span>
+              <span class="landing-trust-badge-copy">
+                <span class="landing-trust-badge-title">{badge.label}</span>
+                <span class="landing-trust-badge-note">{badge.note}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </div>
 </section>

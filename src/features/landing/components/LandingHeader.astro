@@ -1,7 +1,6 @@
 ---
-import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "../../../components/BrandLogo";
-import { landingNavLinks } from "../data";
+import { landingHero, landingNavLinks } from "../data";
 
 interface Props {
   appUrl: string;
@@ -29,7 +28,7 @@ const { appUrl } = Astro.props;
         class="landing-button px-2.5 py-1.5 text-xs whitespace-nowrap"
         href={appUrl}
       >
-        <span>Redact PDF</span>
+        <span>{landingHero.primaryCta}</span>
       </a>
     </div>
   </div>

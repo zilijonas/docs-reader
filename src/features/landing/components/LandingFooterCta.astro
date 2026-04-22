@@ -1,5 +1,6 @@
 ---
 import { ArrowRight } from "lucide-react";
+import { footerCta } from "../data";
 interface Props {
   appUrl: string;
 }
@@ -9,13 +10,15 @@ const { appUrl } = Astro.props;
 
 <section class="landing-footer">
   <div class="page-container landing-footer-cta items-center">
-    <h2 class="type-display-cta measure-landing-cta text-inherit">
-      Ready when you are. <span class="landing-footer-emphasis"
-        >No signup required.</span
-      >
-    </h2>
+    <div class="landing-footer-copy">
+      <h2 class="type-display-cta measure-landing-cta text-inherit">
+        {footerCta.title}
+      </h2>
+      <p class="type-body-lg text-inherit">{footerCta.body}</p>
+      <p class="landing-footer-trust type-caption text-inherit">{footerCta.trustLine}</p>
+    </div>
     <a class="landing-button-inverse" href={appUrl}>
-      <span>Redact your PDF</span>
+      <span>{footerCta.buttonLabel}</span>
       <ArrowRight size={16} strokeWidth={1.5} />
     </a>
   </div>

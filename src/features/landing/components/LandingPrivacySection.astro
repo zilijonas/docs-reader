@@ -1,43 +1,43 @@
 ---
 import { Shield } from "lucide-react";
-import { techHighlights } from "../data";
+import { privacyHighlights, privacySection } from "../data";
 ---
 
 <section id="privacy" class="landing-section-shell">
   <div class="page-container section-space">
-    <div class="landing-privacy-grid">
-      <div>
-        <div class="landing-eyebrow mb-3">Privacy by design</div>
+    <div class="landing-privacy-panel">
+      <div class="landing-privacy-copy-block">
+        <div class="landing-privacy-kicker">
+          <span class="landing-privacy-kicker-icon" aria-hidden="true">
+            <Shield size={14} strokeWidth={1.7} />
+          </span>
+          <span class="landing-eyebrow text-inherit">{privacySection.eyebrow}</span>
+        </div>
         <h2 class="type-display-section measure-landing-privacy mb-6">
-          Your document stays in your browser during processing.
+          {privacySection.title}
         </h2>
         <div class="landing-privacy-copy">
-          <p class="type-body measure-landing-privacy">
-            There is no app server for document processing, uploads, or storage.
-          </p>
-          <p class="type-body measure-landing-privacy">
-            Text extraction, OCR, detection, review, and export run locally
-            using WebAssembly.
-          </p>
-          <p class="type-body measure-landing-privacy">
-            Google Analytics uses denied-by-default consent mode settings, and
-            document contents are not sent there.
-          </p>
+          {
+            privacySection.paragraphs.map((paragraph) => (
+              <p class="type-body measure-landing-privacy">{paragraph}</p>
+            ))
+          }
+          <p class="type-body measure-landing-privacy">{privacySection.supportLine}</p>
         </div>
       </div>
 
-      <div class="landing-card landing-tech-shell">
+      <div class="landing-privacy-proof">
         <div class="landing-pipeline-head">
-          <span class="landing-pipeline-label">How it runs</span>
-          <span class="status-pill">
-            <Shield size={10} strokeWidth={1.5} />
-            local only
-          </span>
+          <span class="landing-pipeline-label text-inherit">{privacySection.highlightsTitle}</span>
+          <span class="landing-privacy-proof-badge">local review</span>
         </div>
-        <ul class="landing-tech-list">
+        <ul class="landing-privacy-proof-grid">
           {
-            techHighlights.map((item) => (
-              <li class="landing-tech-item">{item}</li>
+            privacyHighlights.map((item, index) => (
+              <li class="landing-privacy-proof-card">
+                <span class="landing-privacy-proof-index">0{index + 1}</span>
+                <span class="landing-privacy-proof-text">{item}</span>
+              </li>
             ))
           }
         </ul>

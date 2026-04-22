@@ -1,0 +1,28 @@
+---
+import { whySection } from '../data';
+---
+
+<section class="landing-section-shell">
+  <div class="page-container section-space">
+    <div class="landing-why-frame">
+      <div class="landing-why-summary">
+        <div class="landing-eyebrow mb-3">{whySection.eyebrow}</div>
+        <h2 class="type-display-section measure-landing-section">
+          {whySection.title}
+        </h2>
+        <p class="type-body landing-why-intro">{whySection.intro}</p>
+      </div>
+
+      <ul class="landing-why-badges" aria-label="Why people use HDDN">
+        {
+          whySection.items.map((item) => (
+            <li class="landing-why-badge">
+              <span class="landing-why-badge-dot" aria-hidden="true"></span>
+              <span class="landing-why-badge-label">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

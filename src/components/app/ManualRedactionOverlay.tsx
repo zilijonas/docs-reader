@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
 import { IconButton } from '../../components/ui';
 import type { BoundingBox, DetectionStatus, ManualRedaction } from '../../types';
 import { getReviewItemAnchorId } from '../../features/redactor';
-import { getBoxStyle } from './pdf-viewer-utils';
+import { getBoxPriority, getBoxStyle } from './pdf-viewer-utils';
 
 export function ManualRedactionOverlay({
   manualRedactions,
@@ -50,6 +50,7 @@ export function ManualRedactionOverlay({
                 manualRedaction.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
               '--review-highlight-fill':
                 manualRedaction.status === 'confirmed' ? 'rgb(16 185 129 / 0.18)' : 'rgb(217 119 6 / 0.18)',
+              zIndex: getBoxPriority(box),
             })}
           >
             <span aria-hidden="true" className="pdf-review-pulse-layer" />

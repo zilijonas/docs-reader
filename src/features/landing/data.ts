@@ -1,40 +1,187 @@
-import { APP_LIMITS } from '../../lib/app-config';
+import { APP_LIMITS } from "../../lib/app-config";
 
 export const landingNavLinks = [
-  { href: '#how', label: 'How it works' },
-  { href: '#privacy', label: 'Privacy' },
+  { href: "#how", label: "How it works" },
+  { href: "#privacy", label: "Privacy" },
+  { href: "#limits", label: "Limits" },
 ] as const;
+
+export const landingHero = {
+  eyebrow: "HDDN",
+  headlineLead: "Hide sensitive data in your PDF.",
+  headlineAccent: "locally",
+  headlineTrail: "before you share it with anyone.",
+  subtext:
+    "Open your PDF, review what should be hidden, and export a clean version. Everything happens on your device - your file is never uploaded.",
+  primaryCta: "Redact your PDF",
+  secondaryCta: "See how it works",
+  trustLine: "Free to use. No signup required.",
+} as const;
+
+export const heroTrustBadges = [
+  {
+    label: "No file uploads",
+    note: "Redaction happens in your browser, not on an app server.",
+    icon: "cloudOff",
+  },
+  {
+    label: "Runs on your device",
+    note: "Your browser opens, reviews, and prepares the file locally.",
+    icon: "monitor",
+  },
+  {
+    label: "Review before export",
+    note: "You approve every suggested change before the final download.",
+    icon: "eye",
+  },
+  {
+    label: "Permanent redaction",
+    note: "Selected data is removed in the exported PDF.",
+    icon: "shield",
+  },
+] as const;
+
+export const howSection = {
+  eyebrow: "How it works",
+  title: "A few simple steps. You stay in control the whole time.",
+  intro:
+    "We mark what may need attention. You review every change before export.",
+} as const;
 
 export const howSteps = [
   {
-    number: '01',
-    icon: 'upload',
-    title: 'Drop a PDF',
-    description: 'Text stays local. Scans use in-browser OCR.',
+    number: "01",
+    icon: "upload",
+    title: "Open your PDF",
+    description:
+      "Drop your file into the page. Your browser opens it on your device.",
   },
   {
-    number: '02',
-    icon: 'review',
-    title: 'Review detections',
-    description: 'We suggest emails, phones, IBANs, IDs, and more. You decide what gets redacted.',
+    number: "02",
+    icon: "search",
+    title: "We mark possible sensitive data",
+    description:
+      "We highlight things like names, emails, phone numbers, IDs, and bank details that may need to be hidden.",
   },
   {
-    number: '03',
-    icon: 'export',
-    title: 'Export safely',
-    description: 'True PDF redaction. Not just visual masking.',
+    number: "03",
+    icon: "review",
+    title: "Review and adjust",
+    description:
+      "Keep or remove our suggestions. Add your own markings if needed.",
+  },
+  {
+    number: "04",
+    icon: "export",
+    title: "Export a clean PDF",
+    description: "Save a version with the selected data permanently removed.",
   },
 ] as const;
 
-export const techHighlights = [
-  'In-browser processing (WebAssembly)',
-  'OCR for scanned PDFs',
-  'Pattern detection (emails, IDs, IBANs, etc.)',
-  'Secure PDF redaction (not reversible)',
+export const browserExplainer = {
+  eyebrow: "Local processing",
+  title: "How can a website use your file without uploading it?",
+  paragraphs: [
+    "Your browser is a tool on your device.",
+    "When you open hddn, the website loads the tool into your browser.",
+    "Then your browser can open and edit your PDF on your device.",
+    "That means your file does not need to be sent anywhere.",
+  ],
+  shortTitle: "Short version",
+  shortPoints: [
+    "The website gives your browser the tool.",
+    "Your browser uses that tool on your device.",
+    "Your PDF does not need to be sent anywhere to be edited.",
+  ],
+} as const;
+
+export const privacySection = {
+  eyebrow: "Privacy and trust",
+  title: "Your document stays on your device",
+  paragraphs: [
+    "Your PDF is processed directly in your browser.",
+    "It is not uploaded, stored, or sent away for redaction.",
+  ],
+  supportLine:
+    "You review everything before export, and the final file is saved back to your device.",
+  highlightsTitle: "What this means",
+} as const;
+
+export const privacyHighlights = [
+  "No file uploads for redaction",
+  "Review every suggestion",
+  "Manual changes stay in your control",
+  "Permanent redaction on export",
 ] as const;
+
+export const useCasesSection = {
+  eyebrow: "When to use hddn",
+  title: "Use it before a PDF leaves your hands.",
+  items: [
+    {
+      label: "Share safely",
+      title: "Before sending a PDF to someone else",
+      description:
+        "Check the file first, hide what should stay private, then send the clean version.",
+      icon: "send",
+    },
+    {
+      label: "Before AI tools",
+      title: "Before uploading a document to AI tools",
+      description:
+        "Remove personal details first when you want to use a document with another tool.",
+      icon: "bot",
+    },
+    {
+      label: "Everyday documents",
+      title: "Before sharing contracts, reports, IDs, or forms",
+      description:
+        "Use it on the kinds of PDFs that often carry names, numbers, and sensitive details.",
+      icon: "files",
+    },
+    {
+      label: "General protection",
+      title: "Any time a PDF contains personal or sensitive information",
+      description:
+        "If a document feels too revealing to share as-is, review it here first.",
+      icon: "shield",
+    },
+  ],
+} as const;
+
+export const whySection = {
+  eyebrow: "Why people use it",
+  title: "Simple, review-first redaction.",
+  intro:
+    "Built for people who want a clear workflow they can trust before a PDF leaves their hands.",
+  items: [
+    "Simple to understand",
+    "No signup required",
+    "Free to use",
+    "You review every change",
+    "Clean PDF export",
+    "Sensitive data stays under your control",
+  ],
+} as const;
+
+export const limitsSection = {
+  eyebrow: "Supported right now",
+  title: "A clear scope for safe, focused PDF redaction.",
+} as const;
 
 export const limitStats = [
-  { label: 'File cap', value: `${APP_LIMITS.maxFileSizeMb} MB`, note: 'Per document' },
-  { label: 'Pages', value: String(APP_LIMITS.maxPages), note: 'Maximum' },
-  { label: 'Input', value: 'PDF', note: 'Only, for now' },
+  { label: "Input", value: "PDF", note: "Files only" },
+  {
+    label: "File cap",
+    value: `${APP_LIMITS.maxFileSizeMb} MB`,
+    note: "Per file",
+  },
+  { label: "Pages", value: String(APP_LIMITS.maxPages), note: "Per document" },
 ] as const;
+
+export const footerCta = {
+  title: "Ready to clean up a PDF?",
+  body: "Hide sensitive data before you share your file.",
+  buttonLabel: "Redact your PDF",
+  trustLine: "Free to use. No signup required.",
+} as const;

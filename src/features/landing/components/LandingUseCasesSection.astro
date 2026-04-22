@@ -1,0 +1,42 @@
+---
+import { Bot, Files, Send, Shield } from "lucide-react";
+import { useCasesSection } from '../data';
+---
+
+<section class="landing-section-shell">
+  <div class="page-container section-space">
+    <div class="landing-section-head">
+      <div>
+        <div class="landing-eyebrow mb-3">{useCasesSection.eyebrow}</div>
+        <h2 class="type-display-section measure-landing-section">
+          {useCasesSection.title}
+        </h2>
+      </div>
+    </div>
+
+    <div class="landing-use-case-grid">
+      {
+        useCasesSection.items.map((item) => (
+          <div class="landing-card landing-use-case-card">
+            <div class="landing-use-case-head">
+              <span class="landing-use-case-icon" aria-hidden="true">
+                {item.icon === "send" ? (
+                  <Send size={18} strokeWidth={1.6} />
+                ) : item.icon === "bot" ? (
+                  <Bot size={18} strokeWidth={1.6} />
+                ) : item.icon === "files" ? (
+                  <Files size={18} strokeWidth={1.6} />
+                ) : (
+                  <Shield size={18} strokeWidth={1.6} />
+                )}
+              </span>
+              <span class="landing-use-case-label">{item.label}</span>
+            </div>
+            <h3 class="type-display-card">{item.title}</h3>
+            <p class="type-body-sm">{item.description}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

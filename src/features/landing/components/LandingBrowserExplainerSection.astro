@@ -1,0 +1,71 @@
+---
+import { ArrowRight, FileText, Globe, Monitor } from "lucide-react";
+import { browserExplainer } from '../data';
+---
+
+<section class="landing-section-shell">
+  <div class="page-container section-space">
+    <div class="landing-explainer-shell">
+      <div class="landing-explainer-intro">
+        <div class="landing-eyebrow mb-3">{browserExplainer.eyebrow}</div>
+        <h2 class="type-display-section measure-landing-section mb-6">
+          {browserExplainer.title}
+        </h2>
+        <div class="landing-explainer-copy">
+          {
+            browserExplainer.paragraphs.map((paragraph) => (
+              <p class="type-body measure-landing-privacy">{paragraph}</p>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="landing-card landing-explainer-summary">
+        <div class="landing-pipeline-label mb-4">{browserExplainer.shortTitle}</div>
+        <div class="landing-flow-summary">
+          {
+            browserExplainer.shortPoints.map((point) => (
+              <span class="landing-flow-summary-chip">{point}</span>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="landing-card landing-flow-board">
+        <div class="landing-flow-head">
+          <span class="landing-pipeline-label">What actually happens</span>
+          <span class="status-pill">browser-side</span>
+        </div>
+        <div class="landing-flow-strip" aria-label={browserExplainer.shortTitle}>
+          <div class="landing-flow-node">
+            <span class="landing-flow-icon" aria-hidden="true">
+              <Globe size={18} strokeWidth={1.6} />
+            </span>
+            <span class="landing-flow-title">hddn loads</span>
+            <span class="landing-flow-note">The site loads the tool into your browser.</span>
+          </div>
+          <span class="landing-flow-arrow" aria-hidden="true">
+            <ArrowRight size={18} strokeWidth={1.5} />
+          </span>
+          <div class="landing-flow-node">
+            <span class="landing-flow-icon" aria-hidden="true">
+              <Monitor size={18} strokeWidth={1.6} />
+            </span>
+            <span class="landing-flow-title">Your browser works</span>
+            <span class="landing-flow-note">Open, review, and prepare the PDF on your device.</span>
+          </div>
+          <span class="landing-flow-arrow" aria-hidden="true">
+            <ArrowRight size={18} strokeWidth={1.5} />
+          </span>
+          <div class="landing-flow-node">
+            <span class="landing-flow-icon" aria-hidden="true">
+              <FileText size={18} strokeWidth={1.6} />
+            </span>
+            <span class="landing-flow-title">Your PDF stays put</span>
+            <span class="landing-flow-note">The file does not need to be sent anywhere to be edited.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
