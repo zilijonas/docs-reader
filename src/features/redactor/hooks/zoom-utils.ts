@@ -37,10 +37,14 @@ const clampAnchorOffset = (value: number | undefined, start: number, size: numbe
 
 export function createZoomSnapshot({
   anchor,
+  contentOffsetX = 0,
+  contentOffsetY = 0,
   geometry,
   zoom,
 }: {
   anchor?: ZoomAnchor;
+  contentOffsetX?: number;
+  contentOffsetY?: number;
   geometry: ScrollGeometry;
   zoom: number;
 }): ZoomSnapshot {
@@ -50,17 +54,21 @@ export function createZoomSnapshot({
   return {
     anchorOffsetX,
     anchorOffsetY,
-    contentX: geometry.scrollLeft + anchorOffsetX,
-    contentY: geometry.scrollTop + anchorOffsetY,
+    contentX: geometry.scrollLeft + anchorOffsetX - contentOffsetX,
+    contentY: geometry.scrollTop + anchorOffsetY - contentOffsetY,
     previousZoom: zoom,
   };
 }
 
 export function getScrollPositionForZoom({
+  contentOffsetX = 0,
+  contentOffsetY = 0,
   geometry,
   nextZoom,
   snapshot,
 }: {
+  contentOffsetX?: number;
+  contentOffsetY?: number;
   geometry: Pick<ScrollGeometry, 'clientHeight' | 'clientWidth' | 'scrollHeight' | 'scrollWidth'>;
   nextZoom: number;
   snapshot: ZoomSnapshot;
@@ -73,8 +81,9 @@ export function getScrollPositionForZoom({
 
   return {
     scrollLeft:
-      maxScrollLeft <= 0 ? 0 : clamp(nextContentX - snapshot.anchorOffsetX, 0, maxScrollLeft),
-    scrollTop: maxScrollTop <= 0 ? 0 : clamp(nextContentY - snapshot.anchorOffsetY, 0, maxScrollTop),
+      maxScrollLeft <= 0 ? 0 : clamp(contentOffsetX + nextContentX - snapshot.anchorOffsetX, 0, maxScrollLeft),
+    scrollTop:
+      maxScrollTop <= 0 ? 0 : clamp(contentOffsetY + nextContentY - snapshot.anchorOffsetY, 0, maxScrollTop),
   };
 }
 

@@ -6,6 +6,24 @@ import { createZoomSnapshot, getScrollPositionForZoom, isEditableElement, type Z
 
 const REVIEW_ITEM_PULSE_DELAY_MS = 520;
 
+const getZoomContentOffset = (viewerColumn: HTMLDivElement, viewerRect: DOMRect) => {
+  const zoomOuter = viewerColumn.querySelector<HTMLElement>('.zoom-outer');
+
+  if (!zoomOuter) {
+    return {
+      x: 0,
+      y: 0,
+    };
+  }
+
+  const zoomOuterRect = zoomOuter.getBoundingClientRect();
+
+  return {
+    x: viewerColumn.scrollLeft + (zoomOuterRect.left - viewerRect.left),
+    y: viewerColumn.scrollTop + (zoomOuterRect.top - viewerRect.top),
+  };
+};
+
 export function useScrollNavigation({
   appHeaderHeight,
   hasViewer,
@@ -127,8 +145,11 @@ export function useScrollNavigation({
 
     if (viewerColumn) {
       const viewerRect = viewerColumn.getBoundingClientRect();
+      const contentOffset = getZoomContentOffset(viewerColumn, viewerRect);
       pendingZoomSnapshotRef.current = createZoomSnapshot({
         anchor,
+        contentOffsetX: contentOffset.x,
+        contentOffsetY: contentOffset.y,
         geometry: {
           clientHeight: viewerColumn.clientHeight,
           clientWidth: viewerColumn.clientWidth,
@@ -157,6 +178,8 @@ export function useScrollNavigation({
     }
 
     const nextScroll = getScrollPositionForZoom({
+      contentOffsetX: getZoomContentOffset(viewerColumn, viewerColumn.getBoundingClientRect()).x,
+      contentOffsetY: getZoomContentOffset(viewerColumn, viewerColumn.getBoundingClientRect()).y,
       geometry: {
         clientHeight: viewerColumn.clientHeight,
         clientWidth: viewerColumn.clientWidth,
