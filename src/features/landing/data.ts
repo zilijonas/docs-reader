@@ -19,7 +19,7 @@ export type LandingMobileLink = {
 };
 
 export const getLandingNavLinks = (baseUrl: string): LandingNavLink[] => [
-  { href: `${baseUrl}#how`, label: "How it works", icon: "how" },
+  { href: `${baseUrl}how-it-works`, label: "How it works", icon: "how" },
   { href: `${baseUrl}privacy`, label: "Privacy", icon: "privacy" },
   { href: `${baseUrl}faq`, label: "FAQ", icon: "faq" },
 ];
@@ -33,7 +33,10 @@ export const getLandingFooterLinks = (baseUrl: string): LandingFooterLink[] => [
   { href: `${baseUrl}contact`, label: "Contact", icon: "contact" },
 ];
 
-export const getLandingMobileLinks = (baseUrl: string, appUrl: string): LandingMobileLink[] => [
+export const getLandingMobileLinks = (
+  baseUrl: string,
+  appUrl: string,
+): LandingMobileLink[] => [
   { href: appUrl, label: "Redact your PDF", icon: "app" },
   { href: `${baseUrl}#how`, label: "How it works", icon: "how" },
   { href: `${baseUrl}privacy`, label: "Privacy", icon: "privacy" },
