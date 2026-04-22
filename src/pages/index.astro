@@ -14,12 +14,13 @@ import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 const appUrl = `${baseUrl}redact`;
+const howItWorksUrl = `${baseUrl}how-it-works`;
 ---
 
 <Layout seo={SEO.home}>
   <div class="landing-page">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
-    <LandingHero appUrl={appUrl} />
+    <LandingHero appUrl={appUrl} howItWorksUrl={howItWorksUrl} />
     <LandingHowSection />
     <LandingExampleSection baseUrl={baseUrl} />
     <LandingBrowserExplainerSection />

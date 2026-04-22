@@ -5,9 +5,10 @@ import LandingHeroDiagram from "./LandingHeroDiagram.astro";
 
 interface Props {
   appUrl: string;
+  howItWorksUrl: string;
 }
 
-const { appUrl } = Astro.props;
+const { appUrl, howItWorksUrl } = Astro.props;
 ---
 
 <section class="landing-hero">
@@ -76,7 +77,7 @@ const { appUrl } = Astro.props;
             <span>{landingHero.primaryCta}</span>
             <Pencil size={16} strokeWidth={1.5} />
           </a>
-          <a class="landing-button-secondary" href="how-it-works">
+          <a class="landing-button-secondary" href={howItWorksUrl}>
             <Eye size={16} strokeWidth={1.5} />
             <span>{landingHero.secondaryCta}</span>
           </a>
