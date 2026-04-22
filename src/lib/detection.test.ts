@@ -156,6 +156,20 @@ describe('detectSensitiveData multi-locale', () => {
   const snippetsOfType = (detections: ReturnType<typeof detectSensitiveData>, type: string) =>
     detections.filter((detection) => detection.type === type).map((detection) => detection.snippet);
 
+  const detectSingleSpan = (text: string) =>
+    detectSensitiveData(0, text, [
+      {
+        id: 'single',
+        pageIndex: 0,
+        text,
+        box: { x: 0.1, y: 0.2, width: 0.8, height: 0.04 },
+        source: 'native',
+        confidence: 1,
+        start: 0,
+        end: text.length,
+      },
+    ]);
+
   it('detects German date with "März" and a PLZ postal code', () => {
     const { text, spans } = buildPage(['Am', '15.', 'März', '2024', 'PLZ', '10115', 'Berlin']);
     const detections = detectSensitiveData(0, text, spans);
@@ -170,6 +184,13 @@ describe('detectSensitiveData multi-locale', () => {
 
     expect(snippetsOfType(detections, 'date')).toEqual(['2025-08-12 13:14']);
     expect(snippetsOfType(detections, 'phone')).toEqual([]);
+  });
+
+  it('detects weekday-prefixed month-name dates', () => {
+    const { text, spans } = buildPage(['MON', '18', 'SEPTEMBER', '2023']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'date')).toContain('MON 18 SEPTEMBER 2023');
   });
 
   it('detects a Lithuanian asmens kodas via checksum-validated national ID rule', () => {
@@ -200,6 +221,15 @@ describe('detectSensitiveData multi-locale', () => {
     expect(detections.some((detection) => detection.type === 'postal')).toBe(true);
   });
 
+  it('detects bare Lithuanian postal codes and postcode-plus-city phrases', () => {
+    const bare = detectSingleSpan('01209');
+    const withCity = detectSingleSpan('09308 Vilnius');
+
+    expect(snippetsOfType(bare, 'postal')).toContain('01209');
+    expect(snippetsOfType(withCity, 'postal')).toContain('09308');
+    expect(snippetsOfType(withCity, 'phone')).toEqual([]);
+  });
+
   it('validates IBANs via checksum and rejects random alphanumerics', () => {
     const { text, spans } = buildPage(['IBAN', 'GB82WEST12345698765432', 'XX00BAD00000000000000']);
     const detections = detectSensitiveData(0, text, spans);
@@ -207,6 +237,16 @@ describe('detectSensitiveData multi-locale', () => {
     const ibans = detections.filter((detection) => detection.type === 'iban');
     expect(ibans.length).toBe(1);
     expect(ibans[0].normalizedSnippet).toBe('gb82west12345698765432');
+  });
+
+  it('detects Lithuanian IBANs in contiguous and grouped forms', () => {
+    const contiguous = detectSingleSpan('LT121000011101001000');
+    const grouped = detectSingleSpan('LT12 1000 0111 0100 1000');
+    const groupedNbsp = detectSingleSpan(`LT12\u00A01000\u00A00111\u00A00100\u00A01000`);
+
+    expect(snippetsOfType(contiguous, 'iban')).toContain('LT121000011101001000');
+    expect(snippetsOfType(grouped, 'iban')).toContain('LT12 1000 0111 0100 1000');
+    expect(snippetsOfType(groupedNbsp, 'iban')).toContain(`LT12\u00A01000\u00A00111\u00A00100\u00A01000`);
   });
 
   it('detects a card number only when it passes Luhn', () => {
@@ -267,6 +307,12 @@ describe('detectSensitiveData multi-locale', () => {
     expect(snippetsOfType(detections, 'address')).not.toContain('Kriviu g. 35 - 35, Vilnius, LT01231');
   });
 
+  it('detects uppercase Lithuanian short street abbreviations without dots when address-like', () => {
+    const detections = detectSingleSpan('KONSITUCIJOS PR 12');
+
+    expect(snippetsOfType(detections, 'address')).toContain('KONSITUCIJOS PR 12');
+  });
+
   it('detects Lithuanian written dates with optional year and day markers', () => {
     const { text, spans } = buildPage(['2015', 'm.', 'spalio', '26d.']);
     const detections = detectSensitiveData(0, text, spans);
@@ -293,6 +339,69 @@ describe('detectSensitiveData multi-locale', () => {
     const detections = detectSensitiveData(0, text, spans);
 
     expect(snippetsOfType(detections, 'address')).toContain('Šv. Stepono 5-37');
+  });
+
+  it('detects saint-prefixed Lithuanian street names with collapsed punctuation', () => {
+    const detections = detectSingleSpan('Šv.Stepono 5-37');
+
+    expect(snippetsOfType(detections, 'address')).toContain('Šv.Stepono 5-37');
+  });
+
+  it('detects VINs and rejects VIN-like strings with forbidden letters', () => {
+    const valid = detectSingleSpan('SHHFK37806U011394');
+    const invalid = detectSingleSpan('SHHFK37806U01I394');
+
+    expect(snippetsOfType(valid, 'id')).toContain('SHHFK37806U011394');
+    expect(snippetsOfType(invalid, 'id')).toEqual([]);
+  });
+
+  it('detects global phone layouts including Lithuanian local and short service numbers', () => {
+    const lithuanian = detectSingleSpan('370 5 2102737');
+    const shortService = detectSingleSpan('19001');
+    const compactIntl = detectSingleSpan('+37052102737');
+    const us = detectSingleSpan('(202) 555-0101');
+
+    expect(snippetsOfType(lithuanian, 'phone')).toContain('370 5 2102737');
+    expect(snippetsOfType(shortService, 'phone')).toContain('19001');
+    expect(snippetsOfType(compactIntl, 'phone')).toContain('+37052102737');
+    expect(snippetsOfType(us, 'phone')).toContain('(202) 555-0101');
+  });
+
+  it('does not treat odometer-like date-plus-distance records as phone or number detections', () => {
+    const detections = detectSingleSpan('2020-10 15037km');
+
+    expect(snippetsOfType(detections, 'phone')).toEqual([]);
+    expect(snippetsOfType(detections, 'number')).toEqual([]);
+    expect(snippetsOfType(detections, 'id')).toEqual([]);
+  });
+
+  it('detects structured hyphenated document identifiers as a whole token', () => {
+    const detections = detectSingleSpan('LT26-L18-20145172-9');
+
+    expect(snippetsOfType(detections, 'id')).toContain('LT26-L18-20145172-9');
+    expect(snippetsOfType(detections, 'number')).not.toContain('20145172');
+  });
+
+  it('rejects ordinary business words that should not trigger rule detections', () => {
+    for (const text of ['Atsiskaitymo', 'Įsipareigojimai', 'Įsigaliojimas']) {
+      expect(detectSingleSpan(text)).toEqual([]);
+    }
+  });
+
+  it('rejects short SKU-like hyphenated tokens that are not document ids', () => {
+    const detections = detectSingleSpan('AB-123-XYZ');
+
+    expect(snippetsOfType(detections, 'id')).toEqual([]);
+  });
+
+  it('accepts weekday-prefixed month names across multiple locales', () => {
+    const german = detectSingleSpan('Mo 18 März 2024');
+    const french = detectSingleSpan('lun. 18 septembre 2023');
+    const spanish = detectSingleSpan('LUN 18 SEPTIEMBRE 2023');
+
+    expect(snippetsOfType(german, 'date')).toContain('Mo 18 März 2024');
+    expect(snippetsOfType(french, 'date')).toContain('lun. 18 septembre 2023');
+    expect(snippetsOfType(spanish, 'date')).toContain('LUN 18 SEPTIEMBRE 2023');
   });
 
   it('extends the address bounding box across every span of the phrase', () => {
