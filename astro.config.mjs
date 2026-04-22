@@ -34,8 +34,8 @@ const isUserOrOrgSite = repositoryName !== '' && repositoryName === `${repositor
 const fallbackSite = repositoryOwner ? `https://${repositoryOwner}.github.io` : 'https://example.github.io';
 const fallbackBase = isUserOrOrgSite || repositoryName === '' ? '/' : `/${repositoryName}/`;
 const resolvedSite =
-  normalizeSite(process.env.PUBLIC_SITE_URL) ??
   normalizeSite(configuredDomain ? `https://${configuredDomain}` : undefined) ??
+  normalizeSite(process.env.PUBLIC_SITE_URL) ??
   fallbackSite;
 const resolvedHostname = new URL(resolvedSite).hostname;
 const usesCustomDomain = resolvedHostname !== 'example.github.io' && !resolvedHostname.endsWith('.github.io');

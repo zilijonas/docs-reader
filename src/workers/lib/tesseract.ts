@@ -5,7 +5,7 @@ import { TESSDATA_CDN } from '../../lib/detection/config';
 import { extractOcrWords } from '../../lib/ocr';
 import type { PageAsset, TextSpan } from '../../types';
 import { runPythonBytes } from './pyodide';
-import { resolveRuntimeAssetUrl, state, toOwnedArrayBuffer, updateProgress, pushWarning } from './state';
+import { state, toOwnedArrayBuffer, updateProgress, pushWarning } from './state';
 
 const normalizeLanguages = (languages: string[] | undefined) => {
   const cleaned = Array.from(
@@ -33,13 +33,13 @@ export const ensureTesseractWorker = async (languages: string[] | undefined, req
     state.tesseractWorker = undefined;
   }
 
-  const localLangPath = resolveRuntimeAssetUrl('tesseract/');
+  const localLangPath = new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString();
   const langPath = langs.every((lang) => lang === 'eng') ? localLangPath : TESSDATA_CDN;
 
   state.tesseractWorker = await createTesseractWorker(langKey, OEM.LSTM_ONLY, {
-    workerPath: resolveRuntimeAssetUrl('tesseract/worker.min.js'),
+    workerPath: new URL(`${state.baseUrl}tesseract/worker.min.js`, self.location.origin).toString(),
     langPath,
-    corePath: resolveRuntimeAssetUrl('tesseract/'),
+    corePath: new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString(),
     logger: (message) => {
       updateProgress(requestId, {
         phase: 'ocr',

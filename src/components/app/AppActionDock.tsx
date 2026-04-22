@@ -1,4 +1,4 @@
-import { LassoSelect, Layers, MousePointer2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { LassoSelect, Layers, RotateCcw, TypeOutline, ZoomIn, ZoomOut, SquareDashedMousePointer } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { copy } from '@/lib/copy';
@@ -49,18 +49,6 @@ export function AppActionDock() {
       </CircleButton>
 
       <CircleButton
-        aria-label={copy.dock.redo}
-        data-keep-pending-manuals="true"
-        disabled={!canRedo}
-        onClick={redoLastChange}
-        ring="strong"
-        size="lg"
-        tone="accent"
-      >
-        <RotateCcw size={20} strokeWidth={1.75} />
-      </CircleButton>
-
-      <CircleButton
         aria-label={isSelectMode ? copy.dock.disableSelect : copy.dock.enableSelect}
         active={isSelectMode}
         onClick={() => setToolMode(isSelectMode ? null : 'select')}
@@ -68,7 +56,7 @@ export function AppActionDock() {
         size="lg"
         tone="accent"
       >
-        <MousePointer2 size={20} strokeWidth={1.75} />
+        <TypeOutline size={20} strokeWidth={1.75} />
       </CircleButton>
 
       <CircleButton
@@ -79,7 +67,7 @@ export function AppActionDock() {
         size="lg"
         tone="accent"
       >
-        <LassoSelect size={20} strokeWidth={1.75} />
+        <SquareDashedMousePointer size={20} strokeWidth={1.75} />
       </CircleButton>
 
       <CircleButton
@@ -100,6 +88,18 @@ export function AppActionDock() {
         tone="accent"
       >
         <ZoomOut size={20} strokeWidth={1.75} />
+      </CircleButton>
+
+      <CircleButton
+        aria-label={copy.dock.redo}
+        data-keep-pending-manuals="true"
+        disabled={!canRedo}
+        onClick={redoLastChange}
+        ring="strong"
+        size="lg"
+        tone="accent"
+      >
+        <RotateCcw size={20} strokeWidth={1.75} />
       </CircleButton>
     </div>
   );
