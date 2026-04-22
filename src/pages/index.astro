@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import LandingBrowserExplainerSection from '../features/landing/components/LandingBrowserExplainerSection.astro';
+import LandingExampleSection from '../features/landing/components/LandingExampleSection.astro';
 import LandingFooterCta from '../features/landing/components/LandingFooterCta.astro';
 import LandingHeader from '../features/landing/components/LandingHeader.astro';
 import LandingHero from '../features/landing/components/LandingHero.astro';
@@ -22,6 +23,7 @@ const appUrl = `${baseUrl}app`;
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
     <LandingHero appUrl={appUrl} />
     <LandingHowSection />
+    <LandingExampleSection baseUrl={baseUrl} />
     <LandingBrowserExplainerSection />
     <LandingPrivacySection />
     <LandingUseCasesSection />

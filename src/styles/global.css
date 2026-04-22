@@ -997,6 +997,59 @@ a {
   margin: 0;
 }
 
+.landing-example-shell {
+  display: grid;
+}
+
+.landing-example-shell-marketing {
+  max-width: unset;
+}
+
+.landing-example-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.95fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.landing-example-frame {
+  background:
+    radial-gradient(circle at top right, color-mix(in oklab, var(--theme-brand-soft) 88%, white) 0%, transparent 30%),
+    linear-gradient(180deg, color-mix(in oklab, var(--theme-surface-muted) 88%, white), var(--theme-surface));
+}
+
+.landing-example-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid color-mix(in oklab, var(--theme-border-strong) 70%, white);
+  border-radius: 1rem;
+  box-shadow: 0 18px 40px -28px rgb(17 17 17 / 0.3);
+}
+
+.landing-example-notes {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.landing-example-note {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem 1.1rem;
+}
+
+.landing-example-note p {
+  margin: 0;
+}
+
+.landing-example-note-label {
+  font-family: var(--font-ui-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-content-subtle);
+}
+
 .privacy-code {
   font-family: var(--font-ui-mono);
   color: var(--theme-content) !important;
@@ -2274,6 +2327,7 @@ a {
 
   .landing-explainer-shell,
   .landing-explainer-grid,
+  .landing-example-grid,
   .landing-privacy-grid,
   .landing-privacy-panel,
   .landing-why-frame,
