@@ -1,16 +1,16 @@
 ---
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Contact hddn with questions, feedback, or issues."
   eyebrow="Contact"
-  intro="Questions, feedback, or issues. Reach out here."
+  intro="Questions, bug reports, privacy concerns, or feedback about the PDF redaction tool. Reach out here."
   pageTitle="Contact"
-  title="Contact | hddn"
+  seo={SEO.contact}
 >
   <section class="privacy-section-block contact-page-card">
     <p>hddn is created by:</p>

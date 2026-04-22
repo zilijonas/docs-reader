@@ -49,14 +49,14 @@ export const getLandingMobileLinks = (
 export const landingHero = {
   statusPill: "Private by design",
   statusDetail: "Runs in your browser",
-  headlineLead: "Hide sensitive data in your PDF.",
+  headlineLead: "Redact PDF files",
   headlineAccent: "locally",
-  headlineTrail: "before you share it with anyone.",
+  headlineTrail: "before you share sensitive information.",
   subtext:
-    "Open your PDF, review what should be hidden, and export a clean version. Everything happens on your device - your file is never uploaded.",
+    "Use a browser-based PDF redactor to find sensitive information, review every redaction, and export a permanently redacted PDF. Everything stays on your device - your file is never uploaded.",
   primaryCta: "Redact your PDF",
   secondaryCta: "See how it works",
-  quickPoints: ["No signup", "No file uploads", "Review before export"],
+  quickPoints: ["Local PDF redaction", "No file uploads", "Review before export"],
 } as const;
 
 export const heroTrustBadges = [
@@ -88,9 +88,9 @@ export const heroTrustBadges = [
 
 export const howSection = {
   eyebrow: "How it works",
-  title: "A few simple steps. You stay in control the whole time.",
+  title: "Local PDF redaction in a few clear steps.",
   intro:
-    "We mark what may need attention. You review every change before export.",
+    "Open a PDF, review suggested redactions, and export a clean copy without sending the document to a processing server.",
 } as const;
 
 export const howSteps = [
@@ -142,10 +142,10 @@ export const browserExplainer = {
 
 export const privacySection = {
   eyebrow: "Privacy and trust",
-  title: "Your document stays on your device",
+  title: "Local PDF redaction keeps your document on your device",
   paragraphs: [
     "Your PDF is processed directly in your browser.",
-    "It is not uploaded, stored, or sent away for redaction.",
+    "It is not uploaded, stored, or sent to an app server for redaction.",
   ],
   supportLine:
     "You review everything before export, and the final file is saved back to your device.",
@@ -161,7 +161,7 @@ export const privacyHighlights = [
 
 export const useCasesSection = {
   eyebrow: "When to use hddn",
-  title: "Use it before a PDF leaves your hands.",
+  title: "Use this PDF redactor before a document leaves your hands.",
   items: [
     {
       label: "Share safely",
@@ -196,9 +196,9 @@ export const useCasesSection = {
 
 export const whySection = {
   eyebrow: "Why people use it",
-  title: "Simple, review-first redaction.",
+  title: "Simple, review-first PDF redaction.",
   intro:
-    "Built for people who want a clear workflow they can trust before a PDF leaves their hands.",
+    "Built for people who want calm, browser-based PDF redaction before a document leaves their hands.",
   items: [
     "Simple to understand",
     "No signup required",
@@ -226,7 +226,7 @@ export const limitStats = [
 
 export const footerCta = {
   title: "Ready to clean up a PDF?",
-  body: "Hide sensitive data before you share your file.",
+  body: "Redact sensitive information before you share your PDF.",
   buttonLabel: "Redact your PDF",
   trustLine: "Free to use. No signup required.",
 } as const;

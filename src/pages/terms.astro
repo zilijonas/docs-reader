@@ -1,16 +1,16 @@
 ---
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Read the terms of use for hddn, including usage rules, service limitations, and governing law."
   eyebrow="Terms"
   intro="Simple terms for using hddn."
   pageTitle="Terms of Use"
-  title="Terms of Use | hddn"
+  seo={SEO.terms}
   updatedAt="April 22, 2026"
 >
   <section class="privacy-section-block">

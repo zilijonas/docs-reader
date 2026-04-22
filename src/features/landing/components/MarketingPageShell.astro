@@ -2,10 +2,10 @@
 import Layout from "../../../layouts/Layout.astro";
 import LandingFooterCta from "./LandingFooterCta.astro";
 import LandingHeader from "./LandingHeader.astro";
+import type { SeoMetadata } from "../../../lib/seo";
 
 interface Props {
-  title: string;
-  description: string;
+  seo: SeoMetadata;
   pageTitle: string;
   intro?: string;
   updatedAt?: string;
@@ -14,8 +14,7 @@ interface Props {
 }
 
 const {
-  title,
-  description,
+  seo,
   pageTitle,
   intro,
   updatedAt,
@@ -25,7 +24,7 @@ const {
 const appUrl = `${baseUrl}redact`;
 ---
 
-<Layout title={title} description={description}>
+<Layout seo={seo}>
   <div class="landing-page marketing-page">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
 

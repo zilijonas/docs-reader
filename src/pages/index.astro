@@ -10,15 +10,13 @@ import LandingLimitsSection from "../features/landing/components/LandingLimitsSe
 import LandingPrivacySection from "../features/landing/components/LandingPrivacySection.astro";
 import LandingUseCasesSection from "../features/landing/components/LandingUseCasesSection.astro";
 import LandingWhySection from "../features/landing/components/LandingWhySection.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 const appUrl = `${baseUrl}redact`;
 ---
 
-<Layout
-  title="hddn - Hide what matters."
-  description="Hide sensitive data in your PDF before you share it. Review what should be hidden, redact locally in your browser, and export a clean copy."
->
+<Layout seo={SEO.home}>
   <div class="landing-page">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
     <LandingHero appUrl={appUrl} />

@@ -1,6 +1,7 @@
 ---
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
 import { APP_LIMITS } from "../lib/app-config";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 
@@ -108,11 +109,10 @@ const faqItems = [
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Read common questions about local PDF redaction, analytics, limits, and how hddn works."
   eyebrow="FAQ"
-  intro="Simple answers about local processing, privacy, supported files, and what to expect from hddn."
-  pageTitle="FAQ"
-  title="FAQ | hddn"
+  intro="Answers about local PDF redaction, privacy, uploads, file limits, and what to expect before you export a redacted PDF."
+  pageTitle="PDF Redaction FAQ"
+  seo={SEO.faq}
 >
   <section class="faq-accordion" aria-label="Frequently asked questions">
     {

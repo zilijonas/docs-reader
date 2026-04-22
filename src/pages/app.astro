@@ -1,5 +1,7 @@
 ---
 const redirectUrl = `${import.meta.env.BASE_URL}redact`;
+const siteUrl = Astro.site ?? new URL("https://hddn.app");
+const canonicalUrl = new URL("/redact/", siteUrl);
 ---
 
 <!doctype html>
@@ -7,8 +9,8 @@ const redirectUrl = `${import.meta.env.BASE_URL}redact`;
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="refresh" content={`0;url=${redirectUrl}`} />
-    <meta name="robots" content="noindex" />
-    <link rel="canonical" href={redirectUrl} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href={canonicalUrl} />
     <title>Redirecting to /redact</title>
   </head>
   <body>

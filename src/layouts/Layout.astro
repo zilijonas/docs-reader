@@ -6,25 +6,49 @@ import {
   ANALYTICS_CONSENT_COOKIE_VERSION,
 } from "../features/consent/cookie";
 import { ANALYTICS } from "../lib/app-config";
+import type { SeoMetadata, StructuredData } from "../lib/seo";
+import { SITE_SEO } from "../lib/seo";
 
 interface Props {
+  seo?: SeoMetadata;
   title?: string;
   description?: string;
   viewportContent?: string;
   robots?: string;
+  canonicalPath?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  structuredData?: StructuredData | StructuredData[];
 }
 
 const {
+  seo,
   title = "hddn - Hide what matters.",
   description = "Redact PDFs locally in your browser. Document contents stay on-device during processing.",
   viewportContent = "width=device-width",
-  robots = "index, follow",
+  robots = SITE_SEO.defaultRobots,
+  canonicalPath,
+  ogTitle,
+  ogDescription,
+  structuredData,
 } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL;
 const siteUrl = Astro.site ?? new URL("https://example.github.io");
-const pageUrl = new URL(Astro.url.pathname, siteUrl);
+const resolvedTitle = seo?.title ?? title;
+const resolvedDescription = seo?.description ?? description;
+const resolvedRobots = seo?.robots ?? robots;
+const resolvedOgTitle = seo?.ogTitle ?? ogTitle ?? resolvedTitle;
+const resolvedOgDescription = seo?.ogDescription ?? ogDescription ?? resolvedDescription;
+const resolvedCanonicalPath = seo?.canonicalPath ?? canonicalPath ?? Astro.url.pathname;
+const pageUrl = new URL(resolvedCanonicalPath, siteUrl);
 const ogImageWebpUrl = new URL(`${baseUrl}og-image.webp`, siteUrl);
 const ogImageUrl = new URL(`${baseUrl}og-image.png`, siteUrl);
+const resolvedStructuredData = seo?.structuredData ?? structuredData;
+const structuredDataEntries = Array.isArray(resolvedStructuredData)
+  ? resolvedStructuredData
+  : resolvedStructuredData
+    ? [resolvedStructuredData]
+    : [];
 const enableAnalytics = ANALYTICS.enabled;
 ---
 
@@ -42,26 +66,30 @@ const enableAnalytics = ANALYTICS.enabled;
       rel="stylesheet"
     />
     <meta name="generator" content={Astro.generator} />
-    <meta name="description" content={description} />
-    <meta name="robots" content={robots} />
+    <meta name="description" content={resolvedDescription} />
+    <meta name="robots" content={resolvedRobots} />
     <link rel="canonical" href={pageUrl} />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={resolvedOgTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={pageUrl} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={resolvedOgDescription} />
+    <meta property="og:site_name" content={SITE_SEO.siteName} />
     <meta property="og:image" content={ogImageWebpUrl} />
     <meta property="og:image:type" content="image/webp" />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:type" content="image/png" />
-    <meta
-      property="og:image:alt"
-      content="hddn document redactor preview image"
-    />
+    <meta property="og:image:alt" content={SITE_SEO.ogImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:title" content={resolvedOgTitle} />
+    <meta name="twitter:description" content={resolvedOgDescription} />
     <meta name="twitter:image" content={ogImageUrl} />
-    <title>{title}</title>
+    <meta name="twitter:image:alt" content={SITE_SEO.ogImageAlt} />
+    <title>{resolvedTitle}</title>
+    {
+      structuredDataEntries.map((entry) => (
+        <script type="application/ld+json" set:html={JSON.stringify(entry)} />
+      ))
+    }
   </head>
   <body>
     <slot />

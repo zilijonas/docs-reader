@@ -1,17 +1,17 @@
 ---
 import LandingExampleSection from "../features/landing/components/LandingExampleSection.astro";
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Learn how hddn opens PDFs locally, suggests redactions, and exports a clean file."
   eyebrow="How it works"
-  intro="hddn is designed to be simple. You open a file, review it, and export a clean version."
-  pageTitle="How it works"
-  title="How It Works | hddn"
+  intro="See how local PDF redaction works in hddn: open a file, review suggested redactions, and export a safely redacted PDF."
+  pageTitle="How local PDF redaction works"
+  seo={SEO.howItWorks}
 >
   <section class="privacy-section-block">
     <h2>Step 1 — Open your PDF</h2>

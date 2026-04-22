@@ -1,17 +1,17 @@
 ---
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
 import { ANALYTICS_CONSENT_COOKIE_NAME } from "../features/consent/cookie";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Read how hddn handles privacy, analytics consent, cookies, and local PDF processing."
   eyebrow="Privacy"
-  intro="Your PDF stays on your device. hddn does not upload, store, or send your files anywhere for processing."
-  pageTitle="Privacy"
-  title="Privacy | hddn"
+  intro="Privacy for local PDF redaction starts with browser-only processing. hddn does not upload, store, or send your files away for redaction."
+  pageTitle="Privacy for local PDF redaction"
+  seo={SEO.privacy}
   updatedAt="April 22, 2026"
 >
   <section class="privacy-summary-grid">

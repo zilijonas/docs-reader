@@ -9,6 +9,7 @@ import {
 import Layout from "../layouts/Layout.astro";
 import LandingFooterCta from "../features/landing/components/LandingFooterCta.astro";
 import LandingHeader from "../features/landing/components/LandingHeader.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 const appUrl = `${baseUrl}redact`;
@@ -19,10 +20,7 @@ const helpLinks = [
 ];
 ---
 
-<Layout
-  title="Page not found - hddn"
-  description="The page you requested could not be found. Jump back to the document redactor or return to the homepage."
->
+<Layout seo={SEO.notFound}>
   <div class="landing-page marketing-page not-found-page">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
 

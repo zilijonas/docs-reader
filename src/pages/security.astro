@@ -1,16 +1,16 @@
 ---
 import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+import { SEO } from "../lib/seo";
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Read how hddn keeps documents local, avoids remote file processing, and keeps review in your control."
   eyebrow="Security"
-  intro="hddn is built to keep your documents under your control."
-  pageTitle="Security"
-  title="Security | hddn"
+  intro="Security for browser-based PDF redaction means no document uploads, no remote file processing, and manual review before export."
+  pageTitle="Security for browser-based PDF redaction"
+  seo={SEO.security}
 >
   <section class="privacy-section-block">
     <h2>Your files stay on your device</h2>
