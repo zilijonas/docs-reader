@@ -158,6 +158,15 @@ body {
   html {
     scroll-behavior: auto;
   }
+
+  .fade-in,
+  .anim-draw-in,
+  .anim-float-in {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    will-change: auto;
+  }
 }
 
 body {
@@ -232,7 +241,10 @@ a {
 }
 
 .fade-in {
-  animation: fadeInUp 320ms var(--theme-ease-standard);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeInUp 320ms var(--theme-ease-standard) both;
+  will-change: opacity, transform;
 }
 
 .fade-in-delay-1 {
@@ -248,11 +260,17 @@ a {
 }
 
 .anim-draw-in {
+  opacity: 0;
+  transform: scale(0.96);
   animation: drawIn 200ms var(--theme-ease-standard) both;
+  will-change: opacity, transform;
 }
 
 .anim-float-in {
+  opacity: 0;
+  transform: translateY(12px);
   animation: floatIn 380ms var(--theme-ease-standard) both;
+  will-change: opacity, transform;
 }
 
 .pdf-review-target-pulse {
