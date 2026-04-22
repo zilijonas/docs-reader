@@ -1,5 +1,12 @@
 ---
-import { ArrowRight, CloudOff, Eye, Monitor, Shield } from "lucide-react";
+import {
+  ArrowRight,
+  CloudOff,
+  Eye,
+  Monitor,
+  Pencil,
+  Shield,
+} from "lucide-react";
 import { heroTrustBadges, landingHero } from "../data";
 import LandingHeroDiagram from "./LandingHeroDiagram.astro";
 
@@ -23,46 +30,62 @@ const { appUrl } = Astro.props;
         <h1 class="type-display-hero fade-in">
           {landingHero.headlineLead} Redact <em class="italic-accent">
             {landingHero.headlineAccent}
-          </em> {landingHero.headlineTrail}
+          </em>
+          {landingHero.headlineTrail}
         </h1>
         <p class="landing-hero-copy type-body-lg fade-in fade-in-delay-1">
           {landingHero.subtext}
         </p>
+        <ul
+          class="landing-trust-badges fade-in fade-in-delay-3 my-6"
+          aria-label="Key trust points"
+        >
+          {
+            heroTrustBadges.map((badge) => (
+              <li
+                class="landing-trust-badge"
+                aria-label={`${badge.label}. ${badge.note}`}
+              >
+                <span class="landing-trust-badge-icon" aria-hidden="true">
+                  {badge.icon === "cloudOff" ? (
+                    <CloudOff size={18} strokeWidth={1.6} />
+                  ) : badge.icon === "monitor" ? (
+                    <Monitor size={18} strokeWidth={1.6} />
+                  ) : badge.icon === "eye" ? (
+                    <Eye size={18} strokeWidth={1.6} />
+                  ) : (
+                    <Shield size={18} strokeWidth={1.6} />
+                  )}
+                </span>
+                <span class="landing-trust-badge-copy">
+                  <span class="landing-trust-badge-title">
+                    <span class="landing-trust-badge-title-desktop">
+                      {badge.label}
+                    </span>
+                    <span class="landing-trust-badge-title-mobile">
+                      {badge.mobileLabel}
+                    </span>
+                  </span>
+                  <span class="landing-trust-badge-note">{badge.note}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
         <div class="landing-hero-actions fade-in fade-in-delay-3">
           <a class="landing-button" href={appUrl}>
             <span>{landingHero.primaryCta}</span>
-            <ArrowRight size={16} strokeWidth={1.5} />
+            <Pencil size={16} strokeWidth={1.5} />
           </a>
           <a class="landing-button-secondary" href="#how">
             <Eye size={16} strokeWidth={1.5} />
             <span>{landingHero.secondaryCta}</span>
           </a>
         </div>
-        <p class="landing-hero-microcopy type-caption fade-in fade-in-delay-2">{landingHero.trustLine}</p>
+        <p class="landing-hero-microcopy type-caption fade-in fade-in-delay-2">
+          {landingHero.trustLine}
+        </p>
       </div>
-      <ul class="landing-trust-badges fade-in fade-in-delay-3" aria-label="Key trust points">
-        {
-          heroTrustBadges.map((badge) => (
-            <li class="landing-trust-badge">
-              <span class="landing-trust-badge-icon" aria-hidden="true">
-                {badge.icon === "cloudOff" ? (
-                  <CloudOff size={18} strokeWidth={1.6} />
-                ) : badge.icon === "monitor" ? (
-                  <Monitor size={18} strokeWidth={1.6} />
-                ) : badge.icon === "eye" ? (
-                  <Eye size={18} strokeWidth={1.6} />
-                ) : (
-                  <Shield size={18} strokeWidth={1.6} />
-                )}
-              </span>
-              <span class="landing-trust-badge-copy">
-                <span class="landing-trust-badge-title">{badge.label}</span>
-                <span class="landing-trust-badge-note">{badge.note}</span>
-              </span>
-            </li>
-          ))
-        }
-      </ul>
     </div>
   </div>
 </section>

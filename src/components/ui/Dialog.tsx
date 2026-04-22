@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/cn';
@@ -47,13 +48,13 @@ export function Dialog({ children, className, labelledBy, onClose, open, size, t
     return null;
   }
 
-  return (
+  const content = (
     <div
       aria-labelledby={labelledBy}
       aria-modal="true"
       className={cn(
-        'app-modal-overlay fixed inset-0 flex items-center justify-center bg-content/35 px-4 backdrop-blur-sm',
-        top ? 'z-modal-top' : 'z-modal',
+        'app-modal-overlay fixed inset-0 flex justify-center bg-content/35 px-4 backdrop-blur-sm',
+        top ? 'z-modal-top items-start pt-[calc(env(safe-area-inset-top)+1rem)]' : 'z-modal items-center',
       )}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -67,6 +68,12 @@ export function Dialog({ children, className, labelledBy, onClose, open, size, t
       </Panel>
     </div>
   );
+
+  if (typeof document === 'undefined') {
+    return content;
+  }
+
+  return createPortal(content, document.body);
 }
 
 export { dialogPanelVariants };

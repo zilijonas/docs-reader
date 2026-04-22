@@ -1,6 +1,11 @@
 ---
+import { Pencil } from "lucide-react";
 import { BrandLogo } from "../../../components/BrandLogo";
-import { landingHero, getLandingNavLinks } from "../data";
+import {
+  landingHero,
+  getLandingMobileLinks,
+  getLandingNavLinks,
+} from "../data";
 import { LandingMobileNav } from "./LandingMobileNav";
 
 interface Props {
@@ -10,6 +15,7 @@ interface Props {
 
 const { appUrl, baseUrl } = Astro.props;
 const navLinks = getLandingNavLinks(baseUrl);
+const mobileLinks = getLandingMobileLinks(baseUrl, appUrl);
 ---
 
 <header class="landing-header">
@@ -29,12 +35,20 @@ const navLinks = getLandingNavLinks(baseUrl);
       }
       <div class="landing-header-actions">
         <a
-          class="landing-button px-2.5 py-1.5 text-xs whitespace-nowrap"
+          class="landing-button landing-header-cta-text px-2.5 py-1.5 text-xs whitespace-nowrap"
           href={appUrl}
         >
           <span>{landingHero.primaryCta}</span>
+          <Pencil size={16} strokeWidth={1.9} />
         </a>
-        <LandingMobileNav client:idle links={navLinks} />
+        <a
+          aria-label={landingHero.primaryCta}
+          class="landing-button landing-header-cta-mobile-icon"
+          href={appUrl}
+        >
+          <Pencil size={16} strokeWidth={1.9} />
+        </a>
+        <LandingMobileNav client:idle links={mobileLinks} />
       </div>
     </div>
   </div>

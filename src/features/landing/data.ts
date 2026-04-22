@@ -3,27 +3,44 @@ import { APP_LIMITS } from "../../lib/app-config";
 export type LandingNavLink = {
   href: string;
   label: string;
+  icon: "how" | "privacy" | "faq";
 };
 
 export type LandingFooterLink = {
   href: string;
   label: string;
+  icon: "how" | "privacy" | "faq" | "terms" | "security" | "contact";
+};
+
+export type LandingMobileLink = {
+  href: string;
+  label: string;
+  icon: "app" | "how" | "privacy" | "faq" | "terms" | "security" | "contact";
 };
 
 export const getLandingNavLinks = (baseUrl: string): LandingNavLink[] => [
-  { href: `${baseUrl}#how`, label: "How it works" },
-  { href: `${baseUrl}#limits`, label: "Limits" },
-  { href: `${baseUrl}privacy`, label: "Privacy" },
-  { href: `${baseUrl}faq`, label: "FAQ" },
+  { href: `${baseUrl}#how`, label: "How it works", icon: "how" },
+  { href: `${baseUrl}privacy`, label: "Privacy", icon: "privacy" },
+  { href: `${baseUrl}faq`, label: "FAQ", icon: "faq" },
 ];
 
 export const getLandingFooterLinks = (baseUrl: string): LandingFooterLink[] => [
-  { href: `${baseUrl}how-it-works`, label: "How it works" },
-  { href: `${baseUrl}privacy`, label: "Privacy" },
-  { href: `${baseUrl}faq`, label: "FAQ" },
-  { href: `${baseUrl}terms`, label: "Terms" },
-  { href: `${baseUrl}security`, label: "Security" },
-  { href: `${baseUrl}contact`, label: "Contact" },
+  { href: `${baseUrl}how-it-works`, label: "How it works", icon: "how" },
+  { href: `${baseUrl}privacy`, label: "Privacy", icon: "privacy" },
+  { href: `${baseUrl}faq`, label: "FAQ", icon: "faq" },
+  { href: `${baseUrl}terms`, label: "Terms", icon: "terms" },
+  { href: `${baseUrl}security`, label: "Security", icon: "security" },
+  { href: `${baseUrl}contact`, label: "Contact", icon: "contact" },
+];
+
+export const getLandingMobileLinks = (baseUrl: string, appUrl: string): LandingMobileLink[] => [
+  { href: appUrl, label: "Redact your PDF", icon: "app" },
+  { href: `${baseUrl}#how`, label: "How it works", icon: "how" },
+  { href: `${baseUrl}privacy`, label: "Privacy", icon: "privacy" },
+  { href: `${baseUrl}faq`, label: "FAQ", icon: "faq" },
+  { href: `${baseUrl}terms`, label: "Terms", icon: "terms" },
+  { href: `${baseUrl}security`, label: "Security", icon: "security" },
+  { href: `${baseUrl}contact`, label: "Contact", icon: "contact" },
 ];
 
 export const landingHero = {
@@ -41,21 +58,25 @@ export const landingHero = {
 export const heroTrustBadges = [
   {
     label: "No file uploads",
+    mobileLabel: "No uploads",
     note: "Redaction happens in your browser, not on an app server.",
     icon: "cloudOff",
   },
   {
     label: "Runs on your device",
+    mobileLabel: "Local",
     note: "Your browser opens, reviews, and prepares the file locally.",
     icon: "monitor",
   },
   {
     label: "Review before export",
+    mobileLabel: "Review",
     note: "You approve every suggested change before the final download.",
     icon: "eye",
   },
   {
     label: "Permanent redaction",
+    mobileLabel: "Irreversible",
     note: "Selected data is removed in the exported PDF.",
     icon: "shield",
   },
