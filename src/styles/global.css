@@ -560,6 +560,7 @@ a {
 
 .landing-header-shell,
 .landing-nav,
+.landing-header-actions,
 .landing-hero-panel,
 .landing-hero-actions,
 .landing-stats,
@@ -632,10 +633,28 @@ a {
   flex-wrap: wrap;
 }
 
+.landing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .landing-nav-link {
   font-size: 0.8125rem;
   color: var(--theme-content-muted);
   text-decoration: none;
+}
+
+.landing-nav-link:hover {
+  color: var(--theme-content);
+}
+
+.landing-mobile-nav-trigger {
+  display: none;
+}
+
+.landing-mobile-nav-dialog {
+  max-width: 24rem;
 }
 
 .landing-button,
@@ -689,6 +708,263 @@ a {
 .landing-button-inverse:hover {
   border-color: var(--theme-surface);
   background: var(--theme-surface);
+}
+
+.marketing-page-shell {
+  display: grid;
+  gap: 2rem;
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+}
+
+.marketing-page-hero {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.marketing-page-hero h1,
+.marketing-page-hero p {
+  margin: 0;
+}
+
+.marketing-page-updated {
+  color: var(--theme-content-muted);
+}
+
+.marketing-page-container {
+  width: 100%;
+  max-width: unset !important;
+}
+
+.marketing-prose {
+  display: grid;
+  gap: 2rem;
+  max-width: 44rem;
+}
+
+.marketing-prose section {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.marketing-prose h2 {
+  margin: 0;
+  font-family: var(--font-ui-serif);
+  font-size: clamp(1.4rem, 2.5vw, 1.95rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.marketing-prose p,
+.marketing-prose ul {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--theme-content-muted);
+}
+
+.marketing-prose strong {
+  color: var(--theme-content);
+}
+
+.marketing-prose a {
+  color: var(--theme-content);
+}
+
+.marketing-prose ul {
+  list-style: disc;
+  list-style-position: outside;
+  padding-left: 1.2rem;
+}
+
+.marketing-prose li {
+  display: list-item;
+}
+
+.marketing-prose li + li {
+  margin-top: 0.45rem;
+}
+
+.privacy-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.privacy-summary-card,
+.privacy-section-block,
+.faq-item {
+  border: 1px solid var(--theme-border);
+  border-radius: 1.25rem;
+  background: color-mix(in oklab, var(--theme-surface) 92%, var(--theme-canvas));
+}
+
+.privacy-summary-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
+.privacy-summary-card strong {
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--theme-content);
+}
+
+.privacy-summary-card p,
+.privacy-summary-card strong {
+  margin: 0;
+}
+
+.privacy-summary-label {
+  font-family: var(--font-ui-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-content-subtle);
+}
+
+.privacy-section-block {
+  padding: 1.5rem;
+}
+
+.privacy-checklist {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.privacy-checklist p {
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.privacy-checklist p::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--theme-success);
+}
+
+.privacy-bullet-list {
+  display: grid;
+  gap: 0.35rem;
+  list-style: disc;
+  list-style-position: outside;
+  padding-left: 1.2rem;
+}
+
+.privacy-bullet-list li {
+  display: list-item;
+}
+
+.privacy-meta-card {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.6rem 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--theme-border-strong) 78%, white);
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--theme-surface-muted) 85%, white);
+}
+
+.privacy-meta-card p {
+  margin: 0;
+}
+
+.privacy-code {
+  font-family: var(--font-ui-mono);
+  color: var(--theme-content) !important;
+  word-break: break-word;
+}
+
+.privacy-note-block {
+  background:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--theme-brand-soft) 80%, white) 0%, transparent 42%),
+    color-mix(in oklab, var(--theme-surface) 94%, var(--theme-canvas));
+}
+
+.faq-accordion {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.faq-item {
+  overflow: hidden;
+}
+
+.faq-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.15rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--theme-content);
+}
+
+.faq-icon {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  color: var(--theme-content-subtle);
+}
+
+.faq-icon::before,
+.faq-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.85rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: transform 200ms var(--theme-ease-standard), opacity 200ms var(--theme-ease-standard);
+}
+
+.faq-icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.faq-item[open] .faq-icon::after {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(90deg) scaleX(0.35);
+}
+
+.faq-content {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-top: 1px solid color-mix(in oklab, var(--theme-border) 92%, white);
+}
+
+.faq-content p {
+  margin: 0;
+}
+
+.contact-page-card {
+  max-width: 32rem;
+}
+
+.contact-page-card strong {
+  font-size: 1.125rem;
 }
 
 .landing-hero {
@@ -1260,6 +1536,11 @@ a {
   margin: 0;
 }
 
+.landing-footer-stack {
+  display: grid;
+  gap: 2rem;
+}
+
 .landing-footer {
   background: var(--theme-content);
   color: var(--theme-canvas);
@@ -1273,6 +1554,51 @@ a {
 
 .landing-footer-trust {
   opacity: 0.72;
+}
+
+.landing-footer-meta {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in oklab, white 12%, transparent);
+}
+
+.landing-footer-meta-label {
+  font-family: var(--font-ui-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, white 64%, transparent);
+}
+
+.landing-footer-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid color-mix(in oklab, white 16%, transparent);
+  border-radius: 999px;
+  color: color-mix(in oklab, white 88%, transparent);
+  text-decoration: none;
+  transition:
+    border-color 200ms var(--theme-ease-standard),
+    background-color 200ms var(--theme-ease-standard),
+    color 200ms var(--theme-ease-standard);
+}
+
+.landing-footer-link:hover {
+  border-color: color-mix(in oklab, white 28%, transparent);
+  background: color-mix(in oklab, white 10%, transparent);
+  color: white;
 }
 
 .app-brand-logo {
@@ -1749,7 +2075,8 @@ a {
   .landing-explainer-grid,
   .landing-privacy-grid,
   .landing-privacy-panel,
-  .landing-why-frame {
+  .landing-why-frame,
+  .privacy-summary-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 2.25rem;
   }
@@ -1801,12 +2128,33 @@ a {
     margin-left: auto;
   }
 
+  .landing-header-actions {
+    gap: 0.5rem;
+  }
+
   .landing-nav-link {
     display: none;
   }
 
+  .landing-mobile-nav-trigger {
+    display: inline-flex;
+  }
+
   .landing-brand-logo {
     width: 3.75rem;
+  }
+
+  .privacy-section-block,
+  .privacy-summary-card,
+  .faq-trigger,
+  .faq-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .privacy-meta-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
   }
 
   .landing-nav .landing-button {
@@ -1888,6 +2236,18 @@ a {
 
   .landing-footer {
     padding-block: 3.5rem;
+  }
+
+  .landing-footer-stack {
+    gap: 1.5rem;
+  }
+
+  .landing-footer-meta {
+    padding-top: 1.25rem;
+  }
+
+  .landing-footer-link-list {
+    gap: 0.625rem;
   }
 
   .app-brand-logo {

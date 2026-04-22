@@ -1,35 +1,41 @@
 ---
 import { BrandLogo } from "../../../components/BrandLogo";
-import { landingHero, landingNavLinks } from "../data";
+import { landingHero, getLandingNavLinks } from "../data";
+import { LandingMobileNav } from "./LandingMobileNav";
 
 interface Props {
   appUrl: string;
+  baseUrl: string;
 }
 
-const { appUrl } = Astro.props;
+const { appUrl, baseUrl } = Astro.props;
+const navLinks = getLandingNavLinks(baseUrl);
 ---
 
 <header class="landing-header">
   <div class="page-container landing-header-shell">
-    <div class="landing-brand">
+    <a href={baseUrl} class="landing-brand">
       <BrandLogo className="landing-brand-logo" title="HDDN" />
       <span class="landing-brand-meta type-data">Hide what matters.</span>
-    </div>
+    </a>
 
     <div class="landing-nav">
       {
-        landingNavLinks.map((link) => (
+        navLinks.map((link) => (
           <a class="landing-nav-link" href={link.href}>
             {link.label}
           </a>
         ))
       }
-      <a
-        class="landing-button px-2.5 py-1.5 text-xs whitespace-nowrap"
-        href={appUrl}
-      >
-        <span>{landingHero.primaryCta}</span>
-      </a>
+      <div class="landing-header-actions">
+        <a
+          class="landing-button px-2.5 py-1.5 text-xs whitespace-nowrap"
+          href={appUrl}
+        >
+          <span>{landingHero.primaryCta}</span>
+        </a>
+        <LandingMobileNav client:idle links={navLinks} />
+      </div>
     </div>
   </div>
 </header>

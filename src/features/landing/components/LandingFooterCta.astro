@@ -1,25 +1,46 @@
 ---
 import { ArrowRight } from "lucide-react";
-import { footerCta } from "../data";
+import { footerCta, getLandingFooterLinks } from "../data";
 interface Props {
   appUrl: string;
+  baseUrl: string;
 }
 
-const { appUrl } = Astro.props;
+const { appUrl, baseUrl } = Astro.props;
+const footerLinks = getLandingFooterLinks(baseUrl);
 ---
 
 <section class="landing-footer">
-  <div class="page-container landing-footer-cta items-center">
-    <div class="landing-footer-copy">
-      <h2 class="type-display-cta measure-landing-cta text-inherit">
-        {footerCta.title}
-      </h2>
-      <p class="type-body-lg text-inherit">{footerCta.body}</p>
-      <p class="landing-footer-trust type-caption text-inherit">{footerCta.trustLine}</p>
+  <div class="page-container landing-footer-stack">
+    <div class="landing-footer-cta items-center">
+      <div class="landing-footer-copy">
+        <h2 class="type-display-cta measure-landing-cta text-inherit">
+          {footerCta.title}
+        </h2>
+        <p class="type-body-lg text-inherit">{footerCta.body}</p>
+        <p class="landing-footer-trust type-caption text-inherit">{footerCta.trustLine}</p>
+      </div>
+      <a class="landing-button-inverse" href={appUrl}>
+        <span>{footerCta.buttonLabel}</span>
+        <ArrowRight size={16} strokeWidth={1.5} />
+      </a>
     </div>
-    <a class="landing-button-inverse" href={appUrl}>
-      <span>{footerCta.buttonLabel}</span>
-      <ArrowRight size={16} strokeWidth={1.5} />
-    </a>
+
+    <div class="landing-footer-meta">
+      <span class="landing-footer-meta-label">Info</span>
+      <nav aria-label="Footer information links">
+        <ul class="landing-footer-link-list">
+          {
+            footerLinks.map((link) => (
+              <li>
+                <a class="landing-footer-link" href={link.href}>
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
   </div>
 </section>

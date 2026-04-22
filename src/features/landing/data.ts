@@ -1,10 +1,30 @@
 import { APP_LIMITS } from "../../lib/app-config";
 
-export const landingNavLinks = [
-  { href: "#how", label: "How it works" },
-  { href: "#privacy", label: "Privacy" },
-  { href: "#limits", label: "Limits" },
-] as const;
+export type LandingNavLink = {
+  href: string;
+  label: string;
+};
+
+export type LandingFooterLink = {
+  href: string;
+  label: string;
+};
+
+export const getLandingNavLinks = (baseUrl: string): LandingNavLink[] => [
+  { href: `${baseUrl}#how`, label: "How it works" },
+  { href: `${baseUrl}#limits`, label: "Limits" },
+  { href: `${baseUrl}privacy`, label: "Privacy" },
+  { href: `${baseUrl}faq`, label: "FAQ" },
+];
+
+export const getLandingFooterLinks = (baseUrl: string): LandingFooterLink[] => [
+  { href: `${baseUrl}how-it-works`, label: "How it works" },
+  { href: `${baseUrl}privacy`, label: "Privacy" },
+  { href: `${baseUrl}faq`, label: "FAQ" },
+  { href: `${baseUrl}terms`, label: "Terms" },
+  { href: `${baseUrl}security`, label: "Security" },
+  { href: `${baseUrl}contact`, label: "Contact" },
+];
 
 export const landingHero = {
   eyebrow: "HDDN",

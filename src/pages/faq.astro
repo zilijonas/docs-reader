@@ -1,0 +1,147 @@
+---
+import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+import { APP_LIMITS } from "../lib/app-config";
+
+const baseUrl = import.meta.env.BASE_URL;
+
+const faqItems = [
+  {
+    question: "How does this work without uploading my file?",
+    answer: [
+      "Your browser is a tool on your device. When you open hddn, the website loads the tool into your browser.",
+      "After that, your browser can open and edit your PDF on your device. Your file does not need to be sent anywhere.",
+    ],
+  },
+  {
+    question: "Is my file safe?",
+    answer: [
+      "Yes. Your file stays on your device.",
+      "We do not upload, store, or send your PDF anywhere.",
+    ],
+  },
+  {
+    question: "Does hddn use AI?",
+    answer: [
+      "hddn does not use any remote AI service or external API. Any detection used by the app runs locally in your browser on your device.",
+    ],
+  },
+  {
+    question: "Can you see my documents?",
+    answer: [
+      "No.",
+      "We have no access to your files because they never leave your device.",
+    ],
+  },
+  {
+    question: "What data do you collect?",
+    answer: [
+      "We only use Google Analytics, if you accept it, to understand general site usage.",
+      "We do not collect or analyze your documents.",
+    ],
+  },
+  {
+    question: "Do you use cookies?",
+    answer: [
+      "Yes, one cookie.",
+      "It stores whether you accepted or declined analytics. It does not track your activity or store personal data.",
+    ],
+  },
+  {
+    question: "Is it really free?",
+    answer: [
+      "Yes.",
+      "hddn is completely free to use. No signup required.",
+    ],
+  },
+  {
+    question: "What file types are supported?",
+    answer: [
+      "PDF files only.",
+    ],
+  },
+  {
+    question: "Are there any limits?",
+    answer: [
+      `Up to ${APP_LIMITS.maxFileSizeMb} MB per file.`,
+      `Up to ${APP_LIMITS.maxPages} pages per document.`,
+    ],
+  },
+  {
+    question: "Does it work on mobile?",
+    answer: [
+      "Yes, it works in modern browsers on phones, tablets, and computers.",
+    ],
+  },
+  {
+    question: "Is redaction permanent?",
+    answer: [
+      "Yes.",
+      "When you export the file, the selected data is permanently removed from the PDF.",
+    ],
+  },
+  {
+    question: "What if something is missed?",
+    answer: [
+      "You can always add your own redactions.",
+      "You should review the document before exporting to make sure everything that should be hidden is removed.",
+    ],
+  },
+  {
+    question: "Why do I need to review before exporting?",
+    answer: [
+      "The tool suggests what might be sensitive, but you decide what to remove.",
+      "This helps you stay in control of your document.",
+    ],
+  },
+  {
+    question: "Why is there no upload?",
+    answer: [
+      "Because the tool runs in your browser.",
+      "Your browser can open and edit files on your device without sending them anywhere.",
+    ],
+  },
+  {
+    question: "Who made this?",
+    answer: [
+      "hddn is created by:",
+      "Linas Jonas Zilinskas",
+      "Contact: lijonas.it@gmail.com",
+    ],
+  },
+] as const;
+---
+
+<MarketingPageShell
+  baseUrl={baseUrl}
+  description="Read common questions about local PDF redaction, analytics, limits, and how HDDN works."
+  eyebrow="FAQ"
+  intro="Simple answers about local processing, privacy, supported files, and what to expect from HDDN."
+  pageTitle="FAQ"
+  title="FAQ | HDDN"
+>
+  <section class="faq-accordion" aria-label="Frequently asked questions">
+    {
+      faqItems.map((item, index) => (
+        <details class="faq-item" open={index === 0}>
+          <summary class="faq-trigger">
+            <span class="faq-question">{item.question}</span>
+            <span class="faq-icon" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-content">
+            {item.question === "Who made this?" ? (
+              <>
+                <p>{item.answer[0]}</p>
+                <p>{item.answer[1]}</p>
+                <p>
+                  Contact: <a href="mailto:lijonas.it@gmail.com">lijonas.it@gmail.com</a>
+                </p>
+              </>
+            ) : (
+              item.answer.map((paragraph) => <p>{paragraph}</p>)
+            )}
+          </div>
+        </details>
+      ))
+    }
+  </section>
+</MarketingPageShell>

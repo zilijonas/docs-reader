@@ -19,7 +19,7 @@ const appUrl = `${baseUrl}app`;
   description="Hide sensitive data in your PDF before you share it. Review what should be hidden, redact locally in your browser, and export a clean copy."
 >
   <div class="landing-page">
-    <LandingHeader appUrl={appUrl} />
+    <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
     <LandingHero appUrl={appUrl} />
     <LandingHowSection />
     <LandingBrowserExplainerSection />
@@ -27,6 +27,6 @@ const appUrl = `${baseUrl}app`;
     <LandingUseCasesSection />
     <LandingWhySection />
     <LandingLimitsSection />
-    <LandingFooterCta appUrl={appUrl} />
+    <LandingFooterCta appUrl={appUrl} baseUrl={baseUrl} />
   </div>
 </Layout>

@@ -1,0 +1,68 @@
+---
+import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
+
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<MarketingPageShell
+  baseUrl={baseUrl}
+  description="Learn how HDDN opens PDFs locally, suggests redactions, and exports a clean file."
+  eyebrow="How it works"
+  intro="hddn is designed to be simple. You open a file, review it, and export a clean version."
+  pageTitle="How it works"
+  title="How It Works | HDDN"
+>
+  <section class="privacy-section-block">
+    <h2>Step 1 — Open your PDF</h2>
+    <p>Drop your file into the page.</p>
+    <p>Your browser opens the PDF directly on your device.</p>
+  </section>
+
+  <section class="privacy-section-block">
+    <h2>Step 2 — We mark possible sensitive data</h2>
+    <p>The tool highlights things that may need to be hidden, such as:</p>
+    <ul class="privacy-bullet-list">
+      <li>names</li>
+      <li>emails</li>
+      <li>phone numbers</li>
+      <li>IDs or other personal details</li>
+    </ul>
+    <p>These are only suggestions.</p>
+  </section>
+
+  <section class="privacy-section-block">
+    <h2>Step 3 — You review everything</h2>
+    <p>You decide what should be removed.</p>
+    <p>You can:</p>
+    <ul class="privacy-bullet-list">
+      <li>keep or remove suggested markings</li>
+      <li>add your own markings if something was missed</li>
+    </ul>
+    <p>You stay in control of the document.</p>
+  </section>
+
+  <section class="privacy-section-block">
+    <h2>Step 4 — Export a clean file</h2>
+    <p>When you're ready, export the PDF.</p>
+    <p>The selected data is permanently removed from the file.</p>
+    <p>You can then share it safely.</p>
+  </section>
+
+  <section class="privacy-section-block">
+    <h2>How this works without uploading your file</h2>
+    <p>Your browser is a tool on your device.</p>
+    <p>When you open hddn, the website loads the tool into your browser. After that, your browser can open and edit your PDF locally.</p>
+    <p>This means:</p>
+    <ul class="privacy-bullet-list">
+      <li>your file stays on your device</li>
+      <li>it is not uploaded or sent anywhere</li>
+    </ul>
+    <p>The website gives your browser the tool. Your browser uses that tool on your file.</p>
+  </section>
+
+  <section class="privacy-section-block privacy-note-block">
+    <h2>Important</h2>
+    <p>The tool helps you find sensitive data, but it may not catch everything.</p>
+    <p>Always review your document before exporting and sharing it.</p>
+  </section>
+</MarketingPageShell>

@@ -1,0 +1,58 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import LandingFooterCta from "./LandingFooterCta.astro";
+import LandingHeader from "./LandingHeader.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  pageTitle: string;
+  intro?: string;
+  updatedAt?: string;
+  eyebrow?: string;
+  baseUrl: string;
+}
+
+const {
+  title,
+  description,
+  pageTitle,
+  intro,
+  updatedAt,
+  eyebrow = "Info",
+  baseUrl,
+} = Astro.props;
+const appUrl = `${baseUrl}app`;
+---
+
+<Layout title={title} description={description}>
+  <div class="landing-page marketing-page">
+    <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
+
+    <main class="page-container section-space marketing-page-shell">
+      <section class="marketing-page-hero">
+        <div class="type-eyebrow">{eyebrow}</div>
+        <h1 class="type-display-section measure-landing-section">
+          {pageTitle}
+        </h1>
+        {
+          updatedAt ? (
+            <p class="marketing-page-updated type-caption">
+              Last updated: {updatedAt}
+            </p>
+          ) : null
+        }
+        {
+          intro ? (
+            <p class="type-body-lg measure-landing-section">{intro}</p>
+          ) : null
+        }
+      </section>
+
+      <div class="marketing-page-container marketing-prose">
+        <slot />
+      </div>
+    </main>
+    <LandingFooterCta appUrl={appUrl} baseUrl={baseUrl} />
+  </div>
+</Layout>
