@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 /** @param {string | undefined} value */
@@ -47,7 +48,16 @@ export default defineConfig({
   site: resolvedSite,
   base: resolvedBase,
   output: 'static',
-  integrations: [react()],
+  integrations: [
+    react(),
+    sitemap({
+      filter: (page) =>
+        !page.endsWith('/app/') &&
+        !page.endsWith('/app') &&
+        !page.endsWith('/redact/') &&
+        !page.endsWith('/redact'),
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
     resolve: {

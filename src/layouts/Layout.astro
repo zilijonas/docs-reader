@@ -11,12 +11,14 @@ interface Props {
   title?: string;
   description?: string;
   viewportContent?: string;
+  robots?: string;
 }
 
 const {
   title = "hddn - Hide what matters.",
   description = "Redact PDFs locally in your browser. Document contents stay on-device during processing.",
   viewportContent = "width=device-width",
+  robots = "index, follow",
 } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL;
 const siteUrl = Astro.site ?? new URL("https://example.github.io");
@@ -41,6 +43,7 @@ const enableAnalytics = ANALYTICS.enabled;
     />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
     <link rel="canonical" href={pageUrl} />
     <meta property="og:title" content={title} />
     <meta property="og:type" content="website" />

@@ -20,7 +20,7 @@ The review UI stays responsive because the heavy extraction, OCR, preview render
 ## Runtime architecture
 
 - `/` is the landing page.
-- `/app` hosts the interactive redaction tool.
+- `/redact` hosts the interactive redaction tool.
 - `src/workers/redactor.worker.ts` is the processing boundary for PDF load, page classification, OCR, previews, detection, and export.
 - Detection is rules-only in this release: email, phone, URL, IBAN, card-like patterns, dates, IDs, large numbers, and custom keywords.
 

@@ -1,12 +1,19 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import { AppShell } from "../features/redactor/components/AppShell";
+const redirectUrl = `${import.meta.env.BASE_URL}redact`;
 ---
 
-<Layout
-  title="hddn - Hide what matters."
-  description="Review and redact PDFs locally in your browser with no document uploads or processing servers."
-  viewportContent="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
->
-  <AppShell client:only="react" />
-</Layout>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0;url=${redirectUrl}`} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={redirectUrl} />
+    <title>Redirecting to /redact</title>
+  </head>
+  <body>
+    <p>
+      Redirecting to <a href={redirectUrl}>{redirectUrl}</a>.
+    </p>
+  </body>
+</html>
