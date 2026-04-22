@@ -4,9 +4,12 @@ import { AppActionDock } from '../../../components/app/AppActionDock';
 import { DetectionSidebar } from '../../../components/app/DetectionSidebar';
 import { Dropzone } from '../../../components/app/Dropzone';
 import { PdfViewer } from '../../../components/app/PdfViewer';
+import { ZoomLayer } from '../../../components/app/ZoomLayer';
+import { cn } from '@/lib/cn';
 import { ReviewPagination } from '../../../components/app/ReviewPagination';
 import { ReviewProvider, useReviewContext } from '../context/ReviewContext';
 import { WorkflowProvider, useWorkflowContext } from '../context/WorkflowContext';
+import { useViewerPan } from '../hooks/useViewerPan';
 import { AppHeader } from './AppHeader';
 import { ConfirmAllExportDialog } from './ConfirmAllExportDialog';
 import { OcrLanguageDialog } from './OcrLanguageDialog';
@@ -26,10 +29,18 @@ function AppShellContent() {
     isDesktopSidebarOpen,
     isSidebarOpen,
     scrollToPage,
+    setZoom,
     setReviewPanelOpen,
     viewerColumnRef,
+    zoom,
   } = useWorkflowContext();
-  const { activePage, hasViewer, pages } = useReviewContext();
+  const { activePage, hasViewer, pages, toolMode } = useReviewContext();
+  const { bind, handlePointerDownCapture, isPanning } = useViewerPan({
+    setZoom,
+    toolMode,
+    viewerRef: viewerColumnRef,
+    zoom,
+  });
 
   return (
     <div className="app-shell" ref={appShellRef} style={getAppShellStyle(appHeaderHeight)}>
@@ -48,9 +59,21 @@ function AppShellContent() {
               type="button"
             />
 
-            <div className="app-viewer-column" ref={viewerColumnRef}>
+            <div className="app-viewer-column" data-zoomed={zoom > 1} ref={viewerColumnRef}>
               <div className="app-viewer-inner">
-                <PdfViewer />
+                <ZoomLayer
+                  innerProps={{
+                    ...bind(),
+                    className: cn(
+                      toolMode === null && zoom > 1 && 'cursor-grab',
+                      isPanning && 'cursor-grabbing',
+                    ),
+                    onPointerDownCapture: handlePointerDownCapture,
+                  }}
+                  zoom={zoom}
+                >
+                  <PdfViewer isPanning={isPanning} />
+                </ZoomLayer>
               </div>
             </div>
 

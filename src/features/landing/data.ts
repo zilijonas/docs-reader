@@ -44,7 +44,8 @@ export const getLandingMobileLinks = (baseUrl: string, appUrl: string): LandingM
 ];
 
 export const landingHero = {
-  eyebrow: "HDDN",
+  statusPill: "100% private",
+  statusDetail: "Runs in your browser",
   headlineLead: "Hide sensitive data in your PDF.",
   headlineAccent: "locally",
   headlineTrail: "before you share it with anyone.",
@@ -52,7 +53,7 @@ export const landingHero = {
     "Open your PDF, review what should be hidden, and export a clean version. Everything happens on your device - your file is never uploaded.",
   primaryCta: "Redact your PDF",
   secondaryCta: "See how it works",
-  trustLine: "Free to use. No signup required.",
+  quickPoints: ["No signup", "No file uploads", "Review before export"],
 } as const;
 
 export const heroTrustBadges = [

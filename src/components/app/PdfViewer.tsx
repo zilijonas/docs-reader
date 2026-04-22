@@ -3,7 +3,7 @@ import { useReviewContext } from '../../features/redactor/context/ReviewContext'
 import { useWorkflowContext } from '../../features/redactor/context/WorkflowContext';
 import { PagePreviewCard } from './PagePreviewCard';
 
-export function PdfViewer() {
+export function PdfViewer({ isPanning }: { isPanning: boolean }) {
   const { ensurePreview, isMobileViewport, viewerContentWidth, zoom } = useWorkflowContext();
   const {
     activePage,
@@ -45,6 +45,7 @@ export function PdfViewer() {
           spans={spansByPage.get(page.pageIndex) ?? []}
           totalPages={pages.length}
           viewerContentWidth={viewerContentWidth}
+          isPanning={isPanning}
           zoom={zoom}
         />
       ))}

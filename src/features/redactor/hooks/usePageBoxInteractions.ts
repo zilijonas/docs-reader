@@ -112,6 +112,16 @@ export function usePageBoxInteractions({
       return;
     }
 
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        'button, a, input, textarea, select, [role="button"], [data-highlight-focus="true"], [data-manual-pending="true"]',
+      )
+    ) {
+      return;
+    }
+
     const point = getNormalizedPoint(event.clientX, event.clientY);
     if (!point) {
       return;
@@ -229,6 +239,7 @@ export function usePageBoxInteractions({
       setInteractionDragState(null);
       setInteractionDragPreview(null);
     }
+
   };
 
   const handleTextSelection = () => {

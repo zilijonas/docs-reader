@@ -18,7 +18,8 @@ import { PageHeader } from './PageHeader';
 import { PagePreviewState } from './PagePreviewState';
 import { getBoxStyle } from './pdf-viewer-utils';
 
-const getPageSurfaceStyle = (pageDisplayWidth: number): CSSProperties => ({
+const getPageSurfaceStyle = (pageDisplayHeight: number, pageDisplayWidth: number): CSSProperties => ({
+  '--page-display-height': `${pageDisplayHeight}px`,
   '--page-display-width': `${pageDisplayWidth}px`,
 } as CSSProperties);
 
@@ -43,6 +44,7 @@ export function PagePreviewCard({
   onToggleDetection,
   onSetManualStatus,
   totalPages,
+  isPanning,
 }: {
   id: string;
   page: PageAsset;
@@ -64,6 +66,7 @@ export function PagePreviewCard({
   onToggleDetection: (id: string) => void;
   onSetManualStatus: (id: string, status: DetectionStatus) => void;
   totalPages: number;
+  isPanning: boolean;
 }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
@@ -96,8 +99,8 @@ export function PagePreviewCard({
   const pageLabel = page.lane === 'ocr' ? 'ocr lane' : 'native text';
   const fitWidthScale = viewerContentWidth / Math.max(page.width * page.previewScale, 1);
   const pageBaseWidth = page.width * page.previewScale * fitWidthScale;
-  const pageDisplayWidth = pageBaseWidth * zoom;
-  const pageDisplayHeight = page.height * page.previewScale * fitWidthScale * zoom;
+  const pageDisplayWidth = pageBaseWidth;
+  const pageDisplayHeight = page.height * page.previewScale * fitWidthScale;
   const pendingCount =
     detections.filter((detection) => detection.status === 'unconfirmed').length +
     manualRedactions.filter((manualRedaction) => manualRedaction.status === 'unconfirmed').length;
@@ -105,7 +108,7 @@ export function PagePreviewCard({
   const isMobileTouchToolActive = isMobileViewport && (toolMode === 'select' || toolMode === 'draw');
 
   return (
-    <div id={id} onClick={onActivate}>
+    <div className="page-preview-card flex flex-col items-center" id={id} onClick={onActivate}>
       <PageHeader
         active={active}
         headerWidth={pageBaseWidth}
@@ -120,14 +123,20 @@ export function PagePreviewCard({
         className={cn(
           'viewer-page-surface relative inline-block w-[var(--page-display-width)] overflow-hidden',
           isMobileTouchToolActive && 'touch-none',
-          isDrawMode ? 'cursor-crosshair' : 'cursor-default',
+          isDrawMode
+            ? 'cursor-crosshair'
+            : isPanning
+              ? 'cursor-grabbing'
+              : toolMode === null && zoom > 1
+                ? 'cursor-grab'
+                : 'cursor-default',
         )}
         onMouseUp={handleTextSelection}
         onPointerCancel={endPointer}
         onPointerDown={startDrawing}
         onPointerMove={movePointer}
         onPointerUp={endPointer}
-        style={getPageSurfaceStyle(pageDisplayWidth)}
+        style={getPageSurfaceStyle(pageDisplayHeight, pageDisplayWidth)}
       >
         <PagePreviewState pageIndex={page.pageIndex} preview={preview} />
 
@@ -139,10 +148,7 @@ export function PagePreviewCard({
             <span
               className="pdf-box pdf-text-span"
               key={span.id}
-              style={getBoxStyle(span.box, {
-                '--span-font-size': `${Math.max(10, span.box.height * pageDisplayHeight)}px`,
-                '--span-line-height': `${Math.max(10, span.box.height * pageDisplayHeight)}px`,
-              })}
+              style={getBoxStyle(span.box, { '--box-height-ratio': span.box.height })}
             >
               {span.text}
             </span>

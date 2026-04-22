@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { usePinch, useWheel } from '@use-gesture/react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { REDACTOR_UI, getPageAnchorId, getReviewItemAnchorId } from '../config';
+import { createZoomSnapshot, getScrollPositionForZoom, isEditableElement, type ZoomAnchor } from './zoom-utils';
 
 const REVIEW_ITEM_PULSE_DELAY_MS = 520;
 
@@ -13,7 +15,7 @@ export function useScrollNavigation({
   setAppHeaderHeight,
   setReviewPanelOpen,
   setViewerContentWidth,
-  setZoom,
+  setZoomState,
   zoom,
 }: {
   appHeaderHeight: number;
@@ -24,13 +26,14 @@ export function useScrollNavigation({
   setAppHeaderHeight: (value: number) => void;
   setReviewPanelOpen: (value: boolean) => void;
   setViewerContentWidth: (value: number) => void;
-  setZoom: (value: number) => void;
+  setZoomState: (value: number) => void;
   zoom: number;
 }) {
   const appShellRef = useRef<HTMLDivElement | null>(null);
   const appHeaderRef = useRef<HTMLElement | null>(null);
   const viewerColumnRef = useRef<HTMLDivElement | null>(null);
   const pulseTimeoutRef = useRef<number | null>(null);
+  const pendingZoomSnapshotRef = useRef<ReturnType<typeof createZoomSnapshot> | null>(null);
   const zoomRef = useRef(zoom);
 
   useEffect(() => {
@@ -113,84 +116,142 @@ export function useScrollNavigation({
     };
   }, [hasViewer, setViewerContentWidth]);
 
-  useEffect(() => {
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const setZoom = (value: number, anchor?: ZoomAnchor) => {
+    const nextZoom = Math.min(REDACTOR_UI.maxZoom, Math.max(REDACTOR_UI.minZoom, value));
 
-    if (!viewportMeta || !hasViewer || !isMobileViewport) {
+    if (nextZoom === zoomRef.current) {
       return;
     }
 
-    const previousContent = viewportMeta.getAttribute('content');
-    viewportMeta.setAttribute(
-      'content',
-      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
-    );
-
-    return () => {
-      if (previousContent) {
-        viewportMeta.setAttribute('content', previousContent);
-      } else {
-        viewportMeta.removeAttribute('content');
-      }
-    };
-  }, [hasViewer, isMobileViewport]);
-
-  useEffect(() => {
     const viewerColumn = viewerColumnRef.current;
 
-    if (!viewerColumn || !hasViewer || !isMobileViewport) {
+    if (viewerColumn) {
+      const viewerRect = viewerColumn.getBoundingClientRect();
+      pendingZoomSnapshotRef.current = createZoomSnapshot({
+        anchor,
+        geometry: {
+          clientHeight: viewerColumn.clientHeight,
+          clientWidth: viewerColumn.clientWidth,
+          left: viewerRect.left,
+          scrollHeight: viewerColumn.scrollHeight,
+          scrollLeft: viewerColumn.scrollLeft,
+          scrollTop: viewerColumn.scrollTop,
+          scrollWidth: viewerColumn.scrollWidth,
+          top: viewerRect.top,
+        },
+        zoom: zoomRef.current,
+      });
+    } else {
+      pendingZoomSnapshotRef.current = null;
+    }
+
+    setZoomState(nextZoom);
+  };
+
+  useLayoutEffect(() => {
+    const viewerColumn = viewerColumnRef.current;
+    const snapshot = pendingZoomSnapshotRef.current;
+
+    if (!viewerColumn || !snapshot || snapshot.previousZoom === zoom) {
       return;
     }
 
-    let pinchStartDistance = 0;
-    let pinchStartZoom = 1;
-    let pinching = false;
+    const nextScroll = getScrollPositionForZoom({
+      geometry: {
+        clientHeight: viewerColumn.clientHeight,
+        clientWidth: viewerColumn.clientWidth,
+        scrollHeight: viewerColumn.scrollHeight,
+        scrollWidth: viewerColumn.scrollWidth,
+      },
+      nextZoom: zoom,
+      snapshot,
+    });
 
-    const getDistance = (a: Touch, b: Touch) => {
-      const dx = a.clientX - b.clientX;
-      const dy = a.clientY - b.clientY;
-      return Math.hypot(dx, dy);
-    };
+    viewerColumn.scrollLeft = nextScroll.scrollLeft;
+    viewerColumn.scrollTop = nextScroll.scrollTop;
+    pendingZoomSnapshotRef.current = null;
+  }, [zoom]);
 
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 2) {
-        pinching = true;
-        pinchStartDistance = getDistance(event.touches[0], event.touches[1]);
-        pinchStartZoom = zoomRef.current;
+  usePinch(
+    ({ event, first, offset: [scale], origin: [clientX, clientY], memo }) => {
+      if (!hasViewer) {
+        return memo;
       }
-    };
 
-    const handleTouchMove = (event: TouchEvent) => {
-      if (pinching && event.touches.length === 2) {
+      if (event.cancelable) {
         event.preventDefault();
-        const distance = getDistance(event.touches[0], event.touches[1]);
-        if (pinchStartDistance <= 0) {
-          return;
-        }
-        const ratio = distance / pinchStartDistance;
-        const next = Math.min(REDACTOR_UI.maxZoom, Math.max(REDACTOR_UI.minZoom, pinchStartZoom * ratio));
-        setZoom(next);
+      }
+
+      const pinchStartZoom = first ? zoomRef.current : (memo ?? zoomRef.current);
+
+      setZoom(pinchStartZoom * scale, {
+        clientX,
+        clientY,
+        source: 'pinch',
+      });
+
+      return pinchStartZoom;
+    },
+    {
+      eventOptions: { passive: false },
+      pinchOnWheel: false,
+      pointer: { touch: true },
+      target: viewerColumnRef,
+    },
+  );
+
+  useWheel(
+    ({ event }) => {
+      if (!hasViewer || (!event.ctrlKey && !event.metaKey) || !event.cancelable) {
+        return;
+      }
+
+      event.preventDefault();
+
+      setZoom(zoomRef.current * Math.exp(-event.deltaY * 0.0025), {
+        clientX: event.clientX,
+        clientY: event.clientY,
+        source: 'wheel',
+      });
+    },
+    {
+      eventOptions: { passive: false },
+      target: viewerColumnRef,
+    },
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((!event.ctrlKey && !event.metaKey) || event.altKey || isEditableElement(event.target)) {
+        return;
+      }
+
+      const normalizedKey = event.key.toLowerCase();
+
+      if (normalizedKey === '0') {
+        event.preventDefault();
+        setZoom(REDACTOR_UI.defaultZoom, { source: 'keyboard' });
+        return;
+      }
+
+      if (normalizedKey === '+' || normalizedKey === '=' || normalizedKey === 'add') {
+        event.preventDefault();
+        setZoom(zoomRef.current + REDACTOR_UI.zoomStep, { source: 'keyboard' });
+        return;
+      }
+
+      if (normalizedKey === '-' || normalizedKey === '_' || normalizedKey === 'subtract') {
+        event.preventDefault();
+        setZoom(zoomRef.current - REDACTOR_UI.zoomStep, { source: 'keyboard' });
       }
     };
 
-    const handleTouchEnd = (event: TouchEvent) => {
-      if (event.touches.length < 2) {
-        pinching = false;
-      }
-    };
-
-    viewerColumn.addEventListener('touchstart', handleTouchStart, { passive: true });
-    viewerColumn.addEventListener('touchmove', handleTouchMove, { passive: false });
-    viewerColumn.addEventListener('touchend', handleTouchEnd, { passive: true });
-    viewerColumn.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      viewerColumn.removeEventListener('touchstart', handleTouchStart);
-      viewerColumn.removeEventListener('touchmove', handleTouchMove);
-      viewerColumn.removeEventListener('touchend', handleTouchEnd);
-      viewerColumn.removeEventListener('touchcancel', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [hasViewer, isMobileViewport, setZoom]);
+  }, []);
 
   useEffect(
     () => () => {
@@ -292,6 +353,7 @@ export function useScrollNavigation({
     appShellRef,
     scrollToPage,
     scrollToReviewItem,
+    setZoom,
     viewerColumnRef,
   };
 }

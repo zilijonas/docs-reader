@@ -12,6 +12,7 @@ import { useScrollNavigation } from '../hooks/useScrollNavigation';
 import { useUiState } from '../hooks/useUiState';
 import { useViewportMode } from '../hooks/useViewportMode';
 import { useWorkerClient } from '../hooks/useWorkerClient';
+import type { ZoomAnchor } from '../hooks/zoom-utils';
 
 interface WorkflowContextValue {
   appHeaderHeight: number;
@@ -47,7 +48,7 @@ interface WorkflowContextValue {
   setKeywordDraft: (value: string) => void;
   setReviewPanelOpen: (value: boolean) => void;
   setSelectedOcrLanguages: (languages: string[]) => void;
-  setZoom: (value: number) => void;
+  setZoom: (value: number, anchor?: ZoomAnchor) => void;
   showConfirmAllExportModal: boolean;
   showResetConfirmModal: boolean;
   spans: TextSpan[];
@@ -101,7 +102,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setReviewPanelOpen,
     setSelectedOcrLanguages,
     setViewerContentWidth,
-    setZoom,
+    setZoom: setZoomState,
     state,
     toggleReviewPanel,
   } = useUiState();
@@ -160,7 +161,14 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     sourceDocument,
   });
 
-  const { appHeaderRef, appShellRef, scrollToPage, scrollToReviewItem, viewerColumnRef } = useScrollNavigation({
+  const {
+    appHeaderRef,
+    appShellRef,
+    scrollToPage,
+    scrollToReviewItem,
+    setZoom,
+    viewerColumnRef,
+  } = useScrollNavigation({
     appHeaderHeight: state.appHeaderHeight,
     hasViewer,
     isMobileViewport: state.isMobileViewport,
@@ -169,7 +177,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setAppHeaderHeight,
     setReviewPanelOpen,
     setViewerContentWidth,
-    setZoom,
+    setZoomState,
     zoom: state.zoom,
   });
 

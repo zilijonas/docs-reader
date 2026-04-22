@@ -10,11 +10,13 @@ import { ANALYTICS } from "../lib/app-config";
 interface Props {
   title?: string;
   description?: string;
+  viewportContent?: string;
 }
 
 const {
   title = "HDDN - Hide what matters.",
   description = "Redact PDFs locally in your browser. Document contents stay on-device during processing.",
+  viewportContent = "width=device-width",
 } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL;
 const siteUrl = Astro.site ?? new URL("https://example.github.io");
@@ -28,7 +30,7 @@ const enableAnalytics = ANALYTICS.enabled;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content={viewportContent} />
     <link rel="icon" type="image/svg+xml" href={`${baseUrl}favicon.svg`} />
     <link rel="icon" href={`${baseUrl}favicon.ico`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
