@@ -1,5 +1,5 @@
 import type { LoadPyodideModule, PyProxyLike } from './state';
-import { state, updateProgress, runPythonTask } from './state';
+import { resolveRuntimeAssetUrl, state, updateProgress, runPythonTask } from './state';
 
 const PYTHON_HELPERS = `
 import json
@@ -163,10 +163,10 @@ export const ensurePyodide = async () => {
     state.pyodidePromise = (async () => {
       updateProgress(0, { phase: 'booting', progress: 0.05, message: 'Starting up…' });
 
-      const moduleUrl = new URL(`${state.baseUrl}pyodide/pyodide.mjs`, self.location.origin).toString();
+      const moduleUrl = resolveRuntimeAssetUrl('pyodide/pyodide.mjs');
       const { loadPyodide } = (await import(/* @vite-ignore */ moduleUrl)) as LoadPyodideModule;
       const pyodide = await loadPyodide({
-        indexURL: new URL(`${state.baseUrl}pyodide/`, self.location.origin).toString(),
+        indexURL: resolveRuntimeAssetUrl('pyodide/'),
       });
 
       updateProgress(0, { phase: 'booting', progress: 0.2, message: 'Preparing document tools…' });

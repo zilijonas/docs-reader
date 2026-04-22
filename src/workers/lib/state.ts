@@ -43,6 +43,10 @@ export const state: WorkerState = {
   ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
 };
 
+const workerAssetRootUrl = new URL(/* @vite-ignore */ '../', import.meta.url);
+
+export const resolveRuntimeAssetUrl = (path: string) => new URL(path, workerAssetRootUrl).toString();
+
 let pythonTaskQueue = Promise.resolve();
 
 export const postMessageSafe = (message: WorkerResponse) => {
