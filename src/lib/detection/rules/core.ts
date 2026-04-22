@@ -15,6 +15,8 @@ const POSTAL_PATTERNS = [
 
 const EU_VAT_COUNTRY =
   '(?:AT|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|FR|GB|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|XI)';
+const POSTAL_PREFIX_COUNTRY =
+  '(?:LT|LV|EE|AT|BE|CH|DE|FR|IT|ES|PT|PL|SE|FI|DK|NO|NL|HR|SI|SK|CZ|HU|RO|GR|BG|IE)';
 
 export const POSTAL_RULE: DetectionRule = {
   type: 'postal',
@@ -24,7 +26,16 @@ export const POSTAL_RULE: DetectionRule = {
 
 export const ID_RULE: DetectionRule = {
   type: 'id',
-  pattern: /\b(?:\d{3}[- ]?\d{2}[- ]?\d{4}|[A-Z]{1,3}\d{5,10}|\d{2}[A-Z]{2}\d{6,})\b/gi,
+  pattern:
+    new RegExp(
+      `(?<![\\p{L}\\p{N}])(?:` +
+        `(?:Nr\\.?|No\\.?|Nº)\\s*[A-Z0-9]{1,4}-[A-Z0-9]{2,6}` +
+        `|\\d{3}[- ]?\\d{2}[- ]?\\d{4}` +
+        `|(?!${POSTAL_PREFIX_COUNTRY}\\d{3,5}(?!\\d))[A-Z]{1,3}\\d{5,10}` +
+        `|\\d{2}[A-Z]{2}\\d{6,}` +
+        `)(?![\\p{L}\\p{N}])`,
+      'giu',
+    ),
   confidence: CONFIDENCE.id,
 };
 
@@ -47,7 +58,8 @@ export const CORE_RULES: DetectionRule[] = [
   },
   {
     type: 'phone',
-    pattern: /(?<![\w\d])(?:\+\d{1,3}[\s.\-()]?)?(?:\(?\d{1,4}\)?[\s.\-]){1,5}\d{2,4}(?![\w\d])/g,
+    pattern:
+      /(?<![\w\d])(?!\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?)(?:\+\d{1,3}[\s.\-()]?)?(?:\(?\d{1,4}\)?[\s.\-]){1,5}\d{2,4}(?![\w\d])/g,
     confidence: CONFIDENCE.phone,
     postFilter: (match) => {
       const digits = match.replace(/\D+/g, '');

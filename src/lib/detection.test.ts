@@ -153,12 +153,23 @@ describe('detectSensitiveData multi-locale', () => {
     return { text: parts.join(''), spans };
   };
 
+  const snippetsOfType = (detections: ReturnType<typeof detectSensitiveData>, type: string) =>
+    detections.filter((detection) => detection.type === type).map((detection) => detection.snippet);
+
   it('detects German date with "März" and a PLZ postal code', () => {
     const { text, spans } = buildPage(['Am', '15.', 'März', '2024', 'PLZ', '10115', 'Berlin']);
     const detections = detectSensitiveData(0, text, spans);
 
     expect(detections.some((detection) => detection.type === 'date')).toBe(true);
     expect(detections.some((detection) => detection.type === 'postal')).toBe(true);
+  });
+
+  it('keeps an ISO timestamp as one date detection and avoids a partial phone match', () => {
+    const { text, spans } = buildPage(['2025-08-12', '13:14']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'date')).toEqual(['2025-08-12 13:14']);
+    expect(snippetsOfType(detections, 'phone')).toEqual([]);
   });
 
   it('detects a Lithuanian asmens kodas via checksum-validated national ID rule', () => {
@@ -245,6 +256,43 @@ describe('detectSensitiveData multi-locale', () => {
     expect(address?.normalizedSnippet).toContain('08131');
     expect(address?.normalizedSnippet).toContain('vilniaus');
     expect(address?.normalizedSnippet).toContain('m.');
+  });
+
+  it('keeps a city-first Lithuanian postal code separate from the street address', () => {
+    const { text, spans } = buildPage(['Kriviu', 'g.', '35', '-', '35,', 'Vilnius,', 'LT01231']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'address')).toContain('Kriviu g. 35 - 35, Vilnius');
+    expect(snippetsOfType(detections, 'postal')).toContain('LT01231');
+    expect(snippetsOfType(detections, 'address')).not.toContain('Kriviu g. 35 - 35, Vilnius, LT01231');
+  });
+
+  it('detects Lithuanian written dates with optional year and day markers', () => {
+    const { text, spans } = buildPage(['2015', 'm.', 'spalio', '26d.']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'date')).toContain('2015 m. spalio 26d.');
+  });
+
+  it('detects prefixed short hyphenated case numbers', () => {
+    const { text, spans } = buildPage(['Nr.', '2B-231']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'id')).toContain('Nr. 2B-231');
+  });
+
+  it('does not treat unprefixed short hyphenated tokens as ids', () => {
+    const { text, spans } = buildPage(['Statusas', '2B-231']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'id')).toEqual([]);
+  });
+
+  it('detects saint-prefixed Lithuanian street names without an explicit street token', () => {
+    const { text, spans } = buildPage(['Šv.', 'Stepono', '5-37']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'address')).toContain('Šv. Stepono 5-37');
   });
 
   it('extends the address bounding box across every span of the phrase', () => {
