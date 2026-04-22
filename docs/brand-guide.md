@@ -1,7 +1,7 @@
-# HDDN Brand Guide
+# hddn Brand Guide
 
 ## Core Idea
-HDDN is a privacy-first document redaction tool. The product should feel calm, exact, and trustworthy. It is not a one-click AI magic trick. It is a careful review workflow with local processing and safe export.
+hddn is a privacy-first document redaction tool. The product should feel calm, exact, and trustworthy. It is not a one-click AI magic trick. It is a careful review workflow with local processing and safe export.
 
 ## Brand Principles
 - Calm: low-noise surfaces, generous spacing, deliberate motion, no dashboard clutter.
@@ -70,10 +70,10 @@ Type intent:
 `Create a warm editorial product backdrop for a privacy-focused PDF redaction app. Use layered paper textures, subtle green signal accents, soft bone surfaces, clean shadows, and precise interface framing. No people, no laptops on desks, no stock photography look.`
 
 ### Interface hero illustration
-`Design a premium abstract hero visual for HDDN, a browser-based PDF redaction tool. Show stacked document panels, muted metadata labels, redaction highlights, and a calm signal-green accent. Editorial SaaS style, refined spacing, warm neutrals, soft gradients, zero hype.`
+`Design a premium abstract hero visual for hddn, a browser-based PDF redaction tool. Show stacked document panels, muted metadata labels, redaction highlights, and a calm signal-green accent. Editorial SaaS style, refined spacing, warm neutrals, soft gradients, zero hype.`
 
 ### Marketing copy seed
-`Write concise landing-page copy for HDDN, a privacy-first PDF redaction app. Tone: calm, exact, trustworthy. Emphasize local processing, human review, safe export, and clear limitations. Avoid hype, magic, and perfection claims.`
+`Write concise landing-page copy for hddn, a privacy-first PDF redaction app. Tone: calm, exact, trustworthy. Emphasize local processing, human review, safe export, and clear limitations. Avoid hype, magic, and perfection claims.`
 
 ## UX Guardrails
 - Manual review must remain visible in both copy and interface.

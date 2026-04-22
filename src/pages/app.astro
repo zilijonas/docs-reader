@@ -1,12 +1,12 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { AppShell } from '../features/redactor/components/AppShell';
+import Layout from "../layouts/Layout.astro";
+import { AppShell } from "../features/redactor/components/AppShell";
 ---
 
 <Layout
-	title="HDDN - Hide what matters."
-	description="Review and redact PDFs locally in your browser with no document uploads or processing servers."
-	viewportContent="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  title="hddn - Hide what matters."
+  description="Review and redact PDFs locally in your browser with no document uploads or processing servers."
+  viewportContent="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
 >
-	<AppShell client:only="react" />
+  <AppShell client:only="react" />
 </Layout>

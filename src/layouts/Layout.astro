@@ -14,7 +14,7 @@ interface Props {
 }
 
 const {
-  title = "HDDN - Hide what matters.",
+  title = "hddn - Hide what matters.",
   description = "Redact PDFs locally in your browser. Document contents stay on-device during processing.",
   viewportContent = "width=device-width",
 } = Astro.props;
@@ -50,7 +50,10 @@ const enableAnalytics = ANALYTICS.enabled;
     <meta property="og:image:type" content="image/webp" />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:alt" content="HDDN document redactor preview image" />
+    <meta
+      property="og:image:alt"
+      content="hddn document redactor preview image"
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -59,6 +62,10 @@ const enableAnalytics = ANALYTICS.enabled;
   </head>
   <body>
     <slot />
-    <AnalyticsConsentController client:idle enabled={enableAnalytics} measurementId={ANALYTICS.measurementId} />
+    <AnalyticsConsentController
+      client:idle
+      enabled={enableAnalytics}
+      measurementId={ANALYTICS.measurementId}
+    />
   </body>
 </html>

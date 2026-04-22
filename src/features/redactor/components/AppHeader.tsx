@@ -82,7 +82,7 @@ export function AppHeader() {
     >
       <div className="flex min-w-0 items-center gap-4">
         <a href={homeHref} className="flex items-center">
-          <BrandLogo className="app-brand-logo text-content" title="HDDN" />
+          <BrandLogo className="app-brand-logo text-content" title="hddn" />
         </a>
 
         {sourceDocument ? (

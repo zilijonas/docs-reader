@@ -48,16 +48,11 @@ const faqItems = [
   },
   {
     question: "Is it really free?",
-    answer: [
-      "Yes.",
-      "hddn is completely free to use. No signup required.",
-    ],
+    answer: ["Yes.", "hddn is completely free to use. No signup required."],
   },
   {
     question: "What file types are supported?",
-    answer: [
-      "PDF files only.",
-    ],
+    answer: ["PDF files only."],
   },
   {
     question: "Are there any limits?",
@@ -113,11 +108,11 @@ const faqItems = [
 
 <MarketingPageShell
   baseUrl={baseUrl}
-  description="Read common questions about local PDF redaction, analytics, limits, and how HDDN works."
+  description="Read common questions about local PDF redaction, analytics, limits, and how hddn works."
   eyebrow="FAQ"
-  intro="Simple answers about local processing, privacy, supported files, and what to expect from HDDN."
+  intro="Simple answers about local processing, privacy, supported files, and what to expect from hddn."
   pageTitle="FAQ"
-  title="FAQ | HDDN"
+  title="FAQ | hddn"
 >
   <section class="faq-accordion" aria-label="Frequently asked questions">
     {
@@ -125,7 +120,7 @@ const faqItems = [
         <details class="faq-item" open={index === 0}>
           <summary class="faq-trigger">
             <span class="faq-question">{item.question}</span>
-            <span class="faq-icon" aria-hidden="true"></span>
+            <span class="faq-icon" aria-hidden="true" />
           </summary>
           <div class="faq-content">
             {item.question === "Who made this?" ? (
@@ -133,7 +128,8 @@ const faqItems = [
                 <p>{item.answer[0]}</p>
                 <p>{item.answer[1]}</p>
                 <p>
-                  Contact: <a href="mailto:lijonas.it@gmail.com">lijonas.it@gmail.com</a>
+                  Contact:{" "}
+                  <a href="mailto:lijonas.it@gmail.com">lijonas.it@gmail.com</a>
                 </p>
               </>
             ) : (

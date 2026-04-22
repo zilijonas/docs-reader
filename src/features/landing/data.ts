@@ -47,7 +47,7 @@ export const getLandingMobileLinks = (
 ];
 
 export const landingHero = {
-  statusPill: "100% private",
+  statusPill: "Private by design",
   statusDetail: "Runs in your browser",
   headlineLead: "Hide sensitive data in your PDF.",
   headlineAccent: "locally",

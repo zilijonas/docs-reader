@@ -1,5 +1,5 @@
 ---
-import { whySection } from '../data';
+import { whySection } from "../data";
 ---
 
 <section class="landing-section-shell">
@@ -13,11 +13,11 @@ import { whySection } from '../data';
         <p class="type-body landing-why-intro">{whySection.intro}</p>
       </div>
 
-      <ul class="landing-why-badges" aria-label="Why people use HDDN">
+      <ul class="landing-why-badges" aria-label="Why people use hddn">
         {
           whySection.items.map((item) => (
             <li class="landing-why-badge">
-              <span class="landing-why-badge-dot" aria-hidden="true"></span>
+              <span class="landing-why-badge-dot" aria-hidden="true" />
               <span class="landing-why-badge-label">{item}</span>
             </li>
           ))
