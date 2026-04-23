@@ -36,7 +36,7 @@ const circleButtonVariants = cva(
       {
         tone: 'neutral',
         active: true,
-        className: 'border-content bg-content text-canvas',
+        className: 'border-brand bg-brand text-white',
       },
       {
         tone: 'accent',
@@ -46,7 +46,7 @@ const circleButtonVariants = cva(
       {
         tone: 'accent',
         active: true,
-        className: 'border-content bg-content text-canvas',
+        className: 'border-brand bg-brand text-white',
       },
       {
         tone: 'danger',

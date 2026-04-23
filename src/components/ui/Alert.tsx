@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 const alertVariants = cva('rounded-control border text-left', {
   variants: {
     tone: {
-      info: 'border-border bg-surface-muted text-content-muted',
+      info: 'border-border bg-surface-muted text-content-muted shadow-panel',
       success: 'border-success/30 bg-success-soft text-success-ink',
       warning: 'border-warning/30 bg-warning-soft text-warning-ink',
       danger: 'border-danger/35 bg-danger-soft text-danger',

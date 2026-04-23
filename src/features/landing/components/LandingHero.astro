@@ -1,6 +1,18 @@
 ---
-import { CloudOff, Eye, Monitor, Pencil, Shield } from 'lucide-react';
+import {
+  ArrowRight,
+  CloudOff,
+  Eye,
+  FileLock,
+  FilePen,
+  Monitor,
+  MonitorSmartphone,
+  Pencil,
+  Shield,
+  ShieldCheck,
+} from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
+import { StatusPill } from '../../../components/ui/StatusPill';
 import { heroTrustBadges, landingHero } from '../data';
 import LandingHeroDiagram from './LandingHeroDiagram.astro';
 
@@ -31,17 +43,20 @@ const { appUrl, howItWorksUrl } = Astro.props;
       class="border-border bg-surface/92 shadow-float rounded-(--radius-panel) border p-6 backdrop-blur-sm sm:p-8"
     >
       <div class="grid gap-5">
-        <span
-          class="fade-in border-border bg-surface text-content-muted text-micro tracking-pill inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 font-mono leading-4 uppercase"
-        >
-          <span class="bg-success size-1.5 rounded-full" aria-hidden="true"></span>
-          <span>{landingHero.statusPill}</span>
-          <span class="bg-success ml-2 size-1.5 rounded-full" aria-hidden="true"></span>
-          <span>{landingHero.statusDetail}</span>
-        </span>
+        <div class="flex items-center gap-2">
+          <StatusPill className="fade-in w-fit flex-shrink-0" size="sm" status="trust">
+            <ShieldCheck size={14} strokeWidth={1.7} />
+            <span>{landingHero.statusPill}</span>
+          </StatusPill>
+          <StatusPill className="fade-in w-fit flex-shrink-0" size="sm" status="trust">
+            <MonitorSmartphone size={14} strokeWidth={1.7} />
+            <span>{landingHero.statusDetail}</span>
+          </StatusPill>
+        </div>
 
         <h1 class="fade-in text-display-hero tracking-tight-hero text-balance">
-          {landingHero.headlineLead}<br />
+          {landingHero.headlineLead}
+          <em class="text-brand">{landingHero.headlineAccent}</em><br />
           {landingHero.headlineTrail}
         </h1>
 
@@ -69,7 +84,7 @@ const { appUrl, howItWorksUrl } = Astro.props;
                   ) : badge.icon === 'eye' ? (
                     <Eye size={14} strokeWidth={1.6} />
                   ) : (
-                    <Shield size={14} strokeWidth={1.6} />
+                    <FileLock size={14} strokeWidth={1.6} />
                   )}
                 </span>
                 <span class="grid min-w-0">
@@ -84,8 +99,9 @@ const { appUrl, howItWorksUrl } = Astro.props;
 
         <div class="fade-in fade-in-delay-3 mt-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button className="w-full sm:w-auto" href={appUrl} size="lg">
+            <FilePen size={16} strokeWidth={1.5} />
             <span>{landingHero.primaryCta}</span>
-            <Pencil size={16} strokeWidth={1.5} />
+            <ArrowRight size={16} strokeWidth={1.5} />
           </Button>
           <Button className="w-full sm:w-auto" href={howItWorksUrl} size="lg" variant="secondary">
             <Eye size={16} strokeWidth={1.5} />
@@ -119,7 +135,7 @@ const { appUrl, howItWorksUrl } = Astro.props;
                 ) : badge.icon === 'eye' ? (
                   <Eye size={20} strokeWidth={1.6} />
                 ) : (
-                  <Shield size={20} strokeWidth={1.6} />
+                  <FileLock size={20} strokeWidth={1.6} />
                 )}
               </span>
               <span class="grid min-w-0 gap-0.5">

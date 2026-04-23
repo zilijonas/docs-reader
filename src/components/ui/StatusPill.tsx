@@ -11,6 +11,7 @@ const statusPillVariants = cva(
         neutral: 'border-border bg-surface text-content-muted',
         pending: 'border-detection-ring bg-detection-soft font-medium text-content',
         confirmed: 'border-success/30 bg-success-soft font-medium text-success-ink',
+        trust: 'border-trust/24 bg-trust-soft font-medium text-trust-ink',
         dismissed: 'border-border bg-surface-muted text-content-subtle',
         manual: 'border-border bg-surface text-content-muted',
         ocr: 'border-border bg-surface text-content-muted lowercase',

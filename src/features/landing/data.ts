@@ -46,11 +46,11 @@ export const getLandingMobileLinks = (baseUrl: string, appUrl: string): LandingM
 export const landingHero = {
   statusPill: 'Private by design',
   statusDetail: 'Runs in your browser',
-  headlineLead: 'Redact sensitive data in your PDF.',
-  headlineAccent: '',
-  headlineTrail: 'Before you share it.',
+  headlineLead: 'Redact your',
+  headlineAccent: 'PDF.',
+  headlineTrail: 'Privately.',
   subtext:
-    'Use a browser-based PDF redactor to find sensitive information, review every redaction, and export a permanently redacted PDF. Everything stays on your device - your file is never uploaded.',
+    'Find and remove sensitive data, review every redaction, and export a permanently redacted PDF - all in your browser. Your file never leaves your device.',
   primaryCta: 'Redact your PDF',
   secondaryCta: 'See how it works',
   quickPoints: ['Local PDF redaction', 'No file uploads', 'Review before export'],
@@ -79,7 +79,7 @@ export const heroTrustBadges = [
     label: 'Permanent redaction',
     mobileLabel: 'Irreversible',
     note: 'Export removes selected data.',
-    icon: 'shield',
+    icon: 'file-lock',
   },
 ] as const;
 

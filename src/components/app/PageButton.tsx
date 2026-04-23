@@ -14,7 +14,7 @@ export function PageButton({
       className={cn(
         'rounded-control ease-standard text-caption flex size-7 items-center justify-center border font-mono transition-colors duration-200',
         active
-          ? 'border-content bg-content text-canvas'
+          ? 'border-brand bg-brand text-white'
           : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',
       )}
       onClick={onClick}

@@ -2,8 +2,7 @@
 import { Shield } from 'lucide-react';
 import { privacyHighlights, privacySection } from '../data';
 
-const eyebrowClass =
-  'font-mono text-caption leading-4 tracking-eyebrow uppercase text-content-subtle';
+const eyebrowClass = 'ui-eyebrow-pill';
 const titleClass = 'max-w-measure-landing-privacy text-display-section tracking-tight-section';
 ---
 
@@ -11,17 +10,9 @@ const titleClass = 'max-w-measure-landing-privacy text-display-section tracking-
   <div class="layout-shell py-16">
     <div class="grid gap-4 lg:grid-cols-(--layout-grid-landing-aside)">
       <div class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-6 sm:p-7">
-        <div
-          class="border-border bg-surface-muted text-content mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
+        <span class:list={[eyebrowClass, 'mb-4']}
+          ><Shield size={14} strokeWidth={1.7} /> {privacySection.eyebrow}</span
         >
-          <span
-            class="bg-canvas text-content-subtle inline-flex size-5 items-center justify-center rounded-full"
-            aria-hidden="true"
-          >
-            <Shield size={14} strokeWidth={1.7} />
-          </span>
-          <span class={eyebrowClass}>{privacySection.eyebrow}</span>
-        </div>
         <h2 class:list={[titleClass, 'mb-5']}>{privacySection.title}</h2>
         <div class="grid gap-3">
           {

@@ -15,8 +15,7 @@ interface Props {
 
 const { seo, pageTitle, intro, updatedAt, eyebrow = 'Info', baseUrl } = Astro.props;
 const appUrl = `${baseUrl}redact`;
-const heroEyebrowClass =
-  'font-mono text-caption leading-4 tracking-eyebrow uppercase text-content-subtle';
+const heroEyebrowClass = 'ui-eyebrow-pill';
 const heroTitleClass = 'max-w-measure-landing-section text-display-section tracking-tight-section';
 const heroIntroClass =
   'max-w-measure-landing-section text-content-muted text-lg leading-reading text-pretty';

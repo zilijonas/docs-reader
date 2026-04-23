@@ -6,10 +6,10 @@ import { cn } from '@/lib/cn';
 const panelVariants = cva('rounded-(--radius-panel) border shadow-panel', {
   variants: {
     tone: {
-      surface: 'border-border bg-surface',
-      muted: 'border-border bg-surface-muted',
-      canvas: 'border-border bg-canvas',
-      overlay: 'border-border bg-surface/95 backdrop-blur-md',
+      surface: 'border-border/90 bg-surface',
+      muted: 'border-border/80 bg-surface-muted',
+      canvas: 'border-border/90 bg-canvas',
+      overlay: 'border-border/80 bg-surface/95 backdrop-blur-md',
     },
     padding: {
       none: '',

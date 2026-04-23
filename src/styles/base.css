@@ -90,6 +90,23 @@
     gap: 1.25rem;
   }
 
+  .ui-eyebrow-pill {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid color-mix(in oklab, var(--theme-brand) 12%, white);
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--theme-brand) 9%, white);
+    color: color-mix(in oklab, var(--theme-brand) 86%, black);
+    padding: 0.45rem 0.9rem;
+    font-family: var(--font-ui-mono);
+    font-size: var(--text-caption);
+    line-height: 1;
+    letter-spacing: var(--tracking-pill);
+    text-transform: uppercase;
+  }
+
   .marketing-content > section {
     border: 1px solid var(--theme-border);
     border-radius: var(--radius-panel);
@@ -137,7 +154,11 @@
   .consent-banner-panel {
     border-color: var(--theme-border-strong);
     background-color: var(--theme-surface-elevated);
-    background-image: radial-gradient(circle at top left, rgb(17 17 17 / 0.06) 0%, transparent 48%);
+    background-image: radial-gradient(
+      circle at top left,
+      rgb(86 103 242 / 0.08) 0%,
+      transparent 48%
+    );
   }
 
   .consent-banner-eyebrow {
@@ -151,7 +172,7 @@
       background-color: color-mix(in oklab, var(--theme-surface) 92%, var(--theme-canvas));
       background-image: radial-gradient(
         circle at top left,
-        color-mix(in oklab, var(--theme-brand-soft) 72%, white) 0%,
+        color-mix(in oklab, var(--theme-brand-soft) 82%, white) 0%,
         transparent 48%
       );
     }

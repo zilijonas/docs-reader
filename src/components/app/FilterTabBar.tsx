@@ -21,7 +21,7 @@ export function FilterTabBar({
             className={cn(
               'ease-standard text-control mr-5 mb-4 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 transition-colors duration-200',
               isActive
-                ? 'border-content text-content'
+                ? 'border-brand text-content'
                 : 'text-content-subtle hover:text-content-muted border-transparent',
             )}
             key={label}
@@ -38,7 +38,7 @@ export function FilterTabBar({
             <span
               className={cn(
                 'text-badge rounded-full px-1.5 py-0.25 font-mono',
-                isActive ? 'bg-content text-canvas' : 'bg-surface-muted text-content-subtle',
+                isActive ? 'bg-brand-soft text-content' : 'bg-surface-muted text-content-subtle',
               )}
             >
               {counts[status]}

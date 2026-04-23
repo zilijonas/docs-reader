@@ -13,6 +13,9 @@
   --color-brand: var(--theme-brand);
   --color-brand-hover: var(--theme-brand-hover);
   --color-brand-soft: var(--theme-brand-soft);
+  --color-trust: var(--theme-trust);
+  --color-trust-soft: var(--theme-trust-soft);
+  --color-trust-ink: var(--theme-trust-ink);
   --color-success: var(--theme-success);
   --color-success-soft: var(--theme-success-soft);
   --color-success-ink: var(--theme-success-ink);
@@ -54,7 +57,7 @@
   --text-title-card--line-height: 1.15;
   --text-display-section: clamp(2rem, 4vw, 3rem);
   --text-display-section--line-height: 1.05;
-  --text-display-hero: clamp(2.75rem, 6.4vw, 5.25rem);
+  --text-display-hero: clamp(2.25rem, 6.4vw, 4.25rem);
   --text-display-hero--line-height: 0.98;
   --text-display-cta: clamp(2.125rem, 4vw, 3rem);
   --text-display-cta--line-height: 1.05;
@@ -120,21 +123,24 @@
 :root {
   color-scheme: light;
 
-  --theme-canvas: #f5f4ef;
+  --theme-canvas: #f6f5fb;
   --theme-surface: #ffffff;
-  --theme-surface-muted: #faf9f4;
+  --theme-surface-muted: #fbfaff;
   --theme-surface-elevated: rgba(255, 255, 255, 0.92);
-  --theme-content: #111111;
-  --theme-content-muted: #4b5563;
-  --theme-content-subtle: #5f6774;
-  --theme-border: #ededf0;
-  --theme-border-strong: #d9d9df;
-  --theme-brand: #111111;
-  --theme-brand-hover: #2a2a2a;
-  --theme-brand-soft: color-mix(in oklab, #111111 24%, var(--theme-canvas));
-  --theme-success: #10b981;
-  --theme-success-soft: color-mix(in oklab, var(--theme-success) 10%, var(--theme-canvas));
-  --theme-success-ink: #047857;
+  --theme-content: #141523;
+  --theme-content-muted: #5c6679;
+  --theme-content-subtle: #7a849a;
+  --theme-border: #e7e8f2;
+  --theme-border-strong: #d7d9ea;
+  --theme-brand: #5667f2;
+  --theme-brand-hover: #4657e7;
+  --theme-brand-soft: color-mix(in oklab, var(--theme-brand) 16%, white);
+  --theme-trust: #23b26f;
+  --theme-trust-soft: color-mix(in oklab, var(--theme-trust) 12%, white);
+  --theme-trust-ink: #148856;
+  --theme-success: #20b26b;
+  --theme-success-soft: color-mix(in oklab, var(--theme-success) 11%, white);
+  --theme-success-ink: #147f50;
   --theme-warning: #f59e0b;
   --theme-warning-soft: color-mix(in oklab, var(--theme-warning) 14%, var(--theme-canvas));
   --theme-warning-ink: #b45309;
@@ -144,19 +150,19 @@
   --theme-detection-soft: color-mix(in oklab, #d97706 16%, var(--theme-canvas));
   --theme-detection-ring: color-mix(in oklab, #d97706 55%, transparent);
   --theme-page: #ffffff;
-  --theme-page-border: #ededf0;
+  --theme-page-border: #e7e8f2;
 
   --font-ui-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-ui-serif: 'Instrument Serif', 'Fraunces', Georgia, serif;
+  --font-ui-serif: 'Playfair Display', 'Fraunces', Georgia, serif;
   --font-ui-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
-  --theme-shadow-panel: 0 1px 0 rgba(17, 17, 17, 0.04);
-  --theme-shadow-float: 0 24px 60px -28px rgba(30, 24, 14, 0.22);
+  --theme-shadow-panel: 0 16px 36px -28px rgba(71, 78, 120, 0.26), 0 1px 0 rgba(20, 21, 35, 0.04);
+  --theme-shadow-float: 0 28px 72px -34px rgba(73, 82, 136, 0.3);
   --theme-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 
   --radius-control: 0.875rem;
   --radius-chip: 999px;
-  --radius-panel: 1.5rem;
+  --radius-panel: 1.75rem;
   --radius-pill: 999px;
 
   --spacing-hero-top: 6rem;

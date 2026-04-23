@@ -165,3 +165,5 @@ export function useReviewContext() {
 
   return context;
 }
+
+export type { ReviewContextValue };

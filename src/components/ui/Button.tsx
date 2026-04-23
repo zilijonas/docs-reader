@@ -9,9 +9,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'border border-brand bg-brand !text-white shadow-none hover:border-brand-hover hover:bg-brand-hover',
+          'border border-brand bg-brand !text-white shadow-[0_18px_38px_-24px_rgba(86,103,242,0.72)] hover:-translate-y-px hover:border-brand-hover hover:bg-brand-hover hover:shadow-[0_22px_40px_-22px_rgba(86,103,242,0.82)] active:translate-y-0',
         secondary:
-          'border border-border bg-surface text-content shadow-none hover:border-border-strong hover:bg-surface-muted',
+          'border border-border bg-surface text-content shadow-[0_10px_24px_-22px_rgba(71,78,120,0.3)] hover:-translate-y-px hover:border-border-strong hover:bg-surface-muted active:translate-y-0',
         ghost:
           'border border-transparent bg-transparent text-content hover:bg-surface-muted hover:text-content',
         subtle:
@@ -25,7 +25,7 @@ const buttonVariants = cva(
         sm: 'h-7 px-2.5 text-caption',
         md: 'h-9 px-4 text-control',
         lg: 'h-11 px-5 text-sm',
-        pill: 'h-11 px-6 rounded-pill text-sm',
+        pill: 'h-11 px-6.5 rounded-pill text-sm',
         icon: 'size-7 p-0',
       },
       fullWidth: {

@@ -1,5 +1,5 @@
 ---
-import { Pencil } from 'lucide-react';
+import { FilePen } from 'lucide-react';
 import { BrandLogo } from '../../../components/BrandLogo';
 import { Button } from '../../../components/ui/Button';
 import { landingHero, getLandingMobileLinks, getLandingNavLinks } from '../data';
@@ -45,11 +45,11 @@ const navLinkClass =
 
         <Button className="hidden sm:inline-flex" href={appUrl}>
           <span>{landingHero.primaryCta}</span>
-          <Pencil size={16} strokeWidth={1.9} />
+          <FilePen size={16} strokeWidth={1.9} />
         </Button>
 
         <Button aria-label={landingHero.primaryCta} className="sm:hidden" href={appUrl}>
-          <Pencil size={16} strokeWidth={1.9} />
+          <FilePen size={16} strokeWidth={1.9} />
         </Button>
 
         <LandingMobileNav links={mobileLinks} />

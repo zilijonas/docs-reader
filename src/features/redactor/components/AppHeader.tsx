@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
   Check,
+  ShieldCheck,
   Circle,
   Download,
   FilePenLine,
@@ -89,11 +90,16 @@ export function AppHeader() {
       ref={appHeaderRef}
     >
       <div className="flex min-w-0 items-center gap-4">
-        <a href={homeHref} className="flex items-center">
+        <a href={homeHref} className="flex items-center gap-3">
           <BrandLogo
             className="text-content block h-auto w-[4.5rem] max-[640px]:w-[4rem]"
             title="hddn"
           />
+          {!sourceDocument && (
+            <span className="text-content-subtle text-badge tracking-label font-mono leading-3 uppercase">
+              Hide what matters.
+            </span>
+          )}
         </a>
 
         {sourceDocument ? (
@@ -149,7 +155,7 @@ export function AppHeader() {
       {hasViewer ? (
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-2 lg:mr-2 lg:flex">
-            <StatusPill size="sm" status="confirmed">
+            <StatusPill size="sm" status="trust">
               <Check size={14} strokeWidth={2} />
               {copy.header.localOnly}
             </StatusPill>
@@ -182,7 +188,12 @@ export function AppHeader() {
             <XIcon size={20} strokeWidth={1.75} />
           </CircleButton>
         </div>
-      ) : null}
+      ) : (
+        <StatusPill className="shrink-0" size="sm" status="trust">
+          <ShieldCheck size={14} strokeWidth={2} />
+          {copy.header.privacyPill}
+        </StatusPill>
+      )}
     </header>
   );
 }
