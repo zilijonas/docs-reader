@@ -1,39 +1,26 @@
-type ConsentStatus = 'unknown' | 'accepted' | 'declined';
-
 const ANALYTICS_CONSENT_COOKIE_NAME = 'hddn_analytics_consent';
 const ANALYTICS_CONSENT_COOKIE_VERSION = 'v1';
 const ANALYTICS_CONSENT_MAX_AGE_DAYS = 180;
 
-type PersistedConsentStatus = Exclude<ConsentStatus, 'unknown'>;
-
-declare global {
-  interface Window {
-    dataLayer?: unknown[][];
-    gtag?: (...args: unknown[]) => void;
-  }
-}
-
-const injectedMeasurementIds = new Set<string>();
+const injectedMeasurementIds = new Set();
 
 const deniedConsentState = {
   ad_storage: 'denied',
   ad_user_data: 'denied',
   ad_personalization: 'denied',
   analytics_storage: 'denied',
-} as const;
+};
 
 const grantedConsentState = {
   ...deniedConsentState,
   analytics_storage: 'granted',
-} as const;
+};
 
-const isPersistedConsentStatus = (value: string): value is PersistedConsentStatus =>
-  value === 'accepted' || value === 'declined';
+const isPersistedConsentStatus = (value) => value === 'accepted' || value === 'declined';
 
-const getConsentState = (status: PersistedConsentStatus) =>
-  status === 'accepted' ? grantedConsentState : deniedConsentState;
+const getConsentState = (status) => (status === 'accepted' ? grantedConsentState : deniedConsentState);
 
-const readAnalyticsConsent = (): ConsentStatus => {
+const readAnalyticsConsent = () => {
   const encodedName = `${encodeURIComponent(ANALYTICS_CONSENT_COOKIE_NAME)}=`;
   const cookieEntry = document.cookie
     .split(';')
@@ -55,7 +42,7 @@ const readAnalyticsConsent = (): ConsentStatus => {
   return normalizedStatus;
 };
 
-const writeAnalyticsConsent = (status: PersistedConsentStatus) => {
+const writeAnalyticsConsent = (status) => {
   const expiresAt = new Date(Date.now() + ANALYTICS_CONSENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
   const secureAttribute = location.protocol === 'https:' ? '; Secure' : '';
   const cookieValue = `${ANALYTICS_CONSENT_COOKIE_VERSION}:${status}`;
@@ -75,7 +62,7 @@ const ensureGoogleAnalyticsStub = () => {
   window.dataLayer = window.dataLayer ?? [];
   window.gtag =
     window.gtag ??
-    ((...args: unknown[]) => {
+    ((...args) => {
       window.dataLayer?.push(args);
     });
 };
@@ -85,12 +72,12 @@ const setDefaultConsentState = () => {
   window.gtag?.('consent', 'default', deniedConsentState);
 };
 
-const updateConsentState = (status: PersistedConsentStatus) => {
+const updateConsentState = (status) => {
   ensureGoogleAnalyticsStub();
   window.gtag?.('consent', 'update', getConsentState(status));
 };
 
-const loadGoogleAnalytics = (measurementId: string) => {
+const loadGoogleAnalytics = (measurementId) => {
   if (injectedMeasurementIds.has(measurementId)) {
     return;
   }
@@ -108,7 +95,7 @@ const loadGoogleAnalytics = (measurementId: string) => {
   injectedMeasurementIds.add(measurementId);
 };
 
-const applyPersistedConsent = (status: PersistedConsentStatus, measurementId: string) => {
+const applyPersistedConsent = (status, measurementId) => {
   setDefaultConsentState();
   updateConsentState(status);
 
@@ -117,7 +104,7 @@ const applyPersistedConsent = (status: PersistedConsentStatus, measurementId: st
   }
 };
 
-export const initAnalyticsConsent = (banner: HTMLElement) => {
+export const initAnalyticsConsent = (banner) => {
   if (banner.dataset.analyticsConsentInitialized === 'true') {
     return;
   }
@@ -130,10 +117,7 @@ export const initAnalyticsConsent = (banner: HTMLElement) => {
   const acceptButton = banner.querySelector('[data-consent-accept]');
   const declineButton = banner.querySelector('[data-consent-decline]');
 
-  if (
-    !(acceptButton instanceof HTMLButtonElement) ||
-    !(declineButton instanceof HTMLButtonElement)
-  ) {
+  if (!(acceptButton instanceof HTMLButtonElement) || !(declineButton instanceof HTMLButtonElement)) {
     return;
   }
 
@@ -147,7 +131,7 @@ export const initAnalyticsConsent = (banner: HTMLElement) => {
     banner.hidden = false;
   };
 
-  const handleChoice = (status: PersistedConsentStatus) => {
+  const handleChoice = (status) => {
     writeAnalyticsConsent(status);
     applyPersistedConsent(status, measurementId);
     hideBanner();
