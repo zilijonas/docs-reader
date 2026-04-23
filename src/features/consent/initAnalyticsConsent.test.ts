@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { writeAnalyticsConsent } from './cookie';
-import { initAnalyticsConsent, resetAnalyticsConsentForTests } from './initAnalyticsConsent';
+import { initAnalyticsConsent, resetAnalyticsConsentForTests } from './analytics-consent.client';
 
 const clearConsentCookie = () => {
   document.cookie =
