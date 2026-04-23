@@ -24,7 +24,13 @@ import {
   DETECTION_TYPE_LABELS as BASE_DETECTION_TYPE_LABELS,
   DETECTION_TYPE_ORDER as BASE_DETECTION_TYPE_ORDER,
 } from '../../lib/app-config';
-import type { DetectionSource, DetectionStatus, DetectionType, ExportMode, FilterState } from '../../types';
+import type {
+  DetectionSource,
+  DetectionStatus,
+  DetectionType,
+  ExportMode,
+  FilterState,
+} from '../../types';
 
 export interface DetectionTypeMeta {
   type: DetectionType;

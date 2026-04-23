@@ -12,7 +12,7 @@ const alertVariants = cva('rounded-control border text-left', {
       danger: 'border-danger/35 bg-danger-soft text-danger',
     },
     density: {
-      compact: 'ui-text-control px-2.5 py-2',
+      compact: 'text-control px-2.5 py-2',
       regular: 'px-4 py-3 text-sm',
     },
   },

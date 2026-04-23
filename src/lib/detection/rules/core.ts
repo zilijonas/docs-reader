@@ -90,16 +90,15 @@ export const DOCUMENT_ID_RULE: DetectionRule = {
 
 export const ID_RULE: DetectionRule = {
   type: 'id',
-  pattern:
-    new RegExp(
-      `(?<![\\p{L}\\p{N}])(?:` +
-        `(?:Nr\\.?|No\\.?|Nº)\\s*[A-Z0-9]{1,4}-[A-Z0-9]{2,6}` +
-        `|\\d{3}[- ]?\\d{2}[- ]?\\d{4}` +
-        `|(?!${POSTAL_PREFIX_COUNTRY}\\d{3,5}(?!\\d))[A-Z]{1,3}\\d{5,10}` +
-        `|\\d{2}[A-Z]{2}\\d{6,}` +
-        `)(?![\\p{L}\\p{N}])`,
-      'giu',
-    ),
+  pattern: new RegExp(
+    `(?<![\\p{L}\\p{N}])(?:` +
+      `(?:Nr\\.?|No\\.?|Nº)\\s*[A-Z0-9]{1,4}-[A-Z0-9]{2,6}` +
+      `|\\d{3}[- ]?\\d{2}[- ]?\\d{4}` +
+      `|(?!${POSTAL_PREFIX_COUNTRY}\\d{3,5}(?!\\d))[A-Z]{1,3}\\d{5,10}` +
+      `|\\d{2}[A-Z]{2}\\d{6,}` +
+      `)(?![\\p{L}\\p{N}])`,
+    'giu',
+  ),
   confidence: CONFIDENCE.id,
 };
 
@@ -111,15 +110,14 @@ export const NUMBER_RULE: DetectionRule = {
 
 export const PHONE_RULE: DetectionRule = {
   type: 'phone',
-  pattern:
-    new RegExp(
-      `(?<![\\w\\d])` +
-        `(?!\\d{4}-\\d{2}(?:-\\d{2})?(?:[ T]\\d{1,2}:\\d{2}(?::\\d{2})?)?)` +
-        `(?:\\+\\d{1,3}[\\s.\\-()]*)?(?:\\(?\\d{1,4}\\)?(?:[\\s.\\-()]+)){1,4}\\d{2,8}` +
-        `(?![\\w\\d])` +
-        `(?!\\s*${VEHICLE_UNIT_SUFFIX}\\b)`,
-      'gu',
-    ),
+  pattern: new RegExp(
+    `(?<![\\w\\d])` +
+      `(?!\\d{4}-\\d{2}(?:-\\d{2})?(?:[ T]\\d{1,2}:\\d{2}(?::\\d{2})?)?)` +
+      `(?:\\+\\d{1,3}[\\s.\\-()]*)?(?:\\(?\\d{1,4}\\)?(?:[\\s.\\-()]+)){1,4}\\d{2,8}` +
+      `(?![\\w\\d])` +
+      `(?!\\s*${VEHICLE_UNIT_SUFFIX}\\b)`,
+    'gu',
+  ),
   confidence: CONFIDENCE.phone,
   postFilter: isLongPhoneLike,
 };
@@ -157,7 +155,10 @@ export const CORE_RULES: DetectionRule[] = [
   COMPACT_INTERNATIONAL_PHONE_RULE,
   {
     type: 'iban',
-    pattern: new RegExp(`\\b[A-Z]{2}\\d{2}(?:${IBAN_SEPARATOR}[A-Z0-9]{2,4}){2,7}(?:${IBAN_SEPARATOR}[A-Z0-9]{1,4})?\\b`, 'giu'),
+    pattern: new RegExp(
+      `\\b[A-Z]{2}\\d{2}(?:${IBAN_SEPARATOR}[A-Z0-9]{2,4}){2,7}(?:${IBAN_SEPARATOR}[A-Z0-9]{1,4})?\\b`,
+      'giu',
+    ),
     confidence: CONFIDENCE.iban,
     postFilter: isIbanValid,
   },

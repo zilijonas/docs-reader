@@ -38,7 +38,11 @@ export type OcrWord = {
   box: BoundingBox;
 };
 
-const toNormalizedWord = (word: OcrWordLike, imageWidth: number, imageHeight: number): OcrWord | null => {
+const toNormalizedWord = (
+  word: OcrWordLike,
+  imageWidth: number,
+  imageHeight: number,
+): OcrWord | null => {
   const text = word.text?.trim();
   const bbox = word.bbox;
 
@@ -58,7 +62,11 @@ const toNormalizedWord = (word: OcrWordLike, imageWidth: number, imageHeight: nu
   };
 };
 
-export const extractOcrWords = (result: OcrResultLike, imageWidth: number, imageHeight: number): OcrWord[] => {
+export const extractOcrWords = (
+  result: OcrResultLike,
+  imageWidth: number,
+  imageHeight: number,
+): OcrWord[] => {
   const flatWords = result.data?.words;
   if (flatWords?.length) {
     return flatWords
@@ -69,7 +77,9 @@ export const extractOcrWords = (result: OcrResultLike, imageWidth: number, image
   const nestedWords =
     result.data?.blocks?.flatMap((block) => {
       if (block.paragraphs?.length) {
-        return block.paragraphs.flatMap((paragraph) => paragraph.lines?.flatMap((line) => line.words ?? []) ?? []);
+        return block.paragraphs.flatMap(
+          (paragraph) => paragraph.lines?.flatMap((line) => line.words ?? []) ?? [],
+        );
       }
 
       if (block.lines?.length) {

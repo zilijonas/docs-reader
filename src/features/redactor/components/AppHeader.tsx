@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { Check, Circle, Download, FilePenLine, RotateCcw, X as XIcon, ScanSearch } from 'lucide-react';
+import {
+  Check,
+  Circle,
+  Download,
+  FilePenLine,
+  RotateCcw,
+  X as XIcon,
+  ScanSearch,
+} from 'lucide-react';
 
 import { BrandLogo } from '../../../components/BrandLogo';
 import { CircleButton, StatusPill } from '../../../components/ui';
@@ -77,27 +85,32 @@ export function AppHeader() {
 
   return (
     <header
-      className="app-header sticky top-0 z-sticky flex items-center justify-between gap-4 border-b border-border bg-canvas/95 px-6 py-4 backdrop-blur-app-header"
+      className="z-sticky border-border bg-canvas/95 backdrop-blur-app-header sticky top-0 flex items-center justify-between gap-4 border-b px-6 py-4"
       ref={appHeaderRef}
     >
       <div className="flex min-w-0 items-center gap-4">
         <a href={homeHref} className="flex items-center">
-          <BrandLogo className="app-brand-logo text-content" title="hddn" />
+          <BrandLogo
+            className="text-content block h-auto w-[4.5rem] max-[640px]:w-[4rem]"
+            title="hddn"
+          />
         </a>
 
         {sourceDocument ? (
           <>
-            <div className="app-header-doc-divider h-5 w-px bg-border" />
-            <div className="app-header-doc-column flex min-w-0 flex-col">
-
-
+            <div className="bg-border h-5 w-px" />
+            <div className="flex min-w-0 flex-col">
               <div className="flex min-w-0 items-center gap-2">
-                <FilePenLine className="shrink-0 text-content-subtle" size={14} strokeWidth={1.75} />
+                <FilePenLine
+                  className="text-content-subtle shrink-0"
+                  size={14}
+                  strokeWidth={1.75}
+                />
 
                 {isEditingName ? (
                   <input
                     aria-label={copy.header.fileNameLabel}
-                    className="app-header-doc-name measure-doc-name ui-text-button-sm min-w-0 border-0 bg-transparent p-0 text-xs outline-none"
+                    className="text-caption max-w-measure-doc-name min-w-0 border-0 bg-transparent p-0 outline-none"
                     onBlur={commitDocumentName}
                     onChange={(event) => setDraftName(event.target.value)}
                     onKeyDown={handleNameKeyDown}
@@ -108,7 +121,7 @@ export function AppHeader() {
                 ) : (
                   <button
                     aria-label={copy.header.renameDocument}
-                    className="app-header-doc-name measure-doc-name ui-text-button-sm truncate text-left text-xs transition-colors hover:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20"
+                    className="hover:text-content-muted focus-visible:ring-brand/20 text-caption max-w-measure-doc-name truncate text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     onClick={() => setIsEditingName(true)}
                     type="button"
                   >
@@ -117,13 +130,15 @@ export function AppHeader() {
                 )}
               </div>
 
-              <div className="flex min-w-0 items-center gap-2 ui-text-button-sm leading-4 text-content-subtle">
+              <div className="text-content-subtle text-caption flex min-w-0 items-center gap-2">
                 <ScanSearch className="shrink-0" size={12} strokeWidth={1.75} />
                 <span className="shrink-0">{formatBytes(sourceDocument.size)}</span>
                 <span aria-hidden="true">·</span>
                 <span className="truncate">
                   {totalReviewItemCount}{' '}
-                  {totalReviewItemCount === 1 ? copy.header.findingSingular : copy.header.findingPlural}
+                  {totalReviewItemCount === 1
+                    ? copy.header.findingSingular
+                    : copy.header.findingPlural}
                 </span>
               </div>
             </div>
@@ -133,18 +148,18 @@ export function AppHeader() {
 
       {hasViewer ? (
         <div className="flex items-center gap-2">
-          <div className="app-header-status hidden items-center gap-2 lg:flex lg:mr-2">
-            <StatusPill status="confirmed">
+          <div className="hidden items-center gap-2 lg:mr-2 lg:flex">
+            <StatusPill size="sm" status="confirmed">
               <Check size={14} strokeWidth={2} />
               {copy.header.localOnly}
             </StatusPill>
-            <StatusPill status="neutral">
+            <StatusPill size="sm" status="neutral">
               <Circle size={10} strokeWidth={2} />
               {confirmedCount} {copy.header.confirmedSuffix}
             </StatusPill>
             {hasPending ? (
-              <StatusPill status="pending">
-                <span className="size-2 rounded-full bg-detection" />
+              <StatusPill size="sm" status="pending">
+                <span className="bg-detection size-2 rounded-full" />
                 {unconfirmedCount} {copy.header.toReviewSuffix}
               </StatusPill>
             ) : null}

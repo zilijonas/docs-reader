@@ -39,7 +39,9 @@ const spans: TextSpan[] = [
 
 describe('detectSensitiveData', () => {
   it('detects rule matches and normalizes snippets', () => {
-    const detections = detectSensitiveData(0, 'alice@example.com Call +1 202 555 0101', spans, ['Call']);
+    const detections = detectSensitiveData(0, 'alice@example.com Call +1 202 555 0101', spans, [
+      'Call',
+    ]);
     const types = detections.map((detection) => detection.type);
 
     expect(types).toContain('email');
@@ -83,7 +85,9 @@ describe('detectSensitiveData', () => {
     ];
 
     const detections = detectSensitiveData(0, 'Kodas adresas 110051834', driftedSpans);
-    const numberDetection = detections.find((detection) => detection.normalizedSnippet === '110051834');
+    const numberDetection = detections.find(
+      (detection) => detection.normalizedSnippet === '110051834',
+    );
 
     expect(numberDetection?.box.x).toBeCloseTo(0.62);
     expect(numberDetection?.box.y).toBeCloseTo(0.245);
@@ -246,7 +250,9 @@ describe('detectSensitiveData multi-locale', () => {
 
     expect(snippetsOfType(contiguous, 'iban')).toContain('LT121000011101001000');
     expect(snippetsOfType(grouped, 'iban')).toContain('LT12 1000 0111 0100 1000');
-    expect(snippetsOfType(groupedNbsp, 'iban')).toContain(`LT12\u00A01000\u00A00111\u00A00100\u00A01000`);
+    expect(snippetsOfType(groupedNbsp, 'iban')).toContain(
+      `LT12\u00A01000\u00A00111\u00A00100\u00A01000`,
+    );
   });
 
   it('detects a card number only when it passes Luhn', () => {
@@ -266,13 +272,22 @@ describe('detectSensitiveData multi-locale', () => {
 
     expect(
       detections.some(
-        (detection) => detection.type === 'address' || detection.normalizedSnippet.includes('straße'),
+        (detection) =>
+          detection.type === 'address' || detection.normalizedSnippet.includes('straße'),
       ),
     ).toBe(true);
   });
 
   it('captures a Lithuanian address with initials, short street token, postal and locality marker', () => {
-    const { text, spans } = buildPage(['J.', 'Basanavičiaus', 'g.', '10,', '01118,', 'Vilniaus', 'm.']);
+    const { text, spans } = buildPage([
+      'J.',
+      'Basanavičiaus',
+      'g.',
+      '10,',
+      '01118,',
+      'Vilniaus',
+      'm.',
+    ]);
     const detections = detectSensitiveData(0, text, spans);
     const address = detections.find((detection) => detection.type === 'address');
 
@@ -285,7 +300,16 @@ describe('detectSensitiveData multi-locale', () => {
   });
 
   it('captures a Lithuanian address with no initials and a trailing locality marker', () => {
-    const { text, spans } = buildPage(['Tarpininko', 'adresas:', 'Konstitucijos', 'pr.', '24,', '08131', 'Vilniaus', 'm.']);
+    const { text, spans } = buildPage([
+      'Tarpininko',
+      'adresas:',
+      'Konstitucijos',
+      'pr.',
+      '24,',
+      '08131',
+      'Vilniaus',
+      'm.',
+    ]);
     const detections = detectSensitiveData(0, text, spans);
     const address = detections.find((detection) => detection.type === 'address');
 
@@ -304,7 +328,9 @@ describe('detectSensitiveData multi-locale', () => {
 
     expect(snippetsOfType(detections, 'address')).toContain('Kriviu g. 35 - 35, Vilnius');
     expect(snippetsOfType(detections, 'postal')).toContain('LT01231');
-    expect(snippetsOfType(detections, 'address')).not.toContain('Kriviu g. 35 - 35, Vilnius, LT01231');
+    expect(snippetsOfType(detections, 'address')).not.toContain(
+      'Kriviu g. 35 - 35, Vilnius, LT01231',
+    );
   });
 
   it('detects uppercase Lithuanian short street abbreviations without dots when address-like', () => {

@@ -1,9 +1,10 @@
-import type { Detection, ManualRedaction } from '../../types';
-import type { ReviewSliceCreator, ReviewSnapshot, ReviewStoreState } from './types';
+import type { ReviewSnapshot, ReviewStoreState } from './types';
 
 const MAX_REDO_HISTORY = 100;
 
-export const createReviewSnapshot = (state: Pick<ReviewStoreState, 'detections' | 'manualRedactions'>): ReviewSnapshot => ({
+export const createReviewSnapshot = (
+  state: Pick<ReviewStoreState, 'detections' | 'manualRedactions'>,
+): ReviewSnapshot => ({
   detections: state.detections,
   manualRedactions: state.manualRedactions,
 });
@@ -35,7 +36,10 @@ export const pushRedoHistory = (
   };
 };
 
-export const createHistorySlice = (): Pick<ReviewStoreState, 'canRedo' | 'redoHistory' | 'redoLastChange'> => ({
+export const createHistorySlice = (): Pick<
+  ReviewStoreState,
+  'canRedo' | 'redoHistory' | 'redoLastChange'
+> => ({
   canRedo: false,
   redoHistory: [],
   redoLastChange: () => undefined,

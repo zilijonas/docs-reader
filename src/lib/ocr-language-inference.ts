@@ -31,12 +31,15 @@ const LANGUAGE_SPECIAL_CHARS = {
 } as const satisfies Record<string, string>;
 
 const languageEntries = Object.entries(LANGUAGE_SPECIAL_CHARS);
-const characterFrequency = languageEntries.reduce<Record<string, number>>((counts, [, characters]) => {
-  Array.from(new Set(Array.from(characters))).forEach((character) => {
-    counts[character] = (counts[character] ?? 0) + 1;
-  });
-  return counts;
-}, {});
+const characterFrequency = languageEntries.reduce<Record<string, number>>(
+  (counts, [, characters]) => {
+    Array.from(new Set(Array.from(characters))).forEach((character) => {
+      counts[character] = (counts[character] ?? 0) + 1;
+    });
+    return counts;
+  },
+  {},
+);
 
 const countMatches = (text: string, regex: RegExp) => {
   const matches = text.match(regex);
@@ -50,7 +53,10 @@ const collectSearchableText = (pages: PageAsset[]) =>
     .filter(Boolean)
     .join(' ');
 
-export const inferOcrLanguagesFromText = (text: string, maxExtraLanguages = MAX_EXTRA_LANGUAGES): string[] => {
+export const inferOcrLanguagesFromText = (
+  text: string,
+  maxExtraLanguages = MAX_EXTRA_LANGUAGES,
+): string[] => {
   const normalized = text.toLocaleLowerCase();
   const scores = new Map<string, number>();
 

@@ -6,7 +6,12 @@ export const createInitialExportJob = (): ExportJob => initialExportJob();
 
 export const createExportJobSlice = (): Pick<
   ReviewStoreState,
-  'exportJob' | 'warnings' | 'fallbackExportReady' | 'setExportJob' | 'appendWarning' | 'setFallbackExportReady'
+  | 'exportJob'
+  | 'warnings'
+  | 'fallbackExportReady'
+  | 'setExportJob'
+  | 'appendWarning'
+  | 'setFallbackExportReady'
 > => ({
   exportJob: createInitialExportJob(),
   warnings: [],

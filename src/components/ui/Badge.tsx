@@ -15,8 +15,8 @@ const badgeVariants = cva(
         danger: 'border-danger/25 bg-danger-soft text-danger',
       },
       size: {
-        sm: 'ui-text-badge',
-        md: 'ui-text-label',
+        sm: 'text-badge',
+        md: 'text-badge',
       },
       emphasis: {
         filled: '',

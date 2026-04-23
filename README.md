@@ -78,4 +78,5 @@ The project includes a GitHub Pages workflow in `.github/workflows/deploy.yml`.
 - Use Tailwind utilities, semantic theme tokens, and shared variant-based components for presentation.
 - Do not add inline presentation styles in React or Astro templates.
 - Runtime geometry values are allowed only at rendering boundaries such as viewer overlays, zoom, and progress indicators.
+
 # docs-reader

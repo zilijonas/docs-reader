@@ -17,7 +17,7 @@ export function PageArrowButton({
     <button
       aria-label={label}
       className={cn(
-        'inline-flex size-7 items-center justify-center rounded-control border transition-colors duration-200 ease-standard',
+        'rounded-control ease-standard inline-flex size-7 items-center justify-center border transition-colors duration-200',
         disabled
           ? 'border-border bg-canvas text-content-subtle opacity-50'
           : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted hover:text-content',

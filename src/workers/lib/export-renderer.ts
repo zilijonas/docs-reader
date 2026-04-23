@@ -5,7 +5,8 @@ import type { BoundingBox, Detection, ManualRedaction } from '../../types';
 import { runPythonBytes } from './pyodide';
 import { filterExportBoxes, state, toOwnedArrayBuffer, updateProgress } from './state';
 
-const bytesToBlob = (bytes: Uint8Array, mimeType: string) => new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
+const bytesToBlob = (bytes: Uint8Array, mimeType: string) =>
+  new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
 
 export const paintFlattenedPage = async (pageIndex: number, boxes: BoundingBox[]) => {
   const pngBytes = await runPythonBytes('render_page_png(page_index_js, scale_js)', {
@@ -25,14 +26,23 @@ export const paintFlattenedPage = async (pageIndex: number, boxes: BoundingBox[]
   context.drawImage(bitmap, 0, 0);
   context.fillStyle = '#050505';
   boxes.forEach((box) => {
-    context.fillRect(box.x * canvas.width, box.y * canvas.height, box.width * canvas.width, box.height * canvas.height);
+    context.fillRect(
+      box.x * canvas.width,
+      box.y * canvas.height,
+      box.width * canvas.width,
+      box.height * canvas.height,
+    );
   });
 
   const exportBlob = await canvas.convertToBlob({ type: 'image/png' });
   return new Uint8Array(await exportBlob.arrayBuffer());
 };
 
-export const exportFlattenedPdf = async (detections: Detection[], manualRedactions: ManualRedaction[], requestId: number) => {
+export const exportFlattenedPdf = async (
+  detections: Detection[],
+  manualRedactions: ManualRedaction[],
+  requestId: number,
+) => {
   const output = await PDFDocument.create();
 
   for (const page of state.pages) {

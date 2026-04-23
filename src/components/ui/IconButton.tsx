@@ -8,10 +8,13 @@ const iconButtonVariants = cva(
   {
     variants: {
       tone: {
-        neutral: 'border-transparent bg-transparent text-content-subtle hover:border-border hover:bg-surface-muted hover:text-content',
-        surface: 'border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted',
+        neutral:
+          'border-transparent bg-transparent text-content-subtle hover:border-border hover:bg-surface-muted hover:text-content',
+        surface:
+          'border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted',
         safe: 'border-success bg-success text-canvas hover:border-success hover:bg-success',
-        muted: 'border-content-subtle bg-content-subtle text-canvas hover:border-content-muted hover:bg-content-muted',
+        muted:
+          'border-content-subtle bg-content-subtle text-canvas hover:border-content-muted hover:bg-content-muted',
         danger: 'border-danger bg-danger text-canvas hover:border-danger hover:bg-danger',
       },
       size: {
@@ -44,7 +47,11 @@ export function IconButton({
     children: ReactNode;
   }) {
   return (
-    <button className={cn(iconButtonVariants({ tone, size, shape }), className)} type="button" {...props}>
+    <button
+      className={cn(iconButtonVariants({ tone, size, shape }), className)}
+      type="button"
+      {...props}
+    >
       {children}
     </button>
   );

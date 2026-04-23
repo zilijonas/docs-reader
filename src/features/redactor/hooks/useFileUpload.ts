@@ -9,7 +9,6 @@ import { validateSelectedFile } from '../fileValidation';
 export function useFileUpload({
   clientRef,
   customKeywords,
-  exportJob,
   openOcrLanguageModal,
   resetReviewStore,
   resetWorkflowUi,
@@ -25,7 +24,6 @@ export function useFileUpload({
 }: {
   clientRef: MutableRefObject<RedactorWorkerClient>;
   customKeywords: string[];
-  exportJob: ExportJob;
   openOcrLanguageModal: () => void;
   resetReviewStore: () => void;
   resetWorkflowUi: () => void;
@@ -79,7 +77,9 @@ export function useFileUpload({
           : [...DEFAULT_OCR_LANGUAGES];
       const nextSpans = Array.isArray(response.payload.spans) ? response.payload.spans : [];
       const nextPages = Array.isArray(response.payload.pages) ? response.payload.pages : [];
-      const nextWarnings = Array.isArray(response.payload.warnings) ? response.payload.warnings : [];
+      const nextWarnings = Array.isArray(response.payload.warnings)
+        ? response.payload.warnings
+        : [];
 
       setSelectedOcrLanguages(nextOcrLanguages);
 

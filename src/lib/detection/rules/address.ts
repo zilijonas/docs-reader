@@ -1,7 +1,14 @@
 import { CONFIDENCE } from '../config';
 import { MONTHS_ALT } from '../locales/months';
 import { WEEKDAYS_ALT } from '../locales/weekdays';
-import { LONG_CITY_ALT, LONG_STREET_ALT, SHORT_CITY_ALT, SHORT_STREET_ALT, CONNECTOR_ALT, STREET_TOKEN_CLAUSE } from '../locales/street-tokens';
+import {
+  LONG_CITY_ALT,
+  LONG_STREET_ALT,
+  SHORT_CITY_ALT,
+  SHORT_STREET_ALT,
+  CONNECTOR_ALT,
+  STREET_TOKEN_CLAUSE,
+} from '../locales/street-tokens';
 import type { DetectionRule } from '../rule';
 
 const NAME_WORD = `\\p{Lu}[\\p{L}\\-'’]{1,40}`;
@@ -25,8 +32,7 @@ const POSTAL_SEGMENT =
   `)`;
 
 const CITY_SEGMENT =
-  `\\s*[,;]?\\s*${NAME_CHAIN}` +
-  `(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?`;
+  `\\s*[,;]?\\s*${NAME_CHAIN}` + `(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?`;
 
 const TOKEN_ADDRESS_BODY =
   `\\p{Lu}[\\p{L}\\-'’]{0,40}(?:${LONG_STREET_ALT})(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}` +
@@ -36,8 +42,7 @@ const TOKEN_ADDRESS_BODY =
   `${STREET_TOKEN_CLAUSE}\\s+(?:(?:${CONNECTOR_ALT})\\s+)*${NAME_CHAIN}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
 
 const SAINT_ADDRESS_BODY = `${SAINT_PREFIX}${NAME_CHAIN}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
-const UPPERCASE_SHORT_ADDRESS_BODY =
-  `${UPPERCASE_NAME_CHAIN}\\s+${UPPERCASE_SHORT_STREET_CLAUSE}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
+const UPPERCASE_SHORT_ADDRESS_BODY = `${UPPERCASE_NAME_CHAIN}\\s+${UPPERCASE_SHORT_STREET_CLAUSE}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
 const OPTIONAL_WEEKDAY_PREFIX = `(?:(?:${WEEKDAYS_ALT})\\.?\\s+)?`;
 
 export const ADDRESS_RULE: DetectionRule = {

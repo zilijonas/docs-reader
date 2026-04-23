@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/cn';
 
 const statusPillVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-[0.8125rem]',
+  'inline-flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-field',
   {
     variants: {
       status: {
@@ -16,8 +16,8 @@ const statusPillVariants = cva(
         ocr: 'border-border bg-surface text-content-muted lowercase',
       },
       size: {
-        sm: 'ui-text-caption gap-1.5 px-2.5 py-0.75',
-        md: 'gap-1.5 px-3 py-1.5 text-[0.8125rem]',
+        sm: 'text-caption gap-1.5 px-2.5 py-0.75',
+        md: 'gap-1.5 px-3 py-1.5 text-field',
       },
     },
     defaultVariants: {

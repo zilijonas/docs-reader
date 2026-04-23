@@ -1,7 +1,7 @@
 ---
-import LandingExampleSection from "../features/landing/components/LandingExampleSection.astro";
-import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
-import { SEO } from "../lib/seo";
+import LandingExampleSection from '../features/landing/components/LandingExampleSection.astro';
+import MarketingPageShell from '../features/landing/components/MarketingPageShell.astro';
+import { SEO } from '../lib/seo';
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
@@ -13,16 +13,16 @@ const baseUrl = import.meta.env.BASE_URL;
   pageTitle="How local PDF redaction works"
   seo={SEO.howItWorks}
 >
-  <section class="privacy-section-block">
+  <section>
     <h2>Step 1 — Open your PDF</h2>
     <p>Drop your file into the page.</p>
     <p>Your browser opens the PDF directly on your device.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Step 2 — We mark possible sensitive data</h2>
     <p>The tool highlights things that may need to be hidden, such as:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>names</li>
       <li>emails</li>
       <li>phone numbers</li>
@@ -31,11 +31,11 @@ const baseUrl = import.meta.env.BASE_URL;
     <p>These are only suggestions.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Step 3 — You review everything</h2>
     <p>You decide what should be removed.</p>
     <p>You can:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>keep or remove suggested markings</li>
       <li>add your own markings if something was missed</li>
     </ul>
@@ -44,36 +44,31 @@ const baseUrl = import.meta.env.BASE_URL;
 
   <LandingExampleSection baseUrl={baseUrl} variant="marketing" />
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Step 4 — Export a clean file</h2>
     <p>When you're ready, export the PDF.</p>
     <p>The selected data is permanently removed from the file.</p>
     <p>You can then share the redacted version with more confidence.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>How this works without uploading your file</h2>
     <p>Your browser is a tool on your device.</p>
     <p>
-      When you open hddn, the website loads the tool into your browser. After
-      that, your browser can open and edit your PDF locally.
+      When you open hddn, the website loads the tool into your browser. After that, your browser can
+      open and edit your PDF locally.
     </p>
     <p>This means:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>your file stays on your device</li>
       <li>it is not uploaded or sent anywhere</li>
     </ul>
-    <p>
-      The website loads the tool into your browser. Your browser then uses it
-      locally.
-    </p>
+    <p>The website loads the tool into your browser. Your browser then uses it locally.</p>
   </section>
 
-  <section class="privacy-section-block privacy-note-block">
+  <section class="border-warning/40 bg-warning-soft">
     <h2>Important</h2>
-    <p>
-      The tool helps you find sensitive data, but it may not catch everything.
-    </p>
+    <p>The tool helps you find sensitive data, but it may not catch everything.</p>
     <p>Always review your document before exporting and sharing it.</p>
   </section>
 </MarketingPageShell>

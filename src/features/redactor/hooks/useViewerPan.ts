@@ -29,7 +29,10 @@ export function canStartViewerPan({
     return false;
   }
 
-  return viewerElement.scrollWidth > viewerElement.clientWidth || viewerElement.scrollHeight > viewerElement.clientHeight;
+  return (
+    viewerElement.scrollWidth > viewerElement.clientWidth ||
+    viewerElement.scrollHeight > viewerElement.clientHeight
+  );
 }
 
 export function getViewerPanScrollPosition({
@@ -138,11 +141,7 @@ export function useViewerPan({
   );
 
   const handlePointerDownCapture = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (
-      toolMode !== null ||
-      event.button !== 0 ||
-      isInteractiveTarget(event.target)
-    ) {
+    if (toolMode !== null || event.button !== 0 || isInteractiveTarget(event.target)) {
       return;
     }
 
@@ -150,7 +149,12 @@ export function useViewerPan({
 
     const lastTap = lastTapRef.current;
 
-    if (lastTap && now - lastTap.timeStamp <= DOUBLE_TAP_WINDOW_MS && Math.hypot(event.clientX - lastTap.clientX, event.clientY - lastTap.clientY) <= DOUBLE_TAP_DISTANCE_PX) {
+    if (
+      lastTap &&
+      now - lastTap.timeStamp <= DOUBLE_TAP_WINDOW_MS &&
+      Math.hypot(event.clientX - lastTap.clientX, event.clientY - lastTap.clientY) <=
+        DOUBLE_TAP_DISTANCE_PX
+    ) {
       event.preventDefault();
       lastTapRef.current = null;
       setZoom(zoom > REDACTOR_UI.defaultZoom ? REDACTOR_UI.defaultZoom : 2, {

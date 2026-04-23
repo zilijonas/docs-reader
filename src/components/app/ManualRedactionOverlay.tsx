@@ -30,10 +30,10 @@ export function ManualRedactionOverlay({
         return (
           <div
             className={cn(
-              'pdf-box pdf-manual pointer-events-auto relative rounded-detection border-2',
+              'rounded-detection pointer-events-auto absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) border-2',
               manualRedaction.status === 'confirmed'
                 ? 'border-success bg-success/[0.18]'
-                : 'border-detection-ring border-dashed bg-detection/[0.18]',
+                : 'border-detection-ring bg-detection/[0.18] border-dashed',
             )}
             key={manualRedaction.id}
             data-manual-pending={manualRedaction.status === 'unconfirmed' ? 'true' : undefined}
@@ -47,16 +47,20 @@ export function ManualRedactionOverlay({
             }}
             style={getBoxStyle(box, {
               '--review-highlight-border':
-                manualRedaction.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
+                manualRedaction.status === 'confirmed'
+                  ? 'var(--color-success)'
+                  : 'var(--color-detection-ring)',
               '--review-highlight-fill':
-                manualRedaction.status === 'confirmed' ? 'rgb(16 185 129 / 0.18)' : 'rgb(217 119 6 / 0.18)',
+                manualRedaction.status === 'confirmed'
+                  ? 'rgb(16 185 129 / 0.18)'
+                  : 'rgb(217 119 6 / 0.18)',
               zIndex: getBoxPriority(box),
             })}
           >
             <span aria-hidden="true" className="pdf-review-pulse-layer" />
             {manualRedaction.status === 'unconfirmed' ? (
               <div
-                className="absolute bottom-full right-0 z-overlay mb-1.5 flex gap-1 rounded-full bg-canvas/92 p-1 shadow-lg ring-1 ring-border-strong backdrop-blur-sm"
+                className="z-overlay bg-canvas/92 ring-border-strong absolute right-0 bottom-full mb-1.5 flex gap-1 rounded-full p-1 shadow-lg ring-1 backdrop-blur-sm"
                 data-manual-pending="true"
               >
                 <IconButton
@@ -99,7 +103,7 @@ export function ManualRedactionOverlay({
 
       {draftBox ? (
         <div
-          className="pdf-box absolute rounded-sm border-2 border-dashed border-content bg-brand-soft"
+          className="border-content bg-brand-soft absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) rounded-sm border-2 border-dashed"
           style={getBoxStyle(draftBox)}
         />
       ) : null}

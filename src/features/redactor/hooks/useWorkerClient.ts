@@ -9,7 +9,12 @@ export function useWorkerClient({
   onWarning,
 }: {
   onInitError: (message: string) => void;
-  onProgress: (progress: ProcessingProgress | null | ((current: ProcessingProgress | null) => ProcessingProgress | null)) => void;
+  onProgress: (
+    progress:
+      | ProcessingProgress
+      | null
+      | ((current: ProcessingProgress | null) => ProcessingProgress | null),
+  ) => void;
   onWarning: (message: string) => void;
 }) {
   const clientRef = useRef<RedactorWorkerClient>(getRedactorWorkerClient());
@@ -30,11 +35,17 @@ export function useWorkerClient({
       .init({ baseUrl: import.meta.env.BASE_URL })
       .then(() => {
         startTransition(() =>
-          onProgress((currentProgress) => (currentProgress?.phase === 'booting' ? null : currentProgress)),
+          onProgress((currentProgress) =>
+            currentProgress?.phase === 'booting' ? null : currentProgress,
+          ),
         );
       })
       .catch((caughtError) => {
-        onInitError(caughtError instanceof Error ? caughtError.message : 'Could not initialize the worker runtime.');
+        onInitError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : 'Could not initialize the worker runtime.',
+        );
       });
 
     return unsubscribe;

@@ -50,7 +50,8 @@ export const writeAnalyticsConsent = (status: PersistedConsentStatus) => {
   }
 
   const expiresAt = new Date(Date.now() + ANALYTICS_CONSENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
-  const secureAttribute = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+  const secureAttribute =
+    typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
   const cookieValue = `${ANALYTICS_CONSENT_COOKIE_VERSION}:${status}`;
 
   document.cookie = [
@@ -63,4 +64,3 @@ export const writeAnalyticsConsent = (status: PersistedConsentStatus) => {
     .filter(Boolean)
     .join('; ');
 };
-

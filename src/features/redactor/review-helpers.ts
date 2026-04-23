@@ -56,7 +56,10 @@ export const buildSpansByPage = (spans: TextSpan[]) => {
   return spansByPage;
 };
 
-export const buildReviewItems = (detections: Detection[], manualRedactions: ManualRedaction[]): ReviewItem[] => {
+export const buildReviewItems = (
+  detections: Detection[],
+  manualRedactions: ManualRedaction[],
+): ReviewItem[] => {
   const detectionItems = detections.map<ReviewItem>((detection) => ({
     id: detection.id,
     type: detection.type,
@@ -107,7 +110,10 @@ export const groupReviewItemsByType = (reviewItems: ReviewItem[]) =>
     return groups;
   }, {});
 
-export const getReviewCounts = (detections: Detection[], manualRedactions: ManualRedaction[]): ReviewCounts => {
+export const getReviewCounts = (
+  detections: Detection[],
+  manualRedactions: ManualRedaction[],
+): ReviewCounts => {
   const unconfirmedCount =
     detections.filter((detection) => detection.status === 'unconfirmed').length +
     manualRedactions.filter((manualRedaction) => manualRedaction.status === 'unconfirmed').length;
@@ -160,7 +166,10 @@ export const createManualRedactionRecord = ({
   status: 'unconfirmed',
 });
 
-export const preserveRuleStatuses = (nextDetections: Detection[], previousDetections: Detection[]) =>
+export const preserveRuleStatuses = (
+  nextDetections: Detection[],
+  previousDetections: Detection[],
+) =>
   nextDetections.map((detection) => {
     const previousMatch = previousDetections.find(
       (candidate) =>

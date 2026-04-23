@@ -81,9 +81,13 @@ export function getScrollPositionForZoom({
 
   return {
     scrollLeft:
-      maxScrollLeft <= 0 ? 0 : clamp(contentOffsetX + nextContentX - snapshot.anchorOffsetX, 0, maxScrollLeft),
+      maxScrollLeft <= 0
+        ? 0
+        : clamp(contentOffsetX + nextContentX - snapshot.anchorOffsetX, 0, maxScrollLeft),
     scrollTop:
-      maxScrollTop <= 0 ? 0 : clamp(contentOffsetY + nextContentY - snapshot.anchorOffsetY, 0, maxScrollTop),
+      maxScrollTop <= 0
+        ? 0
+        : clamp(contentOffsetY + nextContentY - snapshot.anchorOffsetY, 0, maxScrollTop),
   };
 }
 

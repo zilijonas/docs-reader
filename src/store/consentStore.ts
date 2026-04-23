@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 
-import { readAnalyticsConsent, type ConsentStatus, writeAnalyticsConsent } from '../features/consent/cookie';
+import {
+  readAnalyticsConsent,
+  type ConsentStatus,
+  writeAnalyticsConsent,
+} from '../features/consent/cookie';
 
 interface ConsentStoreState {
   status: ConsentStatus;

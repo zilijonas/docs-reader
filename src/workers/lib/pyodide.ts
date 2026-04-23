@@ -161,15 +161,18 @@ export const ensurePyodide = async () => {
 
   if (!state.pyodidePromise) {
     state.pyodidePromise = (async () => {
-      updateProgress(0, { phase: 'booting', progress: 0.05, message: 'Starting up…' });
+      updateProgress(0, { phase: 'booting', progress: 0.05, message: 'Starting up' });
 
-      const moduleUrl = new URL(`${state.baseUrl}pyodide/pyodide.mjs`, self.location.origin).toString();
+      const moduleUrl = new URL(
+        `${state.baseUrl}pyodide/pyodide.mjs`,
+        self.location.origin,
+      ).toString();
       const { loadPyodide } = (await import(/* @vite-ignore */ moduleUrl)) as LoadPyodideModule;
       const pyodide = await loadPyodide({
         indexURL: new URL(`${state.baseUrl}pyodide/`, self.location.origin).toString(),
       });
 
-      updateProgress(0, { phase: 'booting', progress: 0.2, message: 'Preparing document tools…' });
+      updateProgress(0, { phase: 'booting', progress: 0.2, message: 'Preparing document tools' });
 
       await pyodide.loadPackage('pymupdf');
       await pyodide.runPythonAsync(PYTHON_HELPERS);

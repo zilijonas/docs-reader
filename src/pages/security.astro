@@ -1,6 +1,6 @@
 ---
-import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
-import { SEO } from "../lib/seo";
+import MarketingPageShell from '../features/landing/components/MarketingPageShell.astro';
+import { SEO } from '../lib/seo';
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
@@ -12,21 +12,21 @@ const baseUrl = import.meta.env.BASE_URL;
   pageTitle="Security for browser-based PDF redaction"
   seo={SEO.security}
 >
-  <section class="privacy-section-block">
+  <section>
     <h2>Your files stay on your device</h2>
     <p>Your PDF is opened and processed directly in your browser.</p>
     <p>It is never:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>uploaded</li>
       <li>stored on a server</li>
       <li>sent to any external service for processing</li>
     </ul>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>No external processing</h2>
     <p>hddn does not send your files to:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>AI services</li>
       <li>external APIs</li>
       <li>remote servers for processing</li>
@@ -34,7 +34,7 @@ const baseUrl = import.meta.env.BASE_URL;
     <p>Everything happens locally on your device.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>In-browser processing</h2>
     <p>When you open the site, your browser downloads the tool.</p>
     <p>After that, all work happens inside your browser using your device.</p>
@@ -42,31 +42,31 @@ const baseUrl = import.meta.env.BASE_URL;
     <p>When you leave the page, the file is no longer kept by the app.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>No file storage</h2>
     <p>We do not store your documents in:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>databases</li>
       <li>browser storage</li>
       <li>any persistent system</li>
     </ul>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>User control</h2>
     <p>You review all changes before exporting.</p>
     <p>Nothing is removed unless you confirm it.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Limitations</h2>
     <p>hddn helps identify sensitive data, but it may not detect everything.</p>
     <p>You are responsible for reviewing your document before sharing it.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Summary</h2>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>Your files stay on your device</li>
       <li>No uploads</li>
       <li>No external processing</li>

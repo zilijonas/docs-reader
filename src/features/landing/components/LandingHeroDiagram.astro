@@ -1,25 +1,17 @@
 <svg
-  class="landing-hero-diagram"
+  class="mx-auto h-auto w-full"
   viewBox="0 0 1120 620"
   role="img"
   aria-label="Animated preview of PDF redaction"
 >
   <defs>
     <filter id="heroShadow" x="-5%" y="-5%" width="110%" height="115%">
-      <feDropShadow
-        dx="0"
-        dy="10"
-        stdDeviation="14"
-        flood-color="#0B0B14"
-        flood-opacity="0.10"></feDropShadow>
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0B0B14" flood-opacity="0.10"
+      ></feDropShadow>
     </filter>
     <filter id="heroToastShadow" x="-12%" y="-16%" width="132%" height="145%">
-      <feDropShadow
-        dx="0"
-        dy="8"
-        stdDeviation="6"
-        flood-color="#6057C8"
-        flood-opacity="0.14"></feDropShadow>
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#6057C8" flood-opacity="0.14"
+      ></feDropShadow>
     </filter>
     <linearGradient id="heroCursor" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#6C5CE7"></stop>
@@ -38,55 +30,13 @@
     </pattern>
   </defs>
 
-  <ellipse
-    cx="748"
-    cy="500"
-    rx="248"
-    ry="134"
-    fill="url(#heroGlowCool)"
-    opacity="0.92"></ellipse>
-  <ellipse
-    cx="928"
-    cy="430"
-    rx="164"
-    ry="136"
-    fill="url(#heroGlowWarm)"
-    opacity="0.95"></ellipse>
-  <rect
-    x="952"
-    y="112"
-    width="124"
-    height="232"
-    rx="22"
-    fill="url(#heroDots)"
-    opacity="0.72"></rect>
-
-  <path
-    d="M 112 432 C 96 446, 82 462, 80 486 C 78 506, 86 522, 108 536"
-    fill="none"
-    stroke="#A8B2C5"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.95"></path>
-  <path
-    d="M 96 525 L 108 536 L 123 528"
-    fill="none"
-    stroke="#A8B2C5"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.95"></path>
+  <ellipse cx="748" cy="500" rx="248" ry="134" fill="url(#heroGlowCool)" opacity="0.92"></ellipse>
+  <ellipse cx="928" cy="430" rx="164" ry="136" fill="url(#heroGlowWarm)" opacity="0.95"></ellipse>
+  <rect x="952" y="112" width="124" height="232" rx="22" fill="url(#heroDots)" opacity="0.72"
+  ></rect>
 
   <g filter="url(#heroShadow)">
-    <rect
-      x="120"
-      y="44"
-      width="760"
-      height="460"
-      rx="6"
-      fill="#FFFFFF"
-      stroke="#EDEDF0"></rect>
+    <rect x="120" y="44" width="760" height="460" rx="6" fill="#FFFFFF" stroke="#EDEDF0"></rect>
     <text
       x="148"
       y="92"
@@ -352,35 +302,4 @@
       <mpath href="#heroCursorPath"></mpath>
     </animateMotion>
   </circle>
-
-  <g transform="translate(742 418)" filter="url(#heroToastShadow)">
-    <rect
-      width="156"
-      height="48"
-      rx="14"
-      fill="#FFF7FB"
-      stroke="#D9C9EF"
-      stroke-width="1.25"></rect>
-    <path
-      d="M 20 17 L 23 23 L 29 26 L 23 29 L 20 35 L 17 29 L 11 26 L 17 23 Z"
-      fill="#9F86D9"
-      opacity="0.92"></path>
-    <circle cx="32" cy="30" r="2" fill="#C8B1ED"></circle>
-    <text
-      x="50"
-      y="30"
-      font-family="Inter, sans-serif"
-      font-size="14"
-      font-weight="500"
-      fill="#6057C8"
-    >
-      Redacting...
-    </text>
-    <animateTransform
-      attributeName="transform"
-      type="translate"
-      values="742 418; 742 412; 742 418"
-      dur="3.2s"
-      repeatCount="indefinite"></animateTransform>
-  </g>
 </svg>

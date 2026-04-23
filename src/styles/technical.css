@@ -1,0 +1,47 @@
+.pdf-review-target-pulse {
+  z-index: 3;
+}
+
+.pdf-review-pulse-layer {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  border-left-width: 4px;
+  border-right-width: 4px;
+  background-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateZ(0) scale(1);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform, opacity, border-color, background-color, box-shadow;
+}
+
+.pdf-review-target-pulse > .pdf-review-pulse-layer {
+  animation: reviewTargetPulse 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 2400ms linear infinite;
+}
+
+.selection-text-layer {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  font-family: system-ui, sans-serif;
+  font-kerning: none;
+  font-variant-ligatures: none;
+}
+
+.selection-text-layer span {
+  position: absolute;
+  transform-origin: 0 0;
+  white-space: pre;
+  cursor: text;
+  overflow: visible;
+  unicode-bidi: plaintext;
+}

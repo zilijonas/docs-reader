@@ -57,7 +57,7 @@ export function CircularProgress({
           style={getIndicatorStyle(dashOffset)}
         />
       </svg>
-      <span className="ui-text-label relative font-mono text-content-muted">
+      <span className="text-content-muted text-badge relative font-mono">
         {Math.round(clamped * 100)}
       </span>
     </div>

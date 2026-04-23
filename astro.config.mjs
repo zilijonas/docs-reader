@@ -30,19 +30,26 @@ const configuredDomain = fs.existsSync(cnamePath)
   ? fs.readFileSync(cnamePath, 'utf8').trim()
   : undefined;
 
-const [repositoryOwner = '', repositoryName = ''] = (process.env.GITHUB_REPOSITORY ?? '').split('/');
+const [repositoryOwner = '', repositoryName = ''] = (process.env.GITHUB_REPOSITORY ?? '').split(
+  '/',
+);
 const isUserOrOrgSite = repositoryName !== '' && repositoryName === `${repositoryOwner}.github.io`;
-const fallbackSite = repositoryOwner ? `https://${repositoryOwner}.github.io` : 'https://example.github.io';
+const fallbackSite = repositoryOwner
+  ? `https://${repositoryOwner}.github.io`
+  : 'https://example.github.io';
 const fallbackBase = isUserOrOrgSite || repositoryName === '' ? '/' : `/${repositoryName}/`;
 const resolvedSite =
   normalizeSite(configuredDomain ? `https://${configuredDomain}` : undefined) ??
   normalizeSite(process.env.PUBLIC_SITE_URL) ??
   fallbackSite;
 const resolvedHostname = new URL(resolvedSite).hostname;
-const usesCustomDomain = resolvedHostname !== 'example.github.io' && !resolvedHostname.endsWith('.github.io');
+const usesCustomDomain =
+  resolvedHostname !== 'example.github.io' && !resolvedHostname.endsWith('.github.io');
 const resolvedBase = usesCustomDomain
   ? '/'
-  : normalizeBase(process.env.PUBLIC_BASE_PATH ?? (process.env.GITHUB_ACTIONS === 'true' ? fallbackBase : '/'));
+  : normalizeBase(
+      process.env.PUBLIC_BASE_PATH ?? (process.env.GITHUB_ACTIONS === 'true' ? fallbackBase : '/'),
+    );
 
 export default defineConfig({
   site: resolvedSite,

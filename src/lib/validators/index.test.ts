@@ -151,4 +151,3 @@ describe('isGermanSteuerIdValid', () => {
     expect(isGermanSteuerIdValid('12345678901')).toBe(false);
   });
 });
-

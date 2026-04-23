@@ -20,7 +20,10 @@ class FakeWorker {
     FakeWorker.instances.push(this);
   }
 
-  addEventListener(type: 'message' | 'error', listener: (event: MessageEvent<WorkerResponse>) => void) {
+  addEventListener(
+    type: 'message' | 'error',
+    listener: (event: MessageEvent<WorkerResponse>) => void,
+  ) {
     this.listeners[type].push(listener);
   }
 
@@ -54,12 +57,18 @@ class FakeWorker {
           };
 
     queueMicrotask(() => {
-      this.listeners.message.forEach((listener) => listener({ data: response } as MessageEvent<WorkerResponse>));
+      this.listeners.message.forEach((listener) =>
+        listener({ data: response } as MessageEvent<WorkerResponse>),
+      );
     });
   }
 
-  emitMessage(message: WorkerResponse | (Omit<WorkerResponse, 'requestId'> & { requestId?: never })) {
-    this.listeners.message.forEach((listener) => listener({ data: message } as MessageEvent<WorkerResponse>));
+  emitMessage(
+    message: WorkerResponse | (Omit<WorkerResponse, 'requestId'> & { requestId?: never }),
+  ) {
+    this.listeners.message.forEach((listener) =>
+      listener({ data: message } as MessageEvent<WorkerResponse>),
+    );
   }
 }
 
@@ -102,9 +111,10 @@ describe('RedactorWorkerClient', () => {
     const worker = FakeWorker.instances[0];
     expect(worker.lastPosted?.message.type).toBe('LOAD_PDF');
     expect(worker.lastPosted?.transferables).toHaveLength(1);
-    expect(worker.lastPosted?.message.type === 'LOAD_PDF' && worker.lastPosted.message.payload.file.byteLength).toBe(
-      fixture.byteLength,
-    );
+    expect(
+      worker.lastPosted?.message.type === 'LOAD_PDF' &&
+        worker.lastPosted.message.payload.file.byteLength,
+    ).toBe(fixture.byteLength);
   });
 
   it('waits for PDF_LOADED instead of resolving from intermediate progress events', async () => {

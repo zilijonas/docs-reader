@@ -15,9 +15,9 @@ export function EmptyState({
 }) {
   return (
     <div className={cn('px-5 py-10 text-center', className)}>
-      {icon ? <div className="flex justify-center text-success">{icon}</div> : null}
-      <div className="mt-2.5 text-sm text-content-muted">{title}</div>
-      <div className="mt-1 text-sm text-content-subtle">{description}</div>
+      {icon ? <div className="text-success flex justify-center">{icon}</div> : null}
+      <div className="text-content-muted mt-2.5 text-sm">{title}</div>
+      <div className="text-content-subtle mt-1 text-sm">{description}</div>
     </div>
   );
 }

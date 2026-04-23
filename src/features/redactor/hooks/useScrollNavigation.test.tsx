@@ -48,8 +48,8 @@ function configureViewerGeometry(viewer: HTMLDivElement) {
       toJSON: () => null,
     }) as DOMRect;
   viewer.scrollTo = vi.fn((options?: ScrollToOptions | number, top?: number) => {
-    const left = typeof options === 'number' ? options : options?.left ?? 0;
-    const nextTop = typeof options === 'number' ? top ?? 0 : options?.top ?? 0;
+    const left = typeof options === 'number' ? options : (options?.left ?? 0);
+    const nextTop = typeof options === 'number' ? (top ?? 0) : (options?.top ?? 0);
     viewer.scrollLeft = left;
     viewer.scrollTop = nextTop;
   }) as typeof viewer.scrollTo;
@@ -136,13 +136,10 @@ describe('useScrollNavigation zoom interactions', () => {
     document.body.innerHTML = '';
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     vi.stubGlobal('ResizeObserver', ResizeObserverStub);
-    vi.stubGlobal(
-      'requestAnimationFrame',
-      ((callback: FrameRequestCallback) => {
-        callback(0);
-        return 1;
-      }) as typeof requestAnimationFrame,
-    );
+    vi.stubGlobal('requestAnimationFrame', ((callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    }) as typeof requestAnimationFrame);
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
   });
 
@@ -231,47 +228,29 @@ describe('useScrollNavigation zoom interactions', () => {
     const touchStart = new Event('touchstart', { bubbles: true, cancelable: true });
     Object.defineProperty(touchStart, 'touches', {
       configurable: true,
-      value: [
-        makeTouch(100, 120, 1),
-        makeTouch(220, 120, 2),
-      ],
+      value: [makeTouch(100, 120, 1), makeTouch(220, 120, 2)],
     });
     Object.defineProperty(touchStart, 'targetTouches', {
       configurable: true,
-      value: [
-        makeTouch(100, 120, 1),
-        makeTouch(220, 120, 2),
-      ],
+      value: [makeTouch(100, 120, 1), makeTouch(220, 120, 2)],
     });
     Object.defineProperty(touchStart, 'changedTouches', {
       configurable: true,
-      value: [
-        makeTouch(100, 120, 1),
-        makeTouch(220, 120, 2),
-      ],
+      value: [makeTouch(100, 120, 1), makeTouch(220, 120, 2)],
     });
 
     const touchMove = new Event('touchmove', { bubbles: true, cancelable: true });
     Object.defineProperty(touchMove, 'touches', {
       configurable: true,
-      value: [
-        makeTouch(80, 110, 1),
-        makeTouch(260, 130, 2),
-      ],
+      value: [makeTouch(80, 110, 1), makeTouch(260, 130, 2)],
     });
     Object.defineProperty(touchMove, 'targetTouches', {
       configurable: true,
-      value: [
-        makeTouch(80, 110, 1),
-        makeTouch(260, 130, 2),
-      ],
+      value: [makeTouch(80, 110, 1), makeTouch(260, 130, 2)],
     });
     Object.defineProperty(touchMove, 'changedTouches', {
       configurable: true,
-      value: [
-        makeTouch(80, 110, 1),
-        makeTouch(260, 130, 2),
-      ],
+      value: [makeTouch(80, 110, 1), makeTouch(260, 130, 2)],
     });
 
     act(() => {

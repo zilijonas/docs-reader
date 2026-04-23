@@ -11,8 +11,10 @@ export function ResetSessionDialog() {
     <Dialog onClose={closeResetConfirmModal} open={showResetConfirmModal}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <h2 className="type-body-lg font-semibold text-content">{copy.resetSession.title}</h2>
-          <p className="text-sm leading-6 text-content-muted">{copy.resetSession.body}</p>
+          <h2 className="text-content-muted text-content leading-reading text-lg font-semibold text-pretty">
+            {copy.resetSession.title}
+          </h2>
+          <p className="text-content-muted text-sm leading-6">{copy.resetSession.body}</p>
         </div>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

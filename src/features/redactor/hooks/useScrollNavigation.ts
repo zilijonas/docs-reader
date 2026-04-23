@@ -2,12 +2,17 @@ import { usePinch, useWheel } from '@use-gesture/react';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { REDACTOR_UI, getPageAnchorId, getReviewItemAnchorId } from '../config';
-import { createZoomSnapshot, getScrollPositionForZoom, isEditableElement, type ZoomAnchor } from './zoom-utils';
+import {
+  createZoomSnapshot,
+  getScrollPositionForZoom,
+  isEditableElement,
+  type ZoomAnchor,
+} from './zoom-utils';
 
 const REVIEW_ITEM_PULSE_DELAY_MS = 520;
 
 const getZoomContentOffset = (viewerColumn: HTMLDivElement, viewerRect: DOMRect) => {
-  const zoomOuter = viewerColumn.querySelector<HTMLElement>('.zoom-outer');
+  const zoomOuter = viewerColumn.querySelector<HTMLElement>('[data-zoom-outer="true"]');
 
   if (!zoomOuter) {
     return {
@@ -299,7 +304,9 @@ export function useScrollNavigation({
       const pageRect = pageElement.getBoundingClientRect();
       const viewerColumn = viewerColumnRef.current;
       const scrollTarget =
-        viewerColumn && viewerColumn.scrollHeight > viewerColumn.clientHeight ? viewerColumn : window;
+        viewerColumn && viewerColumn.scrollHeight > viewerColumn.clientHeight
+          ? viewerColumn
+          : window;
 
       if (scrollTarget === window) {
         window.scrollTo({

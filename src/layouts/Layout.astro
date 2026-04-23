@@ -1,13 +1,9 @@
 ---
-import "../styles/global.css";
-import { AnalyticsConsentController } from "../features/consent/components/AnalyticsConsentController";
-import {
-  ANALYTICS_CONSENT_COOKIE_NAME,
-  ANALYTICS_CONSENT_COOKIE_VERSION,
-} from "../features/consent/cookie";
-import { ANALYTICS } from "../lib/app-config";
-import type { SeoMetadata, StructuredData } from "../lib/seo";
-import { SITE_SEO } from "../lib/seo";
+import '../styles/global.css';
+import { AnalyticsConsentController } from '../features/consent/components/AnalyticsConsentController';
+import { ANALYTICS } from '../lib/app-config';
+import type { SeoMetadata, StructuredData } from '../lib/seo';
+import { SITE_SEO } from '../lib/seo';
 
 interface Props {
   seo?: SeoMetadata;
@@ -23,9 +19,9 @@ interface Props {
 
 const {
   seo,
-  title = "hddn - Hide what matters.",
-  description = "Redact PDFs locally in your browser. Document contents stay on-device during processing.",
-  viewportContent = "width=device-width",
+  title = 'hddn - Hide what matters.',
+  description = 'Redact PDFs locally in your browser. Document contents stay on-device during processing.',
+  viewportContent = 'width=device-width',
   robots = SITE_SEO.defaultRobots,
   canonicalPath,
   ogTitle,
@@ -33,7 +29,7 @@ const {
   structuredData,
 } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL;
-const siteUrl = Astro.site ?? new URL("https://example.github.io");
+const siteUrl = Astro.site ?? new URL('https://example.github.io');
 const resolvedTitle = seo?.title ?? title;
 const resolvedDescription = seo?.description ?? description;
 const resolvedRobots = seo?.robots ?? robots;

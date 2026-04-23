@@ -1,12 +1,9 @@
 ---
-import { Pencil } from "lucide-react";
-import { BrandLogo } from "../../../components/BrandLogo";
-import {
-  landingHero,
-  getLandingMobileLinks,
-  getLandingNavLinks,
-} from "../data";
-import { LandingMobileNav } from "./LandingMobileNav";
+import { Pencil } from 'lucide-react';
+import { BrandLogo } from '../../../components/BrandLogo';
+import { Button } from '../../../components/ui/Button';
+import { landingHero, getLandingMobileLinks, getLandingNavLinks } from '../data';
+import { LandingMobileNav } from './LandingMobileNav';
 
 interface Props {
   appUrl: string;
@@ -16,38 +13,47 @@ interface Props {
 const { appUrl, baseUrl } = Astro.props;
 const navLinks = getLandingNavLinks(baseUrl);
 const mobileLinks = getLandingMobileLinks(baseUrl, appUrl);
+const navLinkClass =
+  'rounded-full px-3 py-1.5 text-sm text-content-muted transition-colors duration-200 hover:text-content';
 ---
 
-<header class="landing-header">
-  <div class="page-container landing-header-shell">
-    <a href={baseUrl} class="landing-brand">
-      <BrandLogo className="landing-brand-logo" title="hddn" />
-      <span class="landing-brand-meta type-data">Hide what matters.</span>
-    </a>
-
-    <div class="landing-nav">
-      {
-        navLinks.map((link) => (
-          <a class="landing-nav-link" href={link.href}>
-            {link.label}
-          </a>
-        ))
-      }
-      <div class="landing-header-actions">
-        <a
-          class="landing-button landing-header-cta-text px-2.5 py-1.5 text-xs whitespace-nowrap"
-          href={appUrl}
+<header
+  class="z-overlay border-border bg-canvas/92 sticky top-0 border-b backdrop-blur-(--blur-app-header)"
+>
+  <div class="layout-shell">
+    <div class="flex h-(--landing-header-height) items-center justify-between gap-4">
+      <a href={baseUrl} class="flex min-w-0 items-center gap-3">
+        <BrandLogo
+          className="text-content block h-auto w-[5rem] max-[900px]:w-[4.5rem] max-[640px]:w-[3.75rem]"
+          title="hddn"
+        />
+        <span
+          class="text-content-subtle text-badge tracking-label hidden font-mono leading-4 uppercase sm:inline"
         >
+          Hide what matters.
+        </span>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <nav class="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+          {
+            navLinks.map((link) => (
+              <a class={navLinkClass} href={link.href}>
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <Button className="hidden sm:inline-flex" href={appUrl}>
           <span>{landingHero.primaryCta}</span>
           <Pencil size={16} strokeWidth={1.9} />
-        </a>
-        <a
-          aria-label={landingHero.primaryCta}
-          class="landing-button landing-header-cta-mobile-icon"
-          href={appUrl}
-        >
+        </Button>
+
+        <Button aria-label={landingHero.primaryCta} className="sm:hidden" href={appUrl}>
           <Pencil size={16} strokeWidth={1.9} />
-        </a>
+        </Button>
+
         <LandingMobileNav client:idle links={mobileLinks} />
       </div>
     </div>

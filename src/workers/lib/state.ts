@@ -1,4 +1,14 @@
-import type { WorkerResponse, BoundingBox, Detection, ExportMode, ManualRedaction, PageAsset, ProcessingProgress, SourceDocument, TextSpan } from '../../types';
+import type {
+  WorkerResponse,
+  BoundingBox,
+  Detection,
+  ExportMode,
+  ManualRedaction,
+  PageAsset,
+  ProcessingProgress,
+  SourceDocument,
+  TextSpan,
+} from '../../types';
 import { DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
 
 type PyodideGlobalsLike = {
@@ -95,7 +105,11 @@ export const hashBuffer = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
   let hash = 2166136261;
 
-  for (let index = 0; index < bytes.length; index += Math.max(1, Math.floor(bytes.length / 2048) || 1)) {
+  for (
+    let index = 0;
+    index < bytes.length;
+    index += Math.max(1, Math.floor(bytes.length / 2048) || 1)
+  ) {
     hash ^= bytes[index];
     hash = Math.imul(hash, 16777619);
   }
@@ -104,13 +118,24 @@ export const hashBuffer = (buffer: ArrayBuffer) => {
 };
 
 export const filterExportBoxes = (detections: Detection[], manualRedactions: ManualRedaction[]) => [
-  ...detections.filter((detection) => detection.status === 'confirmed').map((detection) => ({
-    pageIndex: detection.pageIndex,
-    box: detection.box,
-  })),
+  ...detections
+    .filter((detection) => detection.status === 'confirmed')
+    .map((detection) => ({
+      pageIndex: detection.pageIndex,
+      box: detection.box,
+    })),
   ...manualRedactions
     .filter((redaction) => redaction.status === 'confirmed')
     .map((redaction) => ({ pageIndex: redaction.pageIndex, box: redaction.box })),
 ];
 
-export type { BoundingBox, Detection, ExportMode, ManualRedaction, PageAsset, SourceDocument, TextSpan, PyProxyLike };
+export type {
+  BoundingBox,
+  Detection,
+  ExportMode,
+  ManualRedaction,
+  PageAsset,
+  SourceDocument,
+  TextSpan,
+  PyProxyLike,
+};

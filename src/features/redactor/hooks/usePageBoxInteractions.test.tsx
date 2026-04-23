@@ -32,12 +32,16 @@ function renderHarness({
   manualRedactions = [],
   spans = [],
   toolMode,
-  onCreateManual = vi.fn() as Mock<(payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void>,
+  onCreateManual = vi.fn() as Mock<
+    (payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void
+  >,
   onUpdateManual = vi.fn() as Mock<(id: string, box: BoundingBox) => void>,
 }: {
   isMobileViewport?: boolean;
   manualRedactions?: ManualRedaction[];
-  onCreateManual?: Mock<(payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void>;
+  onCreateManual?: Mock<
+    (payload: { box: BoundingBox; mode: 'text' | 'box'; snippet?: string }) => void
+  >;
   onUpdateManual?: Mock<(id: string, box: BoundingBox) => void>;
   spans?: Array<{ box: BoundingBox; text: string }>;
   toolMode: 'select' | 'draw' | null;

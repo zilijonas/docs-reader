@@ -1,7 +1,8 @@
 ---
-import { CloudOff, Eye, Monitor, Pencil, Shield } from "lucide-react";
-import { heroTrustBadges, landingHero } from "../data";
-import LandingHeroDiagram from "./LandingHeroDiagram.astro";
+import { CloudOff, Eye, Monitor, Pencil, Shield } from 'lucide-react';
+import { Button } from '../../../components/ui/Button';
+import { heroTrustBadges, landingHero } from '../data';
+import LandingHeroDiagram from './LandingHeroDiagram.astro';
 
 interface Props {
   appUrl: string;
@@ -11,111 +12,119 @@ interface Props {
 const { appUrl, howItWorksUrl } = Astro.props;
 ---
 
-<section class="landing-hero">
-  <div aria-hidden="true" class="landing-hero-visual">
-    <div class="fade-in fade-in-delay-1">
+<section
+  class="border-border relative flex min-h-[calc(100svh-var(--landing-header-height))] flex-col items-center justify-center overflow-hidden border-b bg-[linear-gradient(180deg,color-mix(in_oklab,var(--theme-canvas)_94%,white)_0%,var(--theme-canvas)_100%)] py-4 sm:pt-12 md:pb-18"
+>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-x-0 top-0 -right-[120%] hidden justify-center md:flex lg:-right-[62%]"
+  >
+    <div class="fade-in fade-in-delay-1 max-w-layout-diagram w-full opacity-70">
       <LandingHeroDiagram />
     </div>
   </div>
-  <div class="page-container landing-hero-inner">
-    <div class="landing-hero-panel">
-      <div class="landing-hero-content">
-        <span class="landing-hero-status fade-in">
-          <span class="landing-hero-status-dot" aria-hidden="true"></span>
+
+  <div
+    class="layout-shell z-raised relative grid gap-8 md:grid-cols-(--layout-grid-landing-main) md:items-end"
+  >
+    <div
+      class="border-border bg-surface/92 shadow-float rounded-(--radius-panel) border p-6 backdrop-blur-sm sm:p-8"
+    >
+      <div class="grid gap-5">
+        <span
+          class="fade-in border-border bg-surface text-content-muted text-micro tracking-pill inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 font-mono leading-4 uppercase"
+        >
+          <span class="bg-success size-1.5 rounded-full" aria-hidden="true"></span>
           <span>{landingHero.statusPill}</span>
-          <span class="landing-hero-status-dot" aria-hidden="true"></span>
+          <span class="bg-success ml-2 size-1.5 rounded-full" aria-hidden="true"></span>
           <span>{landingHero.statusDetail}</span>
         </span>
-        <h1 class="type-display-hero fade-in">
-          {landingHero.headlineLead}<br /> Redact <em class="italic-accent">
-            {landingHero.headlineAccent}
-          </em>
 
+        <h1 class="fade-in text-display-hero tracking-tight-hero text-balance">
+          {landingHero.headlineLead}<br />
           {landingHero.headlineTrail}
         </h1>
-        <p class="landing-hero-copy type-body-lg fade-in fade-in-delay-1">
+
+        <p
+          class="fade-in fade-in-delay-1 text-content-muted max-w-measure-landing-hero leading-reading text-lg text-pretty max-sm:text-base"
+        >
           {landingHero.subtext}
         </p>
-        <ul
-          class="landing-trust-badges-compact mt-6"
-          aria-label="Key trust points"
-        >
+
+        <ul class="mt-1 grid grid-cols-2 gap-1.5 sm:hidden" aria-label="Key trust points">
           {
             heroTrustBadges.map((badge) => (
               <li
-                class="landing-trust-badge"
+                class="border-border bg-surface-muted flex min-w-0 items-center gap-2 rounded-xl border px-2 py-1.5"
                 aria-label={`${badge.label}. ${badge.note}`}
               >
-                <span class="landing-trust-badge-icon" aria-hidden="true">
-                  {badge.icon === "cloudOff" ? (
-                    <CloudOff size={16} strokeWidth={1.6} />
-                  ) : badge.icon === "monitor" ? (
-                    <Monitor size={16} strokeWidth={1.6} />
-                  ) : badge.icon === "eye" ? (
-                    <Eye size={16} strokeWidth={1.6} />
+                <span
+                  class="bg-canvas text-content-subtle inline-flex size-7 shrink-0 items-center justify-center rounded-full"
+                  aria-hidden="true"
+                >
+                  {badge.icon === 'cloudOff' ? (
+                    <CloudOff size={14} strokeWidth={1.6} />
+                  ) : badge.icon === 'monitor' ? (
+                    <Monitor size={14} strokeWidth={1.6} />
+                  ) : badge.icon === 'eye' ? (
+                    <Eye size={14} strokeWidth={1.6} />
                   ) : (
-                    <Shield size={16} strokeWidth={1.6} />
+                    <Shield size={14} strokeWidth={1.6} />
                   )}
                 </span>
-                <span class="landing-trust-badge-copy">
-                  <span class="landing-trust-badge-title">
-                    <span class="landing-trust-badge-title-desktop">
-                      {badge.label}
-                    </span>
-                    <span class="landing-trust-badge-title-mobile">
-                      {badge.mobileLabel}
-                    </span>
+                <span class="grid min-w-0">
+                  <span class="text-content text-control leading-none font-medium">
+                    {badge.mobileLabel}
                   </span>
-                  <span class="landing-trust-badge-note">{badge.note}</span>
                 </span>
               </li>
             ))
           }
         </ul>
-        <div class="landing-hero-actions fade-in fade-in-delay-3 mt-6">
-          <a class="landing-button" href={appUrl}>
+
+        <div class="fade-in fade-in-delay-3 mt-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Button className="w-full sm:w-auto" href={appUrl} size="lg">
             <span>{landingHero.primaryCta}</span>
             <Pencil size={16} strokeWidth={1.5} />
-          </a>
-          <a class="landing-button-secondary" href={howItWorksUrl}>
+          </Button>
+          <Button className="w-full sm:w-auto" href={howItWorksUrl} size="lg" variant="secondary">
             <Eye size={16} strokeWidth={1.5} />
             <span>{landingHero.secondaryCta}</span>
-          </a>
+          </Button>
         </div>
-        <ul class="landing-hero-points type-caption fade-in fade-in-delay-2">
+
+        <ul
+          class="fade-in fade-in-delay-2 text-content-subtle leading-tight-copy flex flex-wrap gap-4 text-xs max-sm:hidden"
+        >
           {landingHero.quickPoints.map((point) => <li>{point}</li>)}
         </ul>
       </div>
     </div>
-    <div class="landing-trust-strip fade-in fade-in-delay-3">
-      <ul class="landing-trust-badges" aria-label="Key trust points">
+
+    <div
+      class="fade-in fade-in-delay-3 border-border bg-surface/95 shadow-panel hidden rounded-(--radius-panel) border p-5 backdrop-blur-sm sm:block"
+    >
+      <ul class="grid gap-3" aria-label="Key trust points">
         {
           heroTrustBadges.map((badge) => (
-            <li
-              class="landing-trust-badge"
-              aria-label={`${badge.label}. ${badge.note}`}
-            >
-              <span class="landing-trust-badge-icon" aria-hidden="true">
-                {badge.icon === "cloudOff" ? (
-                  <CloudOff size={24} strokeWidth={1.6} />
-                ) : badge.icon === "monitor" ? (
-                  <Monitor size={24} strokeWidth={1.6} />
-                ) : badge.icon === "eye" ? (
-                  <Eye size={24} strokeWidth={1.6} />
+            <li class="flex items-start gap-3" aria-label={`${badge.label}. ${badge.note}`}>
+              <span
+                class="bg-surface-muted text-content-subtle inline-flex size-10 items-center justify-center rounded-full"
+                aria-hidden="true"
+              >
+                {badge.icon === 'cloudOff' ? (
+                  <CloudOff size={20} strokeWidth={1.6} />
+                ) : badge.icon === 'monitor' ? (
+                  <Monitor size={20} strokeWidth={1.6} />
+                ) : badge.icon === 'eye' ? (
+                  <Eye size={20} strokeWidth={1.6} />
                 ) : (
-                  <Shield size={24} strokeWidth={1.6} />
+                  <Shield size={20} strokeWidth={1.6} />
                 )}
               </span>
-              <span class="landing-trust-badge-copy">
-                <span class="landing-trust-badge-title">
-                  <span class="landing-trust-badge-title-desktop">
-                    {badge.label}
-                  </span>
-                  <span class="landing-trust-badge-title-mobile">
-                    {badge.mobileLabel}
-                  </span>
-                </span>
-                <span class="landing-trust-badge-note">{badge.note}</span>
+              <span class="grid min-w-0 gap-0.5">
+                <span class="text-content text-sm font-medium">{badge.label}</span>
+                <span class="text-content-subtle text-xs">{badge.note}</span>
               </span>
             </li>
           ))

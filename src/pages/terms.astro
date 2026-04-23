@@ -1,6 +1,6 @@
 ---
-import MarketingPageShell from "../features/landing/components/MarketingPageShell.astro";
-import { SEO } from "../lib/seo";
+import MarketingPageShell from '../features/landing/components/MarketingPageShell.astro';
+import { SEO } from '../lib/seo';
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
@@ -13,71 +13,63 @@ const baseUrl = import.meta.env.BASE_URL;
   seo={SEO.terms}
   updatedAt="April 22, 2026"
 >
-  <section class="privacy-section-block">
+  <section>
     <p>By using hddn, you agree to these terms.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Use of the service</h2>
     <p>
-      hddn is a tool that helps you remove sensitive data from PDF files
-      directly in your browser.
+      hddn is a tool that helps you remove sensitive data from PDF files directly in your browser.
     </p>
     <p>You can use the service freely for personal or professional purposes.</p>
     <p>You agree not to:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>use the service for illegal purposes</li>
       <li>attempt to reverse engineer or misuse the service</li>
       <li>interfere with how the service works</li>
     </ul>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>No guarantees</h2>
     <p>
-      hddn helps identify and remove sensitive data, but it does not guarantee
-      that all sensitive information will be detected.
+      hddn helps identify and remove sensitive data, but it does not guarantee that all sensitive
+      information will be detected.
     </p>
-    <p>
-      You are responsible for reviewing your document before exporting and
-      sharing it.
-    </p>
+    <p>You are responsible for reviewing your document before exporting and sharing it.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Use at your own risk</h2>
     <p>You use hddn at your own risk.</p>
     <p>We are not responsible for:</p>
-    <ul class="privacy-bullet-list">
+    <ul>
       <li>missed sensitive data</li>
       <li>any consequences of sharing documents</li>
       <li>any loss or damage related to using the service</li>
     </ul>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Service changes</h2>
-    <p>
-      The service may change, be updated, or be discontinued at any time without
-      notice.
-    </p>
+    <p>The service may change, be updated, or be discontinued at any time without notice.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Privacy</h2>
     <p>
-      Your use of the service is also governed by the <a
-        href={`${baseUrl}privacy`}>Privacy page</a
+      Your use of the service is also governed by the <a href={`${baseUrl}privacy`}>Privacy page</a
       >.
     </p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Governing law</h2>
     <p>These terms are governed by the laws of Lithuania.</p>
   </section>
 
-  <section class="privacy-section-block">
+  <section>
     <h2>Contact</h2>
     <p>If you have questions about these terms, contact:</p>
     <p><a href="mailto:lijonas.it@gmail.com">lijonas.it@gmail.com</a></p>

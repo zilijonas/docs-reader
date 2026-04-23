@@ -1,5 +1,9 @@
 import type { FilterState, ManualRedaction } from '../../types';
-import { DEFAULT_REVIEW_FILTERS, createManualRedactionRecord, nextDetectionStatus } from '../../features/redactor';
+import {
+  DEFAULT_REVIEW_FILTERS,
+  createManualRedactionRecord,
+  nextDetectionStatus,
+} from '../../features/redactor';
 import { createId, normalizeBox } from '../../lib/utils';
 import type { ReviewStoreState } from './types';
 
@@ -10,7 +14,10 @@ export const createInitialFilters = (): FilterState => ({
 });
 
 const boxesEqual = (left: ManualRedaction['box'], right: ManualRedaction['box']) =>
-  left.x === right.x && left.y === right.y && left.width === right.width && left.height === right.height;
+  left.x === right.x &&
+  left.y === right.y &&
+  left.width === right.width &&
+  left.height === right.height;
 
 export const createRedactionsSlice = (): Pick<
   ReviewStoreState,

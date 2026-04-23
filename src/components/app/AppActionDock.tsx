@@ -1,4 +1,11 @@
-import { LassoSelect, Layers, RotateCcw, TypeOutline, ZoomIn, ZoomOut, SquareDashedMousePointer } from 'lucide-react';
+import {
+  Layers,
+  RotateCcw,
+  SquareDashedMousePointer,
+  TypeOutline,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { copy } from '@/lib/copy';
@@ -8,8 +15,14 @@ import { useReviewContext } from '../../features/redactor/context/ReviewContext'
 import { useWorkflowContext } from '../../features/redactor/context/WorkflowContext';
 
 export function AppActionDock() {
-  const { isDesktopSidebarOpen, isMobileViewport, isSidebarOpen, setZoom, toggleReviewPanel, zoom } =
-    useWorkflowContext();
+  const {
+    isDesktopSidebarOpen,
+    isMobileViewport,
+    isSidebarOpen,
+    setZoom,
+    toggleReviewPanel,
+    zoom,
+  } = useWorkflowContext();
   const { canRedo, redoLastChange, setToolMode, toolMode, unconfirmedCount } = useReviewContext();
   const sidebarOpen = isMobileViewport ? isSidebarOpen : isDesktopSidebarOpen;
   const isSelectMode = toolMode === 'select';
@@ -18,10 +31,8 @@ export function AppActionDock() {
   return (
     <div
       className={cn(
-        'fixed bottom-6 z-sticky flex flex-col-reverse items-center gap-2.5 transition-[right] duration-200 ease-standard',
-        sidebarOpen
-          ? 'right-4 lg:right-[calc(var(--layout-app-sidebar)+1rem)]'
-          : 'right-4',
+        'z-sticky ease-standard fixed bottom-6 flex flex-col-reverse items-center gap-2.5 transition-[right] duration-200',
+        sidebarOpen ? 'right-4 lg:right-[calc(var(--layout-app-sidebar)+1rem)]' : 'right-4',
       )}
     >
       <CircleButton
@@ -37,10 +48,10 @@ export function AppActionDock() {
           <span
             aria-hidden="true"
             className={cn(
-              'pointer-events-none absolute -right-0.5 -top-0.5',
+              'pointer-events-none absolute -top-0.5 -right-0.5',
               'inline-flex min-w-[1.375rem] items-center justify-center',
-              'h-[1.375rem] rounded-full bg-detection px-1 text-[0.6875rem] font-semibold leading-none text-canvas',
-              'border-2 border-canvas',
+              'bg-detection text-canvas text-caption h-[1.375rem] rounded-full px-1 leading-none font-semibold',
+              'border-canvas border-2',
             )}
           >
             {unconfirmedCount > 99 ? '99+' : unconfirmedCount}

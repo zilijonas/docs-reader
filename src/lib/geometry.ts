@@ -68,7 +68,11 @@ export const boxesClose = (a: BoundingBox, b: BoundingBox) => {
 
 // Clips a span's bounding box to [rangeStart, rangeEnd] by linear
 // interpolation over character count — good enough for proportional fonts.
-export const clipBoxToRange = (span: TextSpan, rangeStart: number, rangeEnd: number): BoundingBox => {
+export const clipBoxToRange = (
+  span: TextSpan,
+  rangeStart: number,
+  rangeEnd: number,
+): BoundingBox => {
   const spanLen = Math.max(1, span.end - span.start);
   const clippedStart = Math.max(rangeStart, span.start);
   const clippedEnd = Math.min(rangeEnd, span.end);

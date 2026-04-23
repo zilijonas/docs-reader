@@ -2,7 +2,16 @@ import type { Detection, ManualRedaction, PageAsset, SourceDocument, TextSpan } 
 import type { ExportMode } from './ui';
 
 export interface ProcessingProgress {
-  phase: 'booting' | 'loading' | 'extracting' | 'ocr' | 'rules' | 'preview' | 'export' | 'complete' | 'error';
+  phase:
+    | 'booting'
+    | 'loading'
+    | 'extracting'
+    | 'ocr'
+    | 'rules'
+    | 'preview'
+    | 'export'
+    | 'complete'
+    | 'error';
   pageIndex?: number;
   message: string;
   progress: number;

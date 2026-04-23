@@ -21,7 +21,9 @@ export function ReviewPagination({
     return null;
   }
 
-  const paginationItems = compact ? buildPaginationItems(pageCount, activePage) : buildFullPaginationItems(pageCount);
+  const paginationItems = compact
+    ? buildPaginationItems(pageCount, activePage)
+    : buildFullPaginationItems(pageCount);
 
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
@@ -37,7 +39,10 @@ export function ReviewPagination({
 
       {paginationItems.map((item, index) =>
         item.type === 'ellipsis' ? (
-          <span className="ui-text-caption px-1.5 font-mono text-content-subtle" key={`ellipsis-${index}`}>
+          <span
+            className="text-content-subtle text-caption px-1.5 font-mono"
+            key={`ellipsis-${index}`}
+          >
             ...
           </span>
         ) : (
@@ -64,7 +69,10 @@ export function ReviewPagination({
 }
 
 function buildFullPaginationItems(pageCount: number) {
-  return Array.from({ length: pageCount }, (_, pageIndex) => ({ type: 'page' as const, pageIndex }));
+  return Array.from({ length: pageCount }, (_, pageIndex) => ({
+    type: 'page' as const,
+    pageIndex,
+  }));
 }
 
 function buildPaginationItems(pageCount: number, activePage: number) {

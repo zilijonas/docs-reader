@@ -1,6 +1,8 @@
 ---
-import { ArrowRight } from "lucide-react";
-import { footerCta, getLandingFooterLinks } from "../data";
+import { ArrowRight } from 'lucide-react';
+import { BrandLogo } from '../../../components/BrandLogo';
+import { Button } from '../../../components/ui/Button';
+import { footerCta, getLandingFooterLinks } from '../data';
 interface Props {
   appUrl: string;
   baseUrl: string;
@@ -8,32 +10,31 @@ interface Props {
 
 const { appUrl, baseUrl } = Astro.props;
 const footerLinks = getLandingFooterLinks(baseUrl);
+const footerLinkClass =
+  'rounded-full py-1.5 text-sm text-content-muted transition-colors duration-200 hover:text-content';
 ---
 
-<section class="landing-footer">
-  <div class="page-container landing-footer-stack">
-    <div class="landing-footer-cta items-center">
-      <div class="landing-footer-copy">
-        <h2 class="type-display-cta measure-landing-cta text-inherit">
-          {footerCta.title}
-        </h2>
-        <p class="type-body-lg text-inherit">{footerCta.body}</p>
-        <p class="landing-footer-trust type-caption text-inherit">{footerCta.trustLine}</p>
-      </div>
-      <a class="landing-button-inverse" href={appUrl}>
-        <span>{footerCta.buttonLabel}</span>
-        <ArrowRight size={16} strokeWidth={1.5} />
+<footer class="border-border bg-canvas/92 border-t backdrop-blur-(--blur-app-header)">
+  <div class="layout-shell py-6 sm:py-7">
+    <div class="grid gap-5 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-6">
+      <a href={baseUrl} class="flex min-w-0 items-center gap-3">
+        <BrandLogo
+          className="text-content block h-auto w-[5rem] max-[900px]:w-[4.5rem] max-[640px]:w-[3.75rem]"
+          title="hddn"
+        />
+        <span
+          class="text-content-subtle text-badge tracking-label font-mono leading-4 uppercase inline"
+        >
+          Hide what matters.
+        </span>
       </a>
-    </div>
 
-    <div class="landing-footer-meta">
-      <span class="landing-footer-meta-label">Info</span>
       <nav aria-label="Footer information links">
-        <ul class="landing-footer-link-list">
+        <ul class="flex flex-wrap items-center gap-4 lg:justify-center">
           {
             footerLinks.map((link) => (
               <li>
-                <a class="landing-footer-link" href={link.href}>
+                <a class={footerLinkClass} href={link.href}>
                   {link.label}
                 </a>
               </li>
@@ -41,6 +42,14 @@ const footerLinks = getLandingFooterLinks(baseUrl);
           }
         </ul>
       </nav>
+
+      <div class="flex flex-col gap-2 lg:items-end">
+        <Button className="w-full sm:w-auto" href={appUrl} size="lg">
+          <span>{footerCta.buttonLabel}</span>
+          <ArrowRight size={16} strokeWidth={1.5} />
+        </Button>
+        <p class="text-content-subtle leading-tight-copy text-xs">{footerCta.trustLine}</p>
+      </div>
     </div>
   </div>
-</section>
+</footer>

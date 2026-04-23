@@ -74,11 +74,20 @@ const downloadIfNeeded = async (url, destination) => {
 const syncPyodide = async () => {
   await ensureDir(pyodidePublicRoot);
 
-  const baseFiles = ['pyodide.mjs', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
+  const baseFiles = [
+    'pyodide.mjs',
+    'pyodide.asm.js',
+    'pyodide.asm.wasm',
+    'python_stdlib.zip',
+    'pyodide-lock.json',
+  ];
   const pyodidePackageJson = resolveOptional('pyodide/package.json');
 
   if (!pyodidePackageJson) {
-    const existingFiles = await ensureFilesPresent(pyodidePublicRoot, [...baseFiles, 'pymupdf-1.26.3-cp313-none-pyodide_2025_0_wasm32.whl']);
+    const existingFiles = await ensureFilesPresent(pyodidePublicRoot, [
+      ...baseFiles,
+      'pymupdf-1.26.3-cp313-none-pyodide_2025_0_wasm32.whl',
+    ]);
     if (existingFiles.ok) {
       return;
     }
@@ -92,7 +101,9 @@ const syncPyodide = async () => {
   const pyodidePackage = require(pyodidePackageJson);
   const pyodideLock = require(path.join(pyodideRoot, 'pyodide-lock.json'));
   await Promise.all(
-    baseFiles.map((fileName) => copyIfNeeded(path.join(pyodideRoot, fileName), path.join(pyodidePublicRoot, fileName))),
+    baseFiles.map((fileName) =>
+      copyIfNeeded(path.join(pyodideRoot, fileName), path.join(pyodidePublicRoot, fileName)),
+    ),
   );
 
   const pymupdfWheel = pyodideLock.packages.pymupdf.file_name;
@@ -146,7 +157,10 @@ const syncTesseract = async () => {
   const workerFiles = ['dist/worker.min.js'];
   await Promise.all(
     workerFiles.map((fileName) =>
-      copyIfNeeded(path.join(tesseractRoot, fileName), path.join(tesseractPublicRoot, path.basename(fileName))),
+      copyIfNeeded(
+        path.join(tesseractRoot, fileName),
+        path.join(tesseractPublicRoot, path.basename(fileName)),
+      ),
     ),
   );
 
@@ -167,7 +181,10 @@ const syncTesseract = async () => {
 
   await Promise.all(
     coreFiles.map((fileName) =>
-      copyIfNeeded(path.join(tesseractCoreRoot, fileName), path.join(tesseractPublicRoot, fileName)),
+      copyIfNeeded(
+        path.join(tesseractCoreRoot, fileName),
+        path.join(tesseractPublicRoot, fileName),
+      ),
     ),
   );
 

@@ -10,7 +10,8 @@ import { useConsentStore } from '../../../store/consentStore';
 import { AnalyticsConsentController } from './AnalyticsConsentController';
 
 const clearConsentCookie = () => {
-  document.cookie = 'hddn_analytics_consent=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax';
+  document.cookie =
+    'hddn_analytics_consent=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax';
 };
 
 const renderController = (props?: Partial<{ enabled: boolean; measurementId: string }>) => {
@@ -90,7 +91,9 @@ describe('AnalyticsConsentController', () => {
       useConsentStore.getState().accept();
     });
 
-    expect(document.head.querySelectorAll('script[data-measurement-id="G-TEST1234"]')).toHaveLength(1);
+    expect(document.head.querySelectorAll('script[data-measurement-id="G-TEST1234"]')).toHaveLength(
+      1,
+    );
   });
 
   it('declines consent and keeps analytics storage denied', () => {
@@ -138,11 +141,10 @@ describe('AnalyticsConsentController', () => {
     ]);
   });
 
-  it('suppresses the banner when analytics is disabled', () => {
+  it('keeps the banner visible when analytics is disabled', () => {
     ({ container, root } = renderController({ enabled: false }));
 
-    expect(container?.textContent ?? '').not.toContain('Analytics consent');
+    expect(container?.textContent).toContain('Analytics consent');
     expect(window.dataLayer).toBeUndefined();
   });
 });
-

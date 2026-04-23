@@ -1,8 +1,8 @@
 ---
-import Layout from "../../../layouts/Layout.astro";
-import LandingFooterCta from "./LandingFooterCta.astro";
-import LandingHeader from "./LandingHeader.astro";
-import type { SeoMetadata } from "../../../lib/seo";
+import Layout from '../../../layouts/Layout.astro';
+import LandingFooterCta from './LandingFooterCta.astro';
+import LandingHeader from './LandingHeader.astro';
+import type { SeoMetadata } from '../../../lib/seo';
 
 interface Props {
   seo: SeoMetadata;
@@ -13,42 +13,36 @@ interface Props {
   baseUrl: string;
 }
 
-const {
-  seo,
-  pageTitle,
-  intro,
-  updatedAt,
-  eyebrow = "Info",
-  baseUrl,
-} = Astro.props;
+const { seo, pageTitle, intro, updatedAt, eyebrow = 'Info', baseUrl } = Astro.props;
 const appUrl = `${baseUrl}redact`;
+const heroEyebrowClass =
+  'font-mono text-caption leading-4 tracking-eyebrow uppercase text-content-subtle';
+const heroTitleClass = 'max-w-measure-landing-section text-display-section tracking-tight-section';
+const heroIntroClass =
+  'max-w-measure-landing-section text-content-muted text-lg leading-reading text-pretty';
 ---
 
 <Layout seo={seo}>
-  <div class="landing-page marketing-page">
+  <div class="flex min-h-screen min-h-svh flex-col">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
 
-    <main class="page-container section-space marketing-page-shell">
-      <section class="marketing-page-hero">
-        <div class="type-eyebrow">{eyebrow}</div>
-        <h1 class="type-display-section measure-landing-section">
-          {pageTitle}
-        </h1>
+    <main class="layout-shell flex flex-1 flex-col gap-8 py-12 md:py-16">
+      <section
+        class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-6 sm:p-8"
+      >
+        <div class={heroEyebrowClass}>{eyebrow}</div>
+        <h1 class:list={[heroTitleClass, 'mt-3']}>{pageTitle}</h1>
         {
           updatedAt ? (
-            <p class="marketing-page-updated type-caption">
+            <p class="text-content-subtle leading-tight-copy mt-4 text-xs">
               Last updated: {updatedAt}
             </p>
           ) : null
         }
-        {
-          intro ? (
-            <p class="type-body-lg measure-landing-section">{intro}</p>
-          ) : null
-        }
+        {intro ? <p class:list={[heroIntroClass, 'mt-4']}>{intro}</p> : null}
       </section>
 
-      <div class="marketing-page-container marketing-prose">
+      <div class="marketing-content">
         <slot />
       </div>
     </main>

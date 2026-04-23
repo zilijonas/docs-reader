@@ -62,7 +62,8 @@ export const NATIONAL_ID_RULES: DetectionRule[] = [
   },
   {
     type: 'nationalId',
-    pattern: /(?<![\w\d])[12]\s?\d{2}\s?(?:0[1-9]|1[0-2])\s?(?:\d{2}|2[AB])\s?\d{3}\s?\d{3}\s?\d{2}(?![\w\d])/gi,
+    pattern:
+      /(?<![\w\d])[12]\s?\d{2}\s?(?:0[1-9]|1[0-2])\s?(?:\d{2}|2[AB])\s?\d{3}\s?\d{3}\s?\d{2}(?![\w\d])/gi,
     confidence: 0.96,
     postFilter: isNirValid,
   },

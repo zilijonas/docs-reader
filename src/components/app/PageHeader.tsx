@@ -25,13 +25,13 @@ export function PageHeader({
 }) {
   return (
     <div
-      className="sticky left-0 z-raised flex items-center justify-between px-1 pb-2.5"
+      className="z-raised sticky left-0 flex items-center justify-between px-1 pb-2.5"
       style={getHeaderStyle(headerWidth)}
     >
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            'ui-text-label font-mono uppercase tracking-ui-data',
+            'tracking-ui-data text-badge font-mono uppercase',
             active ? 'text-content' : 'text-content-subtle',
           )}
         >
@@ -48,7 +48,7 @@ export function PageHeader({
         </StatusPill>
       </div>
 
-      <div className="ui-text-label flex items-center gap-2.5 font-mono tracking-ui-tight text-content-subtle">
+      <div className="tracking-ui-tight text-content-subtle text-badge flex items-center gap-2.5 font-mono">
         {pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <StatusDot tone="warning" />

@@ -34,8 +34,6 @@ export function usePageBoxInteractions({
   onUpdateManual: (id: string, box: BoundingBox) => void;
 }) {
   const [draftBox, setDraftBox] = useState<BoundingBox | null>(null);
-  const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null);
-  const [dragState, setDragState] = useState<ManualDragState | null>(null);
   const [dragPreview, setDragPreview] = useState<{ id: string; box: BoundingBox } | null>(null);
   const activeDraftModeRef = useRef<'box' | 'touch-text' | null>(null);
   const interactionStateRef = useRef<{
@@ -57,12 +55,10 @@ export function usePageBoxInteractions({
 
   const setInteractionDrawingStart = (value: { x: number; y: number } | null) => {
     interactionStateRef.current.drawingStart = value;
-    setDrawingStart(value);
   };
 
   const setInteractionDragState = (value: ManualDragState | null) => {
     interactionStateRef.current.dragState = value;
-    setDragState(value);
   };
 
   const setInteractionDragPreview = (value: { id: string; box: BoundingBox } | null) => {
@@ -71,7 +67,9 @@ export function usePageBoxInteractions({
   };
 
   useEffect(() => {
-    const hasPendingManual = manualRedactions.some((manualRedaction) => manualRedaction.status === 'unconfirmed');
+    const hasPendingManual = manualRedactions.some(
+      (manualRedaction) => manualRedaction.status === 'unconfirmed',
+    );
     if (!hasPendingManual) {
       return;
     }
@@ -82,7 +80,10 @@ export function usePageBoxInteractions({
         return;
       }
 
-      if (target.closest('[data-manual-pending="true"]') || target.closest('[data-keep-pending-manuals="true"]')) {
+      if (
+        target.closest('[data-manual-pending="true"]') ||
+        target.closest('[data-keep-pending-manuals="true"]')
+      ) {
         return;
       }
 
@@ -210,13 +211,19 @@ export function usePageBoxInteractions({
         interactionStateRef.current.draftBox.width > REDACTOR_INTERACTION.minTextSelectionBoxSize &&
         interactionStateRef.current.draftBox.height > REDACTOR_INTERACTION.minTextSelectionBoxSize
       ) {
-        const selectedSpans = spans.filter((span) => boxesOverlap(span.box, interactionStateRef.current.draftBox!));
+        const selectedSpans = spans.filter((span) =>
+          boxesOverlap(span.box, interactionStateRef.current.draftBox!),
+        );
 
         if (selectedSpans.length > 0) {
           onCreateManual({
             box: unionBoxes(selectedSpans.map((span) => span.box)),
             mode: 'text',
-            snippet: selectedSpans.map((span) => span.text).join(' ').replace(/\s+/g, ' ').trim(),
+            snippet: selectedSpans
+              .map((span) => span.text)
+              .join(' ')
+              .replace(/\s+/g, ' ')
+              .trim(),
           });
         }
       }
@@ -231,7 +238,10 @@ export function usePageBoxInteractions({
       const activeDragState = interactionStateRef.current.dragState;
       const activeDragPreview = interactionStateRef.current.dragPreview;
 
-      if (activeDragPreview && !boxesOverlapExactly(activeDragPreview.box, activeDragState.origin)) {
+      if (
+        activeDragPreview &&
+        !boxesOverlapExactly(activeDragPreview.box, activeDragState.origin)
+      ) {
         onUpdateManual(activeDragState.id, activeDragPreview.box);
       }
 
@@ -239,7 +249,6 @@ export function usePageBoxInteractions({
       setInteractionDragState(null);
       setInteractionDragPreview(null);
     }
-
   };
 
   const handleTextSelection = () => {
@@ -285,7 +294,10 @@ export function usePageBoxInteractions({
     selection.removeAllRanges();
   };
 
-  const beginManualDrag = (event: ReactPointerEvent<HTMLDivElement>, manualRedaction: ManualRedaction) => {
+  const beginManualDrag = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    manualRedaction: ManualRedaction,
+  ) => {
     if (toolMode === 'draw' || event.button !== 0) {
       return;
     }

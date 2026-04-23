@@ -140,7 +140,17 @@ export function ReviewProvider({ children }: PropsWithChildren) {
       updateManualRedaction: store.updateManualRedaction,
       warnings: store.warnings,
     }),
-    [deferredReviewItems, handleConfirmAllExport, handleConfirmReset, handlePrimaryExport, handleResetRequest, hasViewer, reviewCounts, spansByPage, store],
+    [
+      deferredReviewItems,
+      handleConfirmAllExport,
+      handleConfirmReset,
+      handlePrimaryExport,
+      handleResetRequest,
+      hasViewer,
+      reviewCounts,
+      spansByPage,
+      store,
+    ],
   );
 
   return <ReviewContext.Provider value={value}>{children}</ReviewContext.Provider>;

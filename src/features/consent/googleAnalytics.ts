@@ -65,4 +65,3 @@ export const updateGoogleAnalyticsConsent = (status: PersistedConsentStatus) => 
 export const resetGoogleAnalyticsForTests = () => {
   injectedMeasurementIds.clear();
 };
-

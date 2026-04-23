@@ -35,9 +35,7 @@ describe('inferOcrLanguagesFromText', () => {
   });
 
   it('caps extra languages to the top three scores', () => {
-    const result = inferOcrLanguagesFromText(
-      'ąčęėįšųūž Αθήνα Σέρρες çğışöü áčďéěíňóřšťúůýž š š š',
-    );
+    const result = inferOcrLanguagesFromText('ąčęėįšųūž Αθήνα Σέρρες çğışöü áčďéěíňóřšťúůýž š š š');
 
     expect(result[0]).toBe('eng');
     expect(result).toHaveLength(4);

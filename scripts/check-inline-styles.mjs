@@ -10,9 +10,14 @@ const allowedInlineStyleMatches = [
     reason: 'runtime geometry CSS variables for viewer overlays',
   },
   {
-    file: 'src/features/redactor/components/AppShell.tsx',
-    pattern: /--viewer-zoom/,
-    reason: 'runtime zoom CSS variable',
+    file: 'src/features/redactor/components/AppShellContent.tsx',
+    pattern: /style=\{\{/,
+    reason: 'runtime app header layout CSS variables',
+  },
+  {
+    file: 'src/components/app/ZoomLayer.tsx',
+    pattern: /style=\{\{/,
+    reason: 'runtime zoom transform and scaled viewport dimensions',
   },
   {
     file: 'src/components/ui/ProgressBar.tsx',

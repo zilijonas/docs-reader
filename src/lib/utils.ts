@@ -1,6 +1,18 @@
 import type { Detection, TextSpan } from '../types';
-import { OVERLAP_RATIO_THRESHOLD, boxArea, boxesClose, clamp, normalizeBox, overlapRatioToSmallerBox, overlaps, unionBoxes } from './geometry';
-import { READING_ORDER_LINE_THRESHOLD, SOURCE_CONFIDENCE_MERGE_THRESHOLD } from './detection/config';
+import {
+  OVERLAP_RATIO_THRESHOLD,
+  boxArea,
+  boxesClose,
+  clamp,
+  normalizeBox,
+  overlapRatioToSmallerBox,
+  overlaps,
+  unionBoxes,
+} from './geometry';
+import {
+  READING_ORDER_LINE_THRESHOLD,
+  SOURCE_CONFIDENCE_MERGE_THRESHOLD,
+} from './detection/config';
 
 export { clamp, normalizeBox, overlaps, boxesClose, unionBoxes };
 
@@ -110,7 +122,9 @@ const selectPreferredDetection = (current: Detection, candidate: Detection) => {
     return boxArea(candidate.box) < boxArea(current.box) ? candidate : current;
   }
 
-  return candidate.normalizedSnippet.length > current.normalizedSnippet.length ? candidate : current;
+  return candidate.normalizedSnippet.length > current.normalizedSnippet.length
+    ? candidate
+    : current;
 };
 
 export const dedupeDetections = (detections: Detection[]) => {

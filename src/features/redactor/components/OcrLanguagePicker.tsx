@@ -7,7 +7,11 @@ interface OcrLanguagePickerProps {
   disabled?: boolean;
 }
 
-export function OcrLanguagePicker({ selected, onChange, disabled = false }: OcrLanguagePickerProps) {
+export function OcrLanguagePicker({
+  selected,
+  onChange,
+  disabled = false,
+}: OcrLanguagePickerProps) {
   const toggle = (code: string) => {
     if (disabled) return;
 
@@ -29,7 +33,7 @@ export function OcrLanguagePicker({ selected, onChange, disabled = false }: OcrL
             onClick={() => toggle(code)}
             tone={isOn ? 'muted' : 'neutral'}
           >
-            <span className="whitespace-nowrap font-mono text-xs">{label}</span>
+            <span className="font-mono text-xs whitespace-nowrap">{label}</span>
           </Chip>
         );
       })}

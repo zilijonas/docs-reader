@@ -21,4 +21,11 @@ export interface FilterState {
   types: DetectionType[];
 }
 
-export type WorkflowPhase = 'idle' | 'uploading' | 'awaitingOcr' | 'detecting' | 'reviewing' | 'exporting' | 'error';
+export type WorkflowPhase =
+  | 'idle'
+  | 'uploading'
+  | 'awaitingOcr'
+  | 'detecting'
+  | 'reviewing'
+  | 'exporting'
+  | 'error';

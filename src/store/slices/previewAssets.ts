@@ -10,7 +10,10 @@ export const releasePreviewUrls = (previews: Record<number, PreviewAsset>) => {
   });
 };
 
-export const createPreviewAssetsSlice = (): Pick<ReviewStoreState, 'previews' | 'setPreviewState'> => ({
+export const createPreviewAssetsSlice = (): Pick<
+  ReviewStoreState,
+  'previews' | 'setPreviewState'
+> => ({
   previews: {},
   setPreviewState: () => undefined,
 });

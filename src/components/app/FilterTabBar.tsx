@@ -19,10 +19,10 @@ export function FilterTabBar({
         return (
           <button
             className={cn(
-              'ui-text-control mb-4 mr-5 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 transition-colors duration-200 ease-standard',
+              'ease-standard text-control mr-5 mb-4 flex items-center gap-1.5 border-b-2 bg-transparent py-2.5 transition-colors duration-200',
               isActive
                 ? 'border-content text-content'
-                : 'border-transparent text-content-subtle hover:text-content-muted',
+                : 'text-content-subtle hover:text-content-muted border-transparent',
             )}
             key={label}
             onClick={() => {
@@ -37,7 +37,7 @@ export function FilterTabBar({
             {label}
             <span
               className={cn(
-                'ui-text-label rounded-full px-1.5 py-0.25 font-mono',
+                'text-badge rounded-full px-1.5 py-0.25 font-mono',
                 isActive ? 'bg-content text-canvas' : 'bg-surface-muted text-content-subtle',
               )}
             >

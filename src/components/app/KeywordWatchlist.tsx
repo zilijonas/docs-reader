@@ -17,14 +17,16 @@ export function KeywordWatchlist({
   onRemoveKeyword: (keyword: string) => void | Promise<void>;
 }) {
   return (
-    <div className="border-b border-border px-5 py-ui-section">
+    <div className="border-border py-ui-section border-b px-5">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="type-data">{copy.sidebar.watchWords}</span>
+        <span className="text-content-subtle text-badge tracking-label font-mono leading-4 uppercase">
+          {copy.sidebar.watchWords}
+        </span>
       </div>
 
-      <div className="mb-2.5 flex gap-1.5 items-center">
+      <div className="mb-2.5 flex items-center gap-1.5">
         <Input
-          className="ui-text-field flex-1"
+          className="text-field flex-1"
           onChange={(event) => onDraftChange(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -43,12 +45,12 @@ export function KeywordWatchlist({
       <div className="flex flex-wrap gap-1.5">
         {keywords.map((keyword) => (
           <Chip interactive key={keyword} onClick={() => void onRemoveKeyword(keyword)}>
-            <span className="whitespace-nowrap font-mono text-xs">{keyword}</span>
+            <span className="font-mono text-xs whitespace-nowrap">{keyword}</span>
             <XIcon className="text-content-subtle" size={10} strokeWidth={1.5} />
           </Chip>
         ))}
         {keywords.length === 0 ? (
-          <span className="ui-text-note italic text-content-subtle">{copy.sidebar.noKeywords}</span>
+          <span className="text-content-subtle text-note italic">{copy.sidebar.noKeywords}</span>
         ) : null}
       </div>
     </div>

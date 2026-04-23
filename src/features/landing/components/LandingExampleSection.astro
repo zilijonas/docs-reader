@@ -1,51 +1,55 @@
 ---
 interface Props {
   baseUrl: string;
-  variant?: "landing" | "marketing";
+  variant?: 'landing' | 'marketing';
 }
 
-const { baseUrl, variant = "landing" } = Astro.props;
+const { baseUrl, variant = 'landing' } = Astro.props;
 
 const notes = [
   {
-    label: "Page preview",
-    text: "See the PDF page and highlighted areas before anything is exported.",
+    label: 'Page preview',
+    text: 'See the PDF page and highlighted areas before anything is exported.',
   },
   {
-    label: "Review queue",
-    text: "Check suggested detections one by one and keep only what should be redacted.",
+    label: 'Review queue',
+    text: 'Check suggested detections one by one and keep only what should be redacted.',
   },
   {
-    label: "Manual control",
-    text: "Add your own redactions when the document needs extra cleanup.",
+    label: 'Manual control',
+    text: 'Add your own redactions when the document needs extra cleanup.',
   },
 ] as const;
+
+const eyebrowClass =
+  'font-mono text-caption leading-4 tracking-eyebrow uppercase text-content-subtle';
+const titleClass = 'max-w-measure-landing-section text-display-section tracking-tight-section';
 ---
 
 {
-  variant === "landing" ? (
-    <section class="landing-section-shell landing-example-section">
-      <div class="page-container section-space landing-example-shell">
-        <div class="landing-section-head">
+  variant === 'landing' ? (
+    <section class="border-border border-t">
+      <div class="layout-shell py-16">
+        <div class="grid gap-5 md:grid-cols-(--layout-grid-landing-split) md:items-end">
           <div>
-            <div class="landing-eyebrow mb-3">Example</div>
-            <h2 class="type-display-section measure-landing-section">
+            <div class:list={[eyebrowClass, 'mb-3']}>Example</div>
+            <h2 class={titleClass}>
               Review workspace. Clear page view. Final decision stays with you.
             </h2>
           </div>
-          <p class="landing-section-copy type-body">
-            The app shows the page, suggested redactions, and manual tools in
-            one place so you can inspect every change before export.
+          <p class="text-content-muted text-body-md leading-copy-relaxed">
+            The app shows the page, suggested redactions, and manual tools in one place so you can
+            inspect every change before export.
           </p>
         </div>
 
-        <div class="landing-example-grid">
-          <div class="landing-card landing-example-frame">
+        <div class="mt-8 grid gap-4 xl:grid-cols-(--layout-grid-landing-example)">
+          <div class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-3 sm:p-4">
             <picture>
               <source srcset={`${baseUrl}example.webp`} type="image/webp" />
               <img
                 alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
-                class="landing-example-image"
+                class="border-border/70 w-full rounded-2xl border"
                 height="1024"
                 loading="lazy"
                 src={`${baseUrl}example.png`}
@@ -54,11 +58,13 @@ const notes = [
             </picture>
           </div>
 
-          <div class="landing-example-notes" aria-label="Example highlights">
+          <div class="grid gap-3" aria-label="Example highlights">
             {notes.map((note) => (
-              <article class="landing-card landing-example-note">
-                <div class="landing-example-note-label">{note.label}</div>
-                <p class="type-body-sm">{note.text}</p>
+              <article class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-5">
+                <div class="text-content-subtle text-badge tracking-label font-mono leading-4 uppercase">
+                  {note.label}
+                </div>
+                <p class="text-content-muted leading-copy mt-2 text-sm">{note.text}</p>
               </article>
             ))}
           </div>
@@ -66,21 +72,21 @@ const notes = [
       </div>
     </section>
   ) : (
-    <section class="privacy-section-block landing-example-shell landing-example-shell-marketing">
-      <div class="landing-eyebrow">Example</div>
+    <section>
+      <div class={eyebrowClass}>Example</div>
       <h2>What the review screen looks like</h2>
       <p>
-        One screen holds the page preview, suggested redactions, and manual
-        tools so you can check everything before export.
+        One screen holds the page preview, suggested redactions, and manual tools so you can check
+        everything before export.
       </p>
 
-      <div class="landing-example-grid">
-        <div class="landing-card landing-example-frame">
+      <div class="mt-4 grid gap-4 xl:grid-cols-(--layout-grid-landing-example)">
+        <div class="border-border bg-surface-muted rounded-(--radius-panel) border p-3 sm:p-4">
           <picture>
             <source srcset={`${baseUrl}example.webp`} type="image/webp" />
             <img
               alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
-              class="landing-example-image"
+              class="border-border/70 w-full rounded-2xl border"
               height="1024"
               loading="lazy"
               src={`${baseUrl}example.png`}
@@ -89,11 +95,13 @@ const notes = [
           </picture>
         </div>
 
-        <div class="landing-example-notes" aria-label="Example highlights">
+        <div class="grid gap-3" aria-label="Example highlights">
           {notes.map((note) => (
-            <article class="landing-card landing-example-note">
-              <div class="landing-example-note-label">{note.label}</div>
-              <p class="type-body-sm">{note.text}</p>
+            <article class="border-border bg-surface-muted rounded-2xl border p-4">
+              <div class="text-content-subtle text-badge tracking-label font-mono leading-4 uppercase">
+                {note.label}
+              </div>
+              <p class="text-content-muted leading-copy mt-2 text-sm">{note.text}</p>
             </article>
           ))}
         </div>

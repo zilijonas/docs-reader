@@ -24,7 +24,7 @@ export function AnalyticsConsentController({
   }, [hydrateFromCookie]);
 
   useEffect(() => {
-    if (!enabled || !isHydrated || status === 'unknown') {
+    if (!isHydrated || status === 'unknown' || !enabled) {
       return;
     }
 
@@ -35,13 +35,13 @@ export function AnalyticsConsentController({
     updateGoogleAnalyticsConsent(status);
   }, [enabled, isHydrated, measurementId, status]);
 
-  if (!enabled || !isHydrated || status !== 'unknown') {
+  if (!isHydrated || status !== 'unknown') {
     return null;
   }
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-toast) px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
       role="region"
       aria-label={copy.consent.regionLabel}
     >
@@ -49,4 +49,3 @@ export function AnalyticsConsentController({
     </div>
   );
 }
-

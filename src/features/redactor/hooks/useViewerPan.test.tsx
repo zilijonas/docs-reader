@@ -12,11 +12,19 @@ import { canStartViewerPan, getViewerPanScrollPosition, useViewerPan } from './u
 type HarnessBindings = {
   bindProps: HTMLAttributes<HTMLDivElement>;
   handlePointerDownCapture: ReturnType<typeof useViewerPan>['handlePointerDownCapture'];
-  setZoom: Mock<(value: number, anchor?: { clientX?: number; clientY?: number; source: string }) => void>;
+  setZoom: Mock<
+    (value: number, anchor?: { clientX?: number; clientY?: number; source: string }) => void
+  >;
   viewer: HTMLDivElement;
 };
 
-function renderHarness({ toolMode = null, zoom }: { toolMode?: 'select' | 'draw' | null; zoom: number }) {
+function renderHarness({
+  toolMode = null,
+  zoom,
+}: {
+  toolMode?: 'select' | 'draw' | null;
+  zoom: number;
+}) {
   const bindings = {} as HarnessBindings;
   const container = document.createElement('div');
   document.body.append(container);

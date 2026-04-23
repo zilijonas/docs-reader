@@ -64,7 +64,9 @@ export class RedactorWorkerClient {
   private pending = new Map<number, PendingRequest>();
 
   constructor() {
-    this.worker = new Worker(new URL('../workers/redactor.worker.ts', import.meta.url), { type: 'module' });
+    this.worker = new Worker(new URL('../workers/redactor.worker.ts', import.meta.url), {
+      type: 'module',
+    });
     this.worker.addEventListener('message', this.handleMessage);
     this.worker.addEventListener('error', this.handleError);
   }
@@ -105,7 +107,7 @@ export class RedactorWorkerClient {
   }
 
   private async dispatch(message: WorkerRequest) {
-    const payloadMessage: WorkerRequest = { ...message, requestId: this.requestId += 1 };
+    const payloadMessage: WorkerRequest = { ...message, requestId: (this.requestId += 1) };
     const expectedTypeByRequest: Record<WorkerRequest['type'], WorkerResponse['type']> = {
       INIT: 'READY',
       LOAD_PDF: 'PDF_LOADED',
@@ -133,23 +135,33 @@ export class RedactorWorkerClient {
   }
 
   loadPdf(payload: LoadPdfRequest): Promise<RequestMap['LOAD_PDF']> {
-    return this.dispatch({ requestId: 0, type: 'LOAD_PDF', payload }) as Promise<RequestMap['LOAD_PDF']>;
+    return this.dispatch({ requestId: 0, type: 'LOAD_PDF', payload }) as Promise<
+      RequestMap['LOAD_PDF']
+    >;
   }
 
   continueOcr(payload: ContinueOcrRequest): Promise<RequestMap['CONTINUE_OCR']> {
-    return this.dispatch({ requestId: 0, type: 'CONTINUE_OCR', payload }) as Promise<RequestMap['CONTINUE_OCR']>;
+    return this.dispatch({ requestId: 0, type: 'CONTINUE_OCR', payload }) as Promise<
+      RequestMap['CONTINUE_OCR']
+    >;
   }
 
   detect(payload: DetectRequest): Promise<RequestMap['DETECT']> {
-    return this.dispatch({ requestId: 0, type: 'DETECT', payload }) as Promise<RequestMap['DETECT']>;
+    return this.dispatch({ requestId: 0, type: 'DETECT', payload }) as Promise<
+      RequestMap['DETECT']
+    >;
   }
 
   getPagePreview(payload: GetPagePreviewRequest): Promise<RequestMap['GET_PAGE_PREVIEW']> {
-    return this.dispatch({ requestId: 0, type: 'GET_PAGE_PREVIEW', payload }) as Promise<RequestMap['GET_PAGE_PREVIEW']>;
+    return this.dispatch({ requestId: 0, type: 'GET_PAGE_PREVIEW', payload }) as Promise<
+      RequestMap['GET_PAGE_PREVIEW']
+    >;
   }
 
   applyRedactions(payload: ApplyRedactionsRequest): Promise<RequestMap['APPLY_REDACTIONS']> {
-    return this.dispatch({ requestId: 0, type: 'APPLY_REDACTIONS', payload }) as Promise<RequestMap['APPLY_REDACTIONS']>;
+    return this.dispatch({ requestId: 0, type: 'APPLY_REDACTIONS', payload }) as Promise<
+      RequestMap['APPLY_REDACTIONS']
+    >;
   }
 
   reset(): Promise<RequestMap['RESET']> {
@@ -167,4 +179,11 @@ export const getRedactorWorkerClient = () => {
   return sharedClient;
 };
 
-export type { ApplyRedactionsRequest, ContinueOcrRequest, DetectRequest, GetPagePreviewRequest, InitRequest, LoadPdfRequest };
+export type {
+  ApplyRedactionsRequest,
+  ContinueOcrRequest,
+  DetectRequest,
+  GetPagePreviewRequest,
+  InitRequest,
+  LoadPdfRequest,
+};

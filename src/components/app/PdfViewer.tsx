@@ -22,7 +22,7 @@ export function PdfViewer({ isPanning }: { isPanning: boolean }) {
     updateManualRedaction,
   } = useReviewContext();
   return (
-    <div className="pdf-viewer flex flex-col gap-7">
+    <div className="flex flex-col gap-5 lg:gap-7 [&>[id^='page-']]:scroll-mt-[calc(var(--app-header-height)+0.75rem)]">
       {pages.map((page) => (
         <PagePreviewCard
           active={activePage === page.pageIndex}
@@ -31,9 +31,13 @@ export function PdfViewer({ isPanning }: { isPanning: boolean }) {
           id={getPageAnchorId(page.pageIndex)}
           isMobileViewport={isMobileViewport}
           key={page.pageIndex}
-          manualRedactions={manualRedactions.filter((manualRedaction) => manualRedaction.pageIndex === page.pageIndex)}
+          manualRedactions={manualRedactions.filter(
+            (manualRedaction) => manualRedaction.pageIndex === page.pageIndex,
+          )}
           onActivate={() => setActivePage(page.pageIndex)}
-          onCreateManual={(payload) => addManualRedaction({ pageIndex: page.pageIndex, ...payload })}
+          onCreateManual={(payload) =>
+            addManualRedaction({ pageIndex: page.pageIndex, ...payload })
+          }
           onDismissPendingManuals={clearPendingManualRedactions}
           onEnsurePreview={() => ensurePreview(page.pageIndex)}
           onRemoveManual={removeManualRedaction}
@@ -51,7 +55,7 @@ export function PdfViewer({ isPanning }: { isPanning: boolean }) {
       ))}
 
       <div className="mt-2 text-center">
-        <span className="ui-text-label font-mono tracking-ui-data text-content-subtle">
+        <span className="tracking-ui-data text-content-subtle text-badge font-mono">
           - end of document -
         </span>
       </div>

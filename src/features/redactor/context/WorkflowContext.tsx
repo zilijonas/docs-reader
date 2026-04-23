@@ -128,7 +128,6 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
   const { fileInputRef, fileRef, handleDrop, handleFileChange } = useFileUpload({
     clientRef,
     customKeywords,
-    exportJob,
     openOcrLanguageModal,
     resetReviewStore: reset,
     resetWorkflowUi,
@@ -161,25 +160,19 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     sourceDocument,
   });
 
-  const {
-    appHeaderRef,
-    appShellRef,
-    scrollToPage,
-    scrollToReviewItem,
-    setZoom,
-    viewerColumnRef,
-  } = useScrollNavigation({
-    appHeaderHeight: state.appHeaderHeight,
-    hasViewer,
-    isMobileViewport: state.isMobileViewport,
-    isSidebarOpen: state.isSidebarOpen,
-    setActivePage,
-    setAppHeaderHeight,
-    setReviewPanelOpen,
-    setViewerContentWidth,
-    setZoomState,
-    zoom: state.zoom,
-  });
+  const { appHeaderRef, appShellRef, scrollToPage, scrollToReviewItem, setZoom, viewerColumnRef } =
+    useScrollNavigation({
+      appHeaderHeight: state.appHeaderHeight,
+      hasViewer,
+      isMobileViewport: state.isMobileViewport,
+      isSidebarOpen: state.isSidebarOpen,
+      setActivePage,
+      setAppHeaderHeight,
+      setReviewPanelOpen,
+      setViewerContentWidth,
+      setZoomState,
+      zoom: state.zoom,
+    });
 
   useViewportMode(setMobileViewport);
 
@@ -214,7 +207,15 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     }
 
     return 'idle';
-  }, [error, exportJob.status, isProcessing, pages.length, progress?.phase, sourceDocument, state.isOcrLanguageModalOpen]);
+  }, [
+    error,
+    exportJob.status,
+    isProcessing,
+    pages.length,
+    progress?.phase,
+    sourceDocument,
+    state.isOcrLanguageModalOpen,
+  ]);
 
   const handleKeywordSubmit = async () => {
     const nextKeyword = state.keywordDraft.trim();
@@ -244,7 +245,9 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
 
       const nextSpans = Array.isArray(response.payload.spans) ? response.payload.spans : [];
       const nextPages = Array.isArray(response.payload.pages) ? response.payload.pages : [];
-      const nextWarnings = Array.isArray(response.payload.warnings) ? response.payload.warnings : [];
+      const nextWarnings = Array.isArray(response.payload.warnings)
+        ? response.payload.warnings
+        : [];
       const nextOcrLanguages =
         Array.isArray(response.payload.ocrLanguages) && response.payload.ocrLanguages.length > 0
           ? response.payload.ocrLanguages

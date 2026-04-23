@@ -1,3 +1,35 @@
-export * from './config';
-export * from './fileValidation';
-export * from './review-helpers';
+export {
+  DEFAULT_REVIEW_FILTERS,
+  DETECTION_TYPE_LABELS,
+  DETECTION_TYPE_META,
+  DETECTION_TYPE_ORDER,
+  EXPORT_MODE_META,
+  FALLBACK_EXPORT_MODE,
+  PRIMARY_EXPORT_MODE,
+  REDACTOR_INTERACTION,
+  REDACTOR_PAGE_ID_PREFIX,
+  REDACTOR_UI,
+  REVIEW_FILTER_TABS,
+  REVIEW_ITEM_ID_PREFIX,
+  REVIEW_SOURCE_ORDER,
+  REVIEW_STATUS_LABELS,
+  REVIEW_STATUS_ORDER,
+  UPLOAD_HINTS,
+  getPageAnchorId,
+  getReviewItemAnchorId,
+} from './config';
+export { validateSelectedFile } from './fileValidation';
+export {
+  buildReviewItems,
+  buildSpansByPage,
+  createManualRedactionRecord,
+  filterReviewItems,
+  getPreviewDisplayState,
+  getReviewCounts,
+  groupReviewItemsByType,
+  initialExportJob,
+  nextDetectionStatus,
+  preserveRuleStatuses,
+  updatePreviewRecord,
+} from './review-helpers';
+export type { ReviewCounts, ReviewItem } from './review-helpers';

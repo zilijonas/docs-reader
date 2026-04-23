@@ -5,7 +5,8 @@ import type { Detection, DetectionType, TextSpan } from '../types';
 import { clipBoxToRange, unionBoxes } from './geometry';
 import { createId, dedupeDetections, findSpansInRange, normalizeSnippet } from './utils';
 
-const getJoinedSpanText = (spans: TextSpan[]) => normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
+const getJoinedSpanText = (spans: TextSpan[]) =>
+  normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
 
 const refineCoveredSpans = (coveredSpans: TextSpan[], snippet: string) => {
   if (coveredSpans.length <= 1) {
@@ -43,7 +44,10 @@ const refineCoveredSpans = (coveredSpans: TextSpan[], snippet: string) => {
         continue;
       }
 
-      if (candidate.length === bestMatch.length && candidateText.length < getJoinedSpanText(bestMatch).length) {
+      if (
+        candidate.length === bestMatch.length &&
+        candidateText.length < getJoinedSpanText(bestMatch).length
+      ) {
         bestMatch = candidate;
       }
     }
@@ -112,7 +116,14 @@ const runRule = (
     if (rule.postFilter && !rule.postFilter(match[0])) {
       continue;
     }
-    const detection = matchToDetection(match, rule.type, rule.confidence, pageIndex, pageText, spans);
+    const detection = matchToDetection(
+      match,
+      rule.type,
+      rule.confidence,
+      pageIndex,
+      pageText,
+      spans,
+    );
     if (detection) {
       detections.push(detection);
     }

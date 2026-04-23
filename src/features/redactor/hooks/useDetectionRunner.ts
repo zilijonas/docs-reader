@@ -36,7 +36,10 @@ export function useDetectionRunner({
 
     try {
       const response = await clientRef.current.detect({ rules: { keywords } });
-      const persistedRuleDetections = preserveRuleStatuses(response.payload.items, existingRuleDetections);
+      const persistedRuleDetections = preserveRuleStatuses(
+        response.payload.items,
+        existingRuleDetections,
+      );
       setDetections(dedupeDetections([...persistedRuleDetections, ...existingNonRuleDetections]));
     } finally {
       setProgress(null);

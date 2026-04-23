@@ -1,9 +1,9 @@
-import { useEffect, useId, useState } from "react";
-import { createPortal } from "react-dom";
-import { CircleHelp, FileText, ListOrdered, Mail, Menu, Pencil, Shield, X } from "lucide-react";
+import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { CircleHelp, FileText, ListOrdered, Mail, Menu, Pencil, Shield, X } from 'lucide-react';
 
-import { IconButton } from "../../../components/ui";
-import type { LandingMobileLink } from "../data";
+import { IconButton } from '../../../components/ui';
+import type { LandingMobileLink } from '../data';
 
 type LandingMobileNavProps = {
   links: LandingMobileLink[];
@@ -29,18 +29,18 @@ export function LandingMobileNav({ links }: LandingMobileNavProps) {
     }
 
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setOpen(false);
       }
     };
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKey);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener('keydown', handleKey);
     };
   }, [open]);
 
@@ -50,29 +50,32 @@ export function LandingMobileNav({ links }: LandingMobileNavProps) {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Open navigation menu"
-        className="landing-mobile-nav-trigger"
+        className="border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted inline-flex size-10 items-center justify-center rounded-full border transition-colors duration-200 md:hidden"
         onClick={() => setOpen(true)}
         type="button"
       >
         <Menu size={18} strokeWidth={1.8} />
       </button>
 
-      {open && typeof document !== "undefined"
+      {open && typeof document !== 'undefined'
         ? createPortal(
             <div
               aria-labelledby={headingId}
               aria-modal="true"
-              className="landing-mobile-nav-overlay"
+              className="z-drawer-backdrop bg-content/45 fixed inset-0 px-4 py-6 backdrop-blur-sm md:hidden"
               onClick={() => setOpen(false)}
               role="dialog"
             >
               <aside
-                className="landing-mobile-nav-sidebar"
+                className="border-border bg-surface shadow-float ml-auto h-full w-full max-w-sm rounded-(--radius-panel) border p-5"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="landing-mobile-nav-shell">
-                  <div className="landing-mobile-nav-head">
-                    <h2 className="type-body-lg m-0 font-semibold text-content" id={headingId}>
+                <div className="grid h-full grid-rows-[auto_1fr] gap-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2
+                      className="text-content leading-reading text-lg font-semibold text-pretty"
+                      id={headingId}
+                    >
                       Menu
                     </h2>
                     <IconButton
@@ -80,23 +83,26 @@ export function LandingMobileNav({ links }: LandingMobileNavProps) {
                       onClick={() => setOpen(false)}
                       shape="pill"
                       size="md"
-                      tone="neutral"
+                      tone="surface"
                     >
                       <X size={16} strokeWidth={1.8} />
                     </IconButton>
                   </div>
 
-                  <nav aria-label="Mobile site navigation" className="grid gap-2">
+                  <nav aria-label="Mobile site navigation" className="grid content-start gap-2">
                     {links.map((link) => {
                       const Icon = linkIcons[link.icon];
                       return (
                         <a
-                          className="landing-mobile-nav-link"
+                          className="border-border bg-surface-muted text-content hover:border-border-strong hover:bg-surface flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors duration-200"
                           href={link.href}
                           key={link.href}
                           onClick={() => setOpen(false)}
                         >
-                          <span className="landing-mobile-nav-link-icon" aria-hidden="true">
+                          <span
+                            className="bg-canvas text-content-subtle inline-flex size-7 items-center justify-center rounded-full"
+                            aria-hidden="true"
+                          >
                             <Icon size={16} strokeWidth={1.8} />
                           </span>
                           <span>{link.label}</span>

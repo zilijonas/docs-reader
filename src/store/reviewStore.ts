@@ -11,7 +11,11 @@ import {
 } from './slices/redactions';
 import { createExportJobSlice, createInitialExportJob } from './slices/exportJob';
 import { clearRedoHistory, createHistorySlice, pushRedoHistory } from './slices/history';
-import { createPreviewAssetsSlice, releasePreviewUrls, updatePreviewRecord } from './slices/previewAssets';
+import {
+  createPreviewAssetsSlice,
+  releasePreviewUrls,
+  updatePreviewRecord,
+} from './slices/previewAssets';
 import type { ReviewStoreState } from './slices/types';
 
 export const useReviewStore = create<ReviewStoreState>((set) => ({
@@ -149,12 +153,13 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
             id: createId('manual'),
             pageIndex,
             box,
-          mode,
+            mode,
             snippet,
             note,
           }),
         ],
-      })),
+      }),
+    ),
   updateManualRedaction: (id, box) =>
     set((state) => {
       const normalizedBox = normalizeBox(box);
@@ -173,12 +178,18 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
   removeManualRedaction: (id) =>
     set((state) => {
       const manualRedactions = state.manualRedactions.filter((redaction) => redaction.id !== id);
-      return manualRedactions.length !== state.manualRedactions.length ? pushRedoHistory(state, { manualRedactions }) : state;
+      return manualRedactions.length !== state.manualRedactions.length
+        ? pushRedoHistory(state, { manualRedactions })
+        : state;
     }),
   clearPendingManualRedactions: () =>
     set((state) => {
-      const manualRedactions = state.manualRedactions.filter((redaction) => redaction.status !== 'unconfirmed');
-      return manualRedactions.length !== state.manualRedactions.length ? pushRedoHistory(state, { manualRedactions }) : state;
+      const manualRedactions = state.manualRedactions.filter(
+        (redaction) => redaction.status !== 'unconfirmed',
+      );
+      return manualRedactions.length !== state.manualRedactions.length
+        ? pushRedoHistory(state, { manualRedactions })
+        : state;
     }),
   setManualStatus: (id, status) =>
     set((state) => {
@@ -197,7 +208,9 @@ export const useReviewStore = create<ReviewStoreState>((set) => ({
   setCustomKeywords: (keywords) => set({ customKeywords: keywords }),
   clearManualPage: (pageIndex) =>
     set((state) => ({
-      manualRedactions: state.manualRedactions.filter((redaction) => redaction.pageIndex !== pageIndex),
+      manualRedactions: state.manualRedactions.filter(
+        (redaction) => redaction.pageIndex !== pageIndex,
+      ),
     })),
   setExportJob: (payload) => set({ exportJob: payload }),
   setPreviewState: (pageIndex, preview) =>

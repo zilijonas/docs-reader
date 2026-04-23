@@ -1,23 +1,30 @@
 ---
-import { limitsSection, limitStats } from "../data";
+import { limitsSection, limitStats } from '../data';
+
+const eyebrowClass =
+  'font-mono text-caption leading-4 tracking-eyebrow uppercase text-content-subtle';
 ---
 
-<section id="limits" class="landing-section-shell">
-  <div class="page-container section-space-tight pb-20">
-    <div class="landing-limits-row items-end">
+<section id="limits" class="border-border border-t">
+  <div class="layout-shell py-16 sm:pb-20">
+    <div class="grid gap-6 md:grid-cols-(--layout-grid-landing-limits) md:items-end">
       <div>
-        <div class="landing-eyebrow mb-2.5">{limitsSection.eyebrow}</div>
-        <h2 class="type-display-card measure-landing-limits">
+        <div class:list={[eyebrowClass, 'mb-2.5']}>{limitsSection.eyebrow}</div>
+        <h2 class="max-w-measure-landing-limits text-title-card tracking-tight-card">
           {limitsSection.title}
         </h2>
       </div>
-      <div class="landing-stats">
+      <div class="grid gap-3 sm:grid-cols-3">
         {
           limitStats.map((stat) => (
-            <div class="landing-card landing-stat-card">
-              <span class="type-stat-label">{stat.label}</span>
-              <span class="type-stat-value">{stat.value}</span>
-              <span class="type-stat-note">{stat.note}</span>
+            <div class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-4">
+              <span class="text-content-subtle text-badge tracking-label font-mono leading-4 uppercase">
+                {stat.label}
+              </span>
+              <span class="text-content tracking-tight-section mt-2 block text-xl font-medium">
+                {stat.value}
+              </span>
+              <span class="text-content-subtle text-note mt-1 block leading-4">{stat.note}</span>
             </div>
           ))
         }

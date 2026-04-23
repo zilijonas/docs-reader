@@ -12,7 +12,7 @@ export function PageButton({
   return (
     <button
       className={cn(
-        'ui-text-caption flex size-7 items-center justify-center rounded-control border font-mono transition-colors duration-200 ease-standard',
+        'rounded-control ease-standard text-caption flex size-7 items-center justify-center border font-mono transition-colors duration-200',
         active
           ? 'border-content bg-content text-canvas'
           : 'border-border bg-canvas text-content-muted hover:border-border-strong hover:bg-surface-muted',

@@ -53,8 +53,10 @@ export function Dialog({ children, className, labelledBy, onClose, open, size, t
       aria-labelledby={labelledBy}
       aria-modal="true"
       className={cn(
-        'app-modal-overlay fixed inset-0 flex justify-center bg-content/35 px-4 backdrop-blur-sm',
-        top ? 'z-modal-top items-start pt-[calc(env(safe-area-inset-top)+1rem)]' : 'z-modal items-center',
+        'bg-content/35 fixed inset-0 flex justify-center px-4 backdrop-blur-sm',
+        top
+          ? 'z-modal-top items-start pt-[calc(env(safe-area-inset-top)+1rem)]'
+          : 'z-modal items-center',
       )}
       onClick={(event) => {
         if (event.target === event.currentTarget) {

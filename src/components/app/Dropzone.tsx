@@ -40,7 +40,9 @@ function useSmoothProgress(progress: ProcessingProgress | null) {
     }
 
     setSmoothed((prev) =>
-      progress.progress < prev - NEW_SESSION_DROP ? progress.progress : Math.max(prev, progress.progress),
+      progress.progress < prev - NEW_SESSION_DROP
+        ? progress.progress
+        : Math.max(prev, progress.progress),
     );
   }, [progress]);
 
@@ -72,7 +74,14 @@ function useSmoothProgress(progress: ProcessingProgress | null) {
 }
 
 export function Dropzone() {
-  const { error, fileInputRef, handleDrop, handleFileChange, isProcessing = false, progress } = useWorkflowContext();
+  const {
+    error,
+    fileInputRef,
+    handleDrop,
+    handleFileChange,
+    isProcessing = false,
+    progress,
+  } = useWorkflowContext();
   const [isHovering, setIsHovering] = useState(false);
   const isBooting = progress?.phase === 'booting';
   const showLoader = isProcessing;
@@ -88,13 +97,16 @@ export function Dropzone() {
   };
 
   return (
-    <div className="dropzone-shell w-full">
-      <div className="dropzone-heading text-center">
-        <span className="type-eyebrow fade-in">{copy.dropzone.eyebrow}</span>
-        <h1 className="type-display-hero mt-4 fade-in fade-in-delay-1">
-          {copy.dropzone.headingLead} <span className="italic-accent">{copy.dropzone.headingAccent}</span>
+    <div className="max-w-dropzone mx-auto flex min-h-[540px] w-full flex-1 flex-col justify-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
+      <div className="flex flex-col items-center text-center">
+        <span className="text-content-subtle fade-in text-caption tracking-eyebrow font-mono leading-4 uppercase">
+          {copy.dropzone.eyebrow}
+        </span>
+        <h1 className="fade-in fade-in-delay-1 text-display-dropzone tracking-tight-hero mt-4 text-balance">
+          {copy.dropzone.headingLead}{' '}
+          <span className="font-serif italic">{copy.dropzone.headingAccent}</span>
         </h1>
-        <p className="type-body measure-copy mx-auto mt-3 fade-in fade-in-delay-2">
+        <p className="text-content-muted fade-in fade-in-delay-2 max-w-measure-copy text-body-md leading-copy-relaxed mx-auto mt-3">
           {copy.dropzone.hint}
         </p>
       </div>
@@ -102,27 +114,34 @@ export function Dropzone() {
       {showLoader ? (
         <Panel
           as="section"
-          className="dropzone-panel border-dashed bg-surface-muted shadow-none anim-float-in"
+          className="anim-float-in bg-surface-muted flex min-h-[280px] flex-col border-dashed shadow-none sm:min-h-[320px] md:min-h-[440px]"
           padding="none"
         >
-          <div className="dropzone-loader flex flex-col items-center justify-center gap-4 text-center">
-            <CircularProgress className="text-content" size={56} strokeWidth={3} value={progressValue} />
-            <div className="type-display-card">{copy.dropzone.processing}</div>
-            <ProgressBar className="measure-progress w-full" value={progressValue} />
-            <p className="type-body-sm measure-progress mx-auto">{progressMessage}</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center sm:px-10 sm:py-14">
+            <CircularProgress
+              className="text-content"
+              size={56}
+              strokeWidth={3}
+              value={progressValue}
+            />
+            <div className="text-title-card tracking-tight-card">{copy.dropzone.processing}</div>
+            <ProgressBar className="max-w-measure-progress w-full" value={progressValue} />
+            <p className="text-content-muted max-w-measure-progress leading-copy mx-auto text-sm">
+              {progressMessage}
+            </p>
           </div>
         </Panel>
       ) : (
         <Panel
           as="section"
           className={cn(
-            'dropzone-panel border-dashed bg-surface-muted shadow-none transition-colors duration-200 ease-standard anim-float-in',
+            'ease-standard anim-float-in bg-surface-muted flex min-h-[280px] flex-col border-dashed shadow-none transition-colors duration-200 sm:min-h-[320px] md:min-h-[440px]',
             isHovering && 'border-content bg-surface',
           )}
           padding="none"
         >
           <div
-            className="dropzone-label block cursor-pointer text-center transition-colors duration-200 ease-standard"
+            className="ease-standard block flex flex-1 cursor-pointer flex-col items-center justify-center px-6 py-8 text-center transition-colors duration-200 sm:px-10 sm:py-14"
             onDragLeave={() => setIsHovering(false)}
             onDragOver={(event) => {
               event.preventDefault();
@@ -156,17 +175,17 @@ export function Dropzone() {
 
             <div
               className={cn(
-                'dropzone-icon mx-auto flex items-center justify-center rounded-full border border-border-strong text-content transition-transform duration-200 ease-standard',
+                'border-border-strong text-content ease-standard mx-auto mb-4 flex size-16 items-center justify-center rounded-full border transition-transform duration-200 sm:mb-6 sm:size-20',
                 isHovering ? '-translate-y-1' : 'translate-y-0',
               )}
             >
               <Upload size={28} strokeWidth={1.25} />
             </div>
 
-            <div className="type-display-card dropzone-title">
+            <div className="text-display-dropzone-compact tracking-tight-card">
               {isHovering ? copy.dropzone.release : copy.dropzone.drop}
             </div>
-            <div className="dropzone-subtitle text-sm text-content-subtle">{copy.dropzone.browse}</div>
+            <div className="text-content-subtle mb-4 text-sm sm:mb-8">{copy.dropzone.browse}</div>
 
             <Button
               onClick={(event) => {
@@ -184,25 +203,33 @@ export function Dropzone() {
       )}
 
       {error ? (
-        <Alert className="measure-feedback mx-auto mt-4 text-center" tone="danger">
+        <Alert className="max-w-measure-feedback mx-auto mt-4 text-center" tone="danger">
           {error}
         </Alert>
       ) : null}
 
-      <div className="dropzone-hints flex flex-wrap justify-center gap-5">
-        {isBooting ? (
-          <div className="ui-text-control flex items-center gap-2 text-content-subtle">
-            <span className="dropzone-boot-dot" aria-hidden="true" />
+      <div className="relative flex min-h-14 flex-wrap justify-center gap-5">
+        {isBooting && (
+          <div className="text-content-subtle text-control absolute top-0 flex items-center">
+            <span
+              aria-hidden="true"
+              className="bg-content-subtle mr-2 size-2 animate-[pulseScale_1400ms_ease-in-out_infinite] rounded-full"
+            />
             {progress?.message ?? copy.dropzone.warmingEngine}
+            <span className="min-w-3">
+              <span aria-hidden="true" className="loading-dots" />
+            </span>
           </div>
-        ) : (
-          UPLOAD_HINTS.map((hint) => (
-            <div key={hint.id} className="ui-text-control flex items-center gap-2 text-content-subtle">
-              {hint.icon()}
-              {hint.label}
-            </div>
-          ))
         )}
+        {UPLOAD_HINTS.map((hint) => (
+          <div
+            key={hint.id}
+            className={`text-content-subtle text-control flex items-center gap-2 ${isBooting ? 'opacity-0' : ''}`}
+          >
+            {hint.icon()}
+            {hint.label}
+          </div>
+        ))}
       </div>
     </div>
   );

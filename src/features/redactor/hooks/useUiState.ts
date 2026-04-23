@@ -131,7 +131,12 @@ const workflowUiReducer = (state: WorkflowUiState, action: WorkflowUiAction): Wo
       if (state.isMobileViewport === action.value) {
         return state;
       }
-      return { ...state, isMobileViewport: action.value };
+      return {
+        ...state,
+        isMobileViewport: action.value,
+        // Never keep drawer-overlay state across viewport mode changes.
+        isSidebarOpen: false,
+      };
     case 'set-ocr-language-modal-open':
       if (state.isOcrLanguageModalOpen === action.value) {
         return state;
@@ -158,10 +163,17 @@ const workflowUiReducer = (state: WorkflowUiState, action: WorkflowUiAction): Wo
       }
       return { ...state, zoom: action.value };
     case 'toggle-review-panel':
+      if (state.isMobileViewport) {
+        return {
+          ...state,
+          isSidebarOpen: !state.isSidebarOpen,
+        };
+      }
+
       return {
         ...state,
         isDesktopSidebarOpen: !state.isDesktopSidebarOpen,
-        isSidebarOpen: !state.isSidebarOpen,
+        isSidebarOpen: false,
       };
     default:
       return state;
@@ -182,13 +194,17 @@ export function useUiState() {
       openResetConfirmModal: () => dispatch({ type: 'open-reset-confirm-modal' }),
       resetWorkflowUi: () => dispatch({ type: 'reset-workflow-ui' }),
       setAppHeaderHeight: (value: number) => dispatch({ type: 'set-app-header-height', value }),
-      setDesktopSidebarOpen: (value: boolean) => dispatch({ type: 'set-desktop-sidebar-open', value }),
+      setDesktopSidebarOpen: (value: boolean) =>
+        dispatch({ type: 'set-desktop-sidebar-open', value }),
       setKeywordDraft: (value: string) => dispatch({ type: 'set-keyword-draft', value }),
       setMobileViewport: (value: boolean) => dispatch({ type: 'set-mobile-viewport', value }),
-      setOcrLanguageModalOpen: (value: boolean) => dispatch({ type: 'set-ocr-language-modal-open', value }),
+      setOcrLanguageModalOpen: (value: boolean) =>
+        dispatch({ type: 'set-ocr-language-modal-open', value }),
       setReviewPanelOpen: (value: boolean) => dispatch({ type: 'set-review-panel-open', value }),
-      setSelectedOcrLanguages: (value: string[]) => dispatch({ type: 'set-selected-ocr-languages', value }),
-      setViewerContentWidth: (value: number) => dispatch({ type: 'set-viewer-content-width', value }),
+      setSelectedOcrLanguages: (value: string[]) =>
+        dispatch({ type: 'set-selected-ocr-languages', value }),
+      setViewerContentWidth: (value: number) =>
+        dispatch({ type: 'set-viewer-content-width', value }),
       setZoom: (value: number) => dispatch({ type: 'set-zoom', value }),
       toggleReviewPanel: () => dispatch({ type: 'toggle-review-panel' }),
     }),

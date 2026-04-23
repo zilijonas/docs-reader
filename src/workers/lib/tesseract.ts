@@ -9,12 +9,17 @@ import { state, toOwnedArrayBuffer, updateProgress, pushWarning } from './state'
 
 const normalizeLanguages = (languages: string[] | undefined) => {
   const cleaned = Array.from(
-    new Set((languages?.length ? languages : DEFAULT_OCR_LANGUAGES).map((lang) => lang.trim()).filter(Boolean)),
+    new Set(
+      (languages?.length ? languages : DEFAULT_OCR_LANGUAGES)
+        .map((lang) => lang.trim())
+        .filter(Boolean),
+    ),
   );
   return cleaned.length ? cleaned : [...DEFAULT_OCR_LANGUAGES];
 };
 
-const bytesToBlob = (bytes: Uint8Array, mimeType: string) => new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
+const bytesToBlob = (bytes: Uint8Array, mimeType: string) =>
+  new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
 
 export const ensureTesseractWorker = async (languages: string[] | undefined, requestId: number) => {
   const langs = normalizeLanguages(languages);
@@ -44,7 +49,8 @@ export const ensureTesseractWorker = async (languages: string[] | undefined, req
       updateProgress(requestId, {
         phase: 'ocr',
         progress: 0.55 + (message.progress ?? 0) * 0.15,
-        message: langs.length > 1 ? `Reading text from scans (${langKey})…` : 'Reading text from scans…',
+        message:
+          langs.length > 1 ? `Reading text from scans (${langKey})…` : 'Reading text from scans…',
       });
     },
   });
@@ -53,7 +59,11 @@ export const ensureTesseractWorker = async (languages: string[] | undefined, req
   return state.tesseractWorker;
 };
 
-export const runPageOcr = async (page: PageAsset, languages: string[] | undefined, requestId: number) => {
+export const runPageOcr = async (
+  page: PageAsset,
+  languages: string[] | undefined,
+  requestId: number,
+) => {
   const tesseractWorker = await ensureTesseractWorker(languages, requestId);
   const imageBytes = await runPythonBytes('render_page_png(page_index_js, scale_js)', {
     page_index_js: page.pageIndex,
@@ -111,7 +121,10 @@ export const applyOcrLayer = (page: PageAsset, ocrLayer: { text: string; spans: 
         }
       : candidate,
   );
-  state.spans = [...state.spans.filter((span) => span.pageIndex !== page.pageIndex), ...ocrLayer.spans];
+  state.spans = [
+    ...state.spans.filter((span) => span.pageIndex !== page.pageIndex),
+    ...ocrLayer.spans,
+  ];
 };
 
 export const runQueuedOcr = async (languages: string[], requestId: number) => {

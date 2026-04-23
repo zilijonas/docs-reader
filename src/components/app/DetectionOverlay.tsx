@@ -8,7 +8,9 @@ import { compareBoxesForFocusOrder, getBoxPriority, getBoxStyle } from './pdf-vi
 const HIGHLIGHT_FOCUS_SELECTOR = '[data-highlight-focus="true"]';
 
 const moveHighlightFocus = (current: HTMLButtonElement, direction: -1 | 1) => {
-  const highlights = Array.from(document.querySelectorAll<HTMLButtonElement>(HIGHLIGHT_FOCUS_SELECTOR));
+  const highlights = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(HIGHLIGHT_FOCUS_SELECTOR),
+  );
   const currentIndex = highlights.indexOf(current);
 
   if (currentIndex === -1) {
@@ -40,9 +42,7 @@ const handleHighlightKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) =>
     return;
   }
 
-  if (
-    moveHighlightFocus(event.currentTarget, event.shiftKey ? -1 : 1)
-  ) {
+  if (moveHighlightFocus(event.currentTarget, event.shiftKey ? -1 : 1)) {
     event.preventDefault();
   }
 };
@@ -65,10 +65,10 @@ export function DetectionOverlay({
         <button
           aria-label={`${detection.status === 'confirmed' ? 'Unconfirm' : 'Confirm'} ${detection.snippet}`}
           className={cn(
-            'pdf-box pdf-detection pointer-events-auto relative rounded-detection border anim-draw-in transition',
+            'rounded-detection anim-draw-in pointer-events-auto absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) border transition',
             detection.status === 'confirmed'
               ? 'border-success bg-success/[0.18]'
-              : 'border-detection-ring bg-detection/[0.18] ring-1 ring-detection-ring',
+              : 'border-detection-ring bg-detection/[0.18] ring-detection-ring ring-1',
           )}
           data-highlight-focus="true"
           key={detection.id}
@@ -79,7 +79,10 @@ export function DetectionOverlay({
           onKeyDown={handleHighlightKeyDown}
           id={getReviewItemAnchorId(detection.id)}
           style={getBoxStyle(detection.box, {
-            '--review-highlight-border': detection.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-detection-ring)',
+            '--review-highlight-border':
+              detection.status === 'confirmed'
+                ? 'var(--color-success)'
+                : 'var(--color-detection-ring)',
             '--review-highlight-fill':
               detection.status === 'confirmed' ? 'rgb(16 185 129 / 0.18)' : 'rgb(217 119 6 / 0.18)',
             zIndex: getBoxPriority(detection.box),

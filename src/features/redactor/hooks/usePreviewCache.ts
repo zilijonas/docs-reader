@@ -22,7 +22,9 @@ export function usePreviewCache({
 
     try {
       const response = await clientRef.current.getPagePreview({ pageIndex });
-      const previewUrl = URL.createObjectURL(new Blob([response.payload.bytes], { type: response.payload.mimeType }));
+      const previewUrl = URL.createObjectURL(
+        new Blob([response.payload.bytes], { type: response.payload.mimeType }),
+      );
 
       if (existingPreview?.url) {
         URL.revokeObjectURL(existingPreview.url);

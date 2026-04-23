@@ -6,7 +6,8 @@ import { writeAnalyticsConsent } from '../features/consent/cookie';
 import { useConsentStore } from './consentStore';
 
 const clearConsentCookie = () => {
-  document.cookie = 'hddn_analytics_consent=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax';
+  document.cookie =
+    'hddn_analytics_consent=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax';
 };
 
 describe('consentStore', () => {

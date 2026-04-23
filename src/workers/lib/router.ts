@@ -4,7 +4,16 @@ import { planOcrLanguageFlow } from '../../lib/ocr-language-inference';
 import type { ContinueOcrRequest, LoadPdfRequest, WorkerRequest } from '../../types';
 import { exportFlattenedPdf } from './export-renderer';
 import { ensurePyodide, runPythonBytes, runPythonJson } from './pyodide';
-import { postMessageSafe, pushWarning, resetDocumentState, state, toOwnedArrayBuffer, updateProgress, hashBuffer, filterExportBoxes } from './state';
+import {
+  postMessageSafe,
+  pushWarning,
+  resetDocumentState,
+  state,
+  toOwnedArrayBuffer,
+  updateProgress,
+  hashBuffer,
+  filterExportBoxes,
+} from './state';
 import { runQueuedOcr } from './tesseract';
 
 type HandlerMap = {
@@ -65,7 +74,11 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
     message: 'Opening document…',
   });
 
-  const summary = await runPythonJson<{ pageCount: number; pages: typeof state.pages; spans: typeof state.spans }>(
+  const summary = await runPythonJson<{
+    pageCount: number;
+    pages: typeof state.pages;
+    spans: typeof state.spans;
+  }>(
     `load_document_from_bytes(
       bytes(document_bytes_js),
       preview_scale_js,
@@ -96,7 +109,8 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
   state.warnings = [];
 
   const ocrPlan = planOcrLanguageFlow(state.pages);
-  state.ocrLanguages = ocrPlan.resolvedLanguages.length > 0 ? ocrPlan.resolvedLanguages : [...DEFAULT_OCR_LANGUAGES];
+  state.ocrLanguages =
+    ocrPlan.resolvedLanguages.length > 0 ? ocrPlan.resolvedLanguages : [...DEFAULT_OCR_LANGUAGES];
 
   if (ocrPlan.needsLanguageSelection) {
     postPdfLoaded(message.requestId, {
@@ -168,7 +182,9 @@ const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>)
   });
 };
 
-const handleGetPagePreview = async (message: Extract<WorkerRequest, { type: 'GET_PAGE_PREVIEW' }>) => {
+const handleGetPagePreview = async (
+  message: Extract<WorkerRequest, { type: 'GET_PAGE_PREVIEW' }>,
+) => {
   const bytes = await runPythonBytes('render_page_png(page_index_js, scale_js)', {
     page_index_js: message.payload.pageIndex,
     scale_js: message.payload.scale ?? APP_LIMITS.previewScale,
@@ -185,7 +201,9 @@ const handleGetPagePreview = async (message: Extract<WorkerRequest, { type: 'GET
   });
 };
 
-const handleApplyRedactions = async (message: Extract<WorkerRequest, { type: 'APPLY_REDACTIONS' }>) => {
+const handleApplyRedactions = async (
+  message: Extract<WorkerRequest, { type: 'APPLY_REDACTIONS' }>,
+) => {
   const payload = message.payload.redactions;
   const boxes = filterExportBoxes(payload.detections, payload.manualRedactions);
 
@@ -217,7 +235,10 @@ const handleApplyRedactions = async (message: Extract<WorkerRequest, { type: 'AP
     });
   } catch (error) {
     if (payload.mode === 'true-redaction') {
-      pushWarning(message.requestId, 'Secure export failed. You can retry with the flattened fallback export.');
+      pushWarning(
+        message.requestId,
+        'Secure export failed. You can retry with the flattened fallback export.',
+      );
     }
     throw error;
   }

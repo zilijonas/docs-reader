@@ -20,20 +20,24 @@ export function OcrLanguageDialog() {
     <Dialog open={isOcrLanguageModalOpen} size="lg" top>
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <div className="type-data flex items-center gap-1.5 text-content">
+          <div className="text-content-subtle text-content text-badge tracking-label flex items-center gap-1.5 font-mono leading-4 uppercase">
             <Languages size={14} strokeWidth={1.6} />
             {copy.ocr.eyebrow}
           </div>
-          <h2 className="type-body-lg font-semibold text-content">{copy.ocr.heading}</h2>
-          <p className="text-sm leading-6 text-content-muted">{copy.ocr.body}</p>
+          <h2 className="text-content-muted text-content leading-reading text-lg font-semibold text-pretty">
+            {copy.ocr.heading}
+          </h2>
+          <p className="text-content-muted text-sm leading-6">{copy.ocr.body}</p>
         </div>
 
         <OcrLanguagePicker
-          onChange={(next) => setSelectedOcrLanguages(next.length > 0 ? next : [...DEFAULT_OCR_LANGUAGES])}
+          onChange={(next) =>
+            setSelectedOcrLanguages(next.length > 0 ? next : [...DEFAULT_OCR_LANGUAGES])
+          }
           selected={selectedOcrLanguages}
         />
 
-        <p className="ui-text-note italic text-content-subtle">{copy.ocr.note}</p>
+        <p className="text-content-subtle text-note italic">{copy.ocr.note}</p>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button

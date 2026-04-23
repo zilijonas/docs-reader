@@ -1,16 +1,16 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import LandingBrowserExplainerSection from "../features/landing/components/LandingBrowserExplainerSection.astro";
-import LandingExampleSection from "../features/landing/components/LandingExampleSection.astro";
-import LandingFooterCta from "../features/landing/components/LandingFooterCta.astro";
-import LandingHeader from "../features/landing/components/LandingHeader.astro";
-import LandingHero from "../features/landing/components/LandingHero.astro";
-import LandingHowSection from "../features/landing/components/LandingHowSection.astro";
-import LandingLimitsSection from "../features/landing/components/LandingLimitsSection.astro";
-import LandingPrivacySection from "../features/landing/components/LandingPrivacySection.astro";
-import LandingUseCasesSection from "../features/landing/components/LandingUseCasesSection.astro";
-import LandingWhySection from "../features/landing/components/LandingWhySection.astro";
-import { SEO } from "../lib/seo";
+import Layout from '../layouts/Layout.astro';
+import LandingBrowserExplainerSection from '../features/landing/components/LandingBrowserExplainerSection.astro';
+import LandingExampleSection from '../features/landing/components/LandingExampleSection.astro';
+import LandingFooterCta from '../features/landing/components/LandingFooterCta.astro';
+import LandingHeader from '../features/landing/components/LandingHeader.astro';
+import LandingHero from '../features/landing/components/LandingHero.astro';
+import LandingHowSection from '../features/landing/components/LandingHowSection.astro';
+import LandingLimitsSection from '../features/landing/components/LandingLimitsSection.astro';
+import LandingPrivacySection from '../features/landing/components/LandingPrivacySection.astro';
+import LandingUseCasesSection from '../features/landing/components/LandingUseCasesSection.astro';
+import LandingWhySection from '../features/landing/components/LandingWhySection.astro';
+import { SEO } from '../lib/seo';
 
 const baseUrl = import.meta.env.BASE_URL;
 const appUrl = `${baseUrl}redact`;
@@ -18,7 +18,7 @@ const howItWorksUrl = `${baseUrl}how-it-works`;
 ---
 
 <Layout seo={SEO.home}>
-  <div class="landing-page">
+  <div class="min-h-screen min-h-svh">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
     <LandingHero appUrl={appUrl} howItWorksUrl={howItWorksUrl} />
     <LandingHowSection />

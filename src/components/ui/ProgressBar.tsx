@@ -15,12 +15,12 @@ export function ProgressBar({
 
   return (
     <div
-      className={cn('h-0.5 overflow-hidden rounded-full bg-border', className)}
+      className={cn('bg-border h-0.5 overflow-hidden rounded-full', className)}
       style={{ '--progress-value': `${clamped * 100}%` } as CSSProperties}
     >
       <div
         className={cn(
-          'h-full w-[var(--progress-value)] bg-content transition-[width] duration-500 ease-standard',
+          'bg-content ease-standard h-full w-(--progress-value) transition-[width] duration-500',
           indicatorClassName,
         )}
       />

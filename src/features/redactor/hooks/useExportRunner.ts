@@ -1,6 +1,11 @@
 import type { MutableRefObject } from 'react';
 
-import type { ExportMode, ManualRedaction, ProcessingProgress, SourceDocument } from '../../../types';
+import type {
+  ExportMode,
+  ManualRedaction,
+  ProcessingProgress,
+  SourceDocument,
+} from '../../../types';
 import type { Detection, ExportJob } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 import { PRIMARY_EXPORT_MODE, EXPORT_MODE_META } from '../config';
@@ -19,18 +24,19 @@ const triggerAnchorDownload = (blob: Blob, fileName: string) => {
 };
 
 const writeBlobToFile = async (blob: Blob, fileName: string) => {
-  const windowWithSavePicker = window as Window & typeof globalThis & {
-    showSaveFilePicker?: (options?: {
-      suggestedName?: string;
-      types?: Array<{ description?: string; accept: Record<string, string[]> }>;
-    }) => Promise<{
-      createWritable: () => Promise<{
-        write: (data: Blob | BufferSource) => Promise<void>;
-        close: () => Promise<void>;
+  const windowWithSavePicker = window as Window &
+    typeof globalThis & {
+      showSaveFilePicker?: (options?: {
+        suggestedName?: string;
+        types?: Array<{ description?: string; accept: Record<string, string[]> }>;
+      }) => Promise<{
+        createWritable: () => Promise<{
+          write: (data: Blob | BufferSource) => Promise<void>;
+          close: () => Promise<void>;
+        }>;
+        getFile?: () => Promise<File>;
       }>;
-      getFile?: () => Promise<File>;
-    }>;
-  };
+    };
 
   if (windowWithSavePicker.showSaveFilePicker) {
     try {
@@ -46,7 +52,9 @@ const writeBlobToFile = async (blob: Blob, fileName: string) => {
       if (handle.getFile) {
         const writtenFile = await handle.getFile();
         if (writtenFile.size !== blob.size) {
-          throw new Error(`Saved file size mismatch: expected ${blob.size} bytes, got ${writtenFile.size}.`);
+          throw new Error(
+            `Saved file size mismatch: expected ${blob.size} bytes, got ${writtenFile.size}.`,
+          );
         }
       }
 
@@ -99,12 +107,16 @@ export function useExportRunner({
 
     const exportDetections = options?.confirmAllUnconfirmed
       ? detections.map((detection) =>
-          detection.status === 'unconfirmed' ? { ...detection, status: 'confirmed' as const } : detection,
+          detection.status === 'unconfirmed'
+            ? { ...detection, status: 'confirmed' as const }
+            : detection,
         )
       : detections;
     const exportManualRedactions = options?.confirmAllUnconfirmed
       ? manualRedactions.map((redaction) =>
-          redaction.status === 'unconfirmed' ? { ...redaction, status: 'confirmed' as const } : redaction,
+          redaction.status === 'unconfirmed'
+            ? { ...redaction, status: 'confirmed' as const }
+            : redaction,
         )
       : manualRedactions;
 

@@ -26,7 +26,7 @@ export function DetectionRow({
   const isConfirmed = item.status === 'confirmed';
 
   return (
-    <div className="flex items-stretch transition-[background-color] duration-200 ease-standard">
+    <div className="ease-standard flex items-stretch transition-[background-color] duration-200">
       <div className="flex flex-1 flex-col gap-1 px-5 py-2.5 text-left">
         <button
           className="flex items-center gap-2 bg-transparent text-left"
@@ -35,23 +35,21 @@ export function DetectionRow({
         >
           <span
             className={cn(
-              'measure-review-snippet overflow-hidden text-ellipsis whitespace-nowrap text-content',
-              item.manual ? 'ui-text-field italic' : 'ui-text-control font-mono',
+              'text-content max-w-measure-review-snippet overflow-hidden text-ellipsis whitespace-nowrap',
+              item.manual ? 'text-field italic' : 'text-control font-mono',
             )}
           >
             {item.snippet}
           </span>
         </button>
 
-        <div className="ui-text-label flex items-center gap-2.5 font-mono text-content-subtle">
+        <div className="text-content-subtle text-badge flex items-center gap-2.5 font-mono">
           <RowStatusIcon status={item.status} />
           <span>p.{item.pageIndex + 1}</span>
-          {!item.manual ? (
-            <span>{Math.round(item.confidence * 100)}%</span>
-          ) : null}
+          {!item.manual ? <span>{Math.round(item.confidence * 100)}%</span> : null}
           {onConfirmAll && onConfirmAllLabel ? (
             <button
-              className="cursor-pointer text-content-muted underline transition-colors duration-200 ease-standard hover:text-content"
+              className="text-content-muted ease-standard hover:text-content cursor-pointer underline transition-colors duration-200"
               onClick={onConfirmAll}
               type="button"
             >
@@ -61,13 +59,17 @@ export function DetectionRow({
         </div>
       </div>
 
-      <div className="flex items-center gap-0.5 mr-5">
+      <div className="mr-5 flex items-center gap-0.5">
         <StatusActionButton
           onClick={isConfirmed ? onUnconfirm : onConfirm}
           size="lg"
           title={isConfirmed ? copy.sidebar.unconfirmTooltip : copy.sidebar.confirmTooltip}
         >
-          {isConfirmed ? <XIcon size={14} strokeWidth={2} className="text-danger/70" /> : <Check size={14} strokeWidth={2} className="text-success" />}
+          {isConfirmed ? (
+            <XIcon size={14} strokeWidth={2} className="text-danger/70" />
+          ) : (
+            <Check size={14} strokeWidth={2} className="text-success" />
+          )}
         </StatusActionButton>
         {onDelete ? (
           <StatusActionButton onClick={onDelete} title={copy.sidebar.removeTooltip}>

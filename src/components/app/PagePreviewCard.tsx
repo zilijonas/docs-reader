@@ -18,10 +18,11 @@ import { PageHeader } from './PageHeader';
 import { PagePreviewState } from './PagePreviewState';
 import { getBoxStyle } from './pdf-viewer-utils';
 
-const getPageSurfaceStyle = (pageDisplayHeight: number, pageDisplayWidth: number): CSSProperties => ({
-  '--page-display-height': `${pageDisplayHeight}px`,
-  '--page-display-width': `${pageDisplayWidth}px`,
-} as CSSProperties);
+const getPageSurfaceStyle = (pageDisplayHeight: number, pageDisplayWidth: number): CSSProperties =>
+  ({
+    '--page-display-height': `${pageDisplayHeight}px`,
+    '--page-display-width': `${pageDisplayWidth}px`,
+  }) as CSSProperties;
 
 export function PagePreviewCard({
   id,
@@ -105,10 +106,15 @@ export function PagePreviewCard({
     detections.filter((detection) => detection.status === 'unconfirmed').length +
     manualRedactions.filter((manualRedaction) => manualRedaction.status === 'unconfirmed').length;
   const isDrawMode = toolMode === 'draw';
-  const isMobileTouchToolActive = isMobileViewport && (toolMode === 'select' || toolMode === 'draw');
+  const isMobileTouchToolActive =
+    isMobileViewport && (toolMode === 'select' || toolMode === 'draw');
 
   return (
-    <div className="page-preview-card flex flex-col items-center" id={id} onClick={onActivate}>
+    <div
+      className="mx-auto flex w-fit max-w-full flex-col items-center"
+      id={id}
+      onClick={onActivate}
+    >
       <PageHeader
         active={active}
         headerWidth={pageBaseWidth}
@@ -121,7 +127,7 @@ export function PagePreviewCard({
       <div
         ref={pageRef}
         className={cn(
-          'viewer-page-surface relative inline-block w-[var(--page-display-width)] overflow-hidden',
+          'border-page-border bg-page relative inline-block w-(--page-display-width) overflow-hidden border shadow-[0_1px_0_var(--theme-page-border),0_16px_40px_-24px_rgba(20,16,10,0.18)]',
           isMobileTouchToolActive && 'touch-none',
           isDrawMode
             ? 'cursor-crosshair'
@@ -142,11 +148,14 @@ export function PagePreviewCard({
 
         <div
           ref={textLayerRef}
-          className={cn('selection-text-layer absolute inset-0', isDrawMode && 'pointer-events-none select-none')}
+          className={cn(
+            'selection-text-layer absolute inset-0',
+            isDrawMode && 'pointer-events-none select-none',
+          )}
         >
           {spans.map((span) => (
             <span
-              className="pdf-box pdf-text-span"
+              className="absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) [font-size:max(10px,calc(var(--page-display-height)*var(--box-height-ratio)))] [line-height:max(10px,calc(var(--page-display-height)*var(--box-height-ratio)))]"
               key={span.id}
               style={getBoxStyle(span.box, { '--box-height-ratio': span.box.height })}
             >

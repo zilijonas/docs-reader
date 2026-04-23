@@ -62,7 +62,8 @@ export function ZoomLayer({
 
   return (
     <div
-      className="zoom-outer"
+      className="mx-auto w-fit"
+      data-zoom-outer="true"
       style={{
         height: outerHeight,
         width: outerWidth,
@@ -70,7 +71,7 @@ export function ZoomLayer({
     >
       <div
         {...innerProps}
-        className={cn('zoom-inner', innerProps?.className)}
+        className={cn('w-fit origin-top-left will-change-transform', innerProps?.className)}
         ref={innerRef}
         style={{
           ...innerProps?.style,
