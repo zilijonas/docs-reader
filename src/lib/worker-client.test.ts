@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RedactorWorkerClient, extractTransferables } from './worker-client';
@@ -97,8 +94,7 @@ describe('RedactorWorkerClient', () => {
   });
 
   it('posts fixture bytes as transferable payloads for LOAD_PDF', async () => {
-    const fixturePath = path.join(process.cwd(), 'testing', 'searchable-text.pdf');
-    const fixture = fs.readFileSync(fixturePath);
+    const fixture = new Uint8Array([37, 80, 68, 70, 45, 49, 46, 55]);
     const client = new RedactorWorkerClient();
 
     await client.loadPdf({
