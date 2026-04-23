@@ -50,10 +50,10 @@ export const landingHero = {
   headlineAccent: 'PDF.',
   headlineTrail: 'Privately.',
   subtext:
-    'Find and remove sensitive data, review every redaction, and export a permanently redacted PDF - all in your browser. Your file never leaves your device.',
+    'Find and remove sensitive data, review every redaction, and export a permanently redacted PDF - all in your browser. Your file never leaves your device, and the tool is completely free.',
   primaryCta: 'Redact your PDF',
   secondaryCta: 'See how it works',
-  quickPoints: ['Local PDF redaction', 'No file uploads', 'Review before export'],
+  quickPoints: ['Completely free', 'No file uploads', 'Review before export'],
 } as const;
 
 export const heroTrustBadges = [
@@ -64,20 +64,20 @@ export const heroTrustBadges = [
     icon: 'cloudOff',
   },
   {
-    label: 'Runs on your device',
-    mobileLabel: 'Local',
-    note: 'PDF stays on your device.',
-    icon: 'monitor',
+    label: 'Free to use',
+    mobileLabel: 'Free',
+    note: 'No signup required.',
+    icon: 'tag',
   },
   {
     label: 'Review before export',
-    mobileLabel: 'Review',
+    mobileLabel: 'Review step',
     note: 'Approve every redaction.',
     icon: 'eye',
   },
   {
     label: 'Permanent redaction',
-    mobileLabel: 'Irreversible',
+    mobileLabel: 'Secure',
     note: 'Export removes selected data.',
     icon: 'file-lock',
   },

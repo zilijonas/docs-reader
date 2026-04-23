@@ -28,7 +28,7 @@ export const HOME_WEBSITE_STRUCTURED_DATA: StructuredData = {
 
 export const SEO = {
   home: {
-    title: 'PDF Redactor Online | Redact PDFs Locally | hddn',
+    title: 'Free PDF Redactor Online | Redact PDFs Locally | hddn',
     description:
       'Redact PDF files locally in your browser. Find sensitive information, review every redaction, and export a permanently redacted PDF without uploading your document.',
     canonicalPath: '/',
@@ -71,7 +71,7 @@ export const SEO = {
     canonicalPath: '/terms/',
   },
   redact: {
-    title: 'Redact PDF Online | Local Browser Tool | hddn',
+    title: 'Free PDF Redactor Online | Local Browser Tool | hddn',
     description:
       'Open a PDF, review sensitive content, and export a redacted copy locally in your browser.',
     robots: 'noindex, follow',
