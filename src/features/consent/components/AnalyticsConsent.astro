@@ -1,0 +1,188 @@
+---
+import { copy } from '../../../lib/copy';
+import {
+  ANALYTICS_CONSENT_COOKIE_NAME,
+  ANALYTICS_CONSENT_COOKIE_VERSION,
+  ANALYTICS_CONSENT_MAX_AGE_DAYS,
+} from '../cookie';
+
+interface Props {
+  enabled: boolean;
+  measurementId: string;
+}
+
+const { enabled, measurementId } = Astro.props;
+---
+
+{
+  enabled ? (
+    <>
+      <div
+        class="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+        data-analytics-consent
+        hidden
+        role="region"
+        aria-label={copy.consent.regionLabel}
+      >
+        <div class="anim-float-in pointer-events-auto mx-auto grid w-full max-w-5xl gap-4 rounded-(--radius-panel) border border-[color:color-mix(in_oklab,var(--theme-border-strong)_78%,white)] bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--theme-brand-soft)_72%,white)_0%,transparent_48%),color-mix(in_oklab,var(--theme-surface)_92%,var(--theme-canvas))] p-6 shadow-(--theme-shadow-float) md:grid-cols-(--layout-grid-landing-footer) md:items-end">
+          <div class="grid min-w-0 gap-3.5">
+            <div class="text-content text-note inline-flex w-fit items-center gap-2 rounded-full border border-[color:color-mix(in_oklab,var(--theme-border)_92%,white)] bg-[color:color-mix(in_oklab,var(--theme-surface)_85%,var(--theme-canvas))] px-3 py-1.5 font-mono leading-4 tracking-(--tracking-ui-wide) uppercase">
+              <span class="bg-success inline-flex size-2 rounded-full" aria-hidden="true"></span>
+              {copy.consent.eyebrow}
+            </div>
+
+            <div class="grid max-w-2xl gap-2">
+              <h2 class="text-content leading-reading text-lg font-semibold text-pretty">
+                {copy.consent.heading}
+              </h2>
+              <p class="text-content-muted text-sm leading-6">{copy.consent.body}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-stretch gap-3 md:justify-end">
+            <button
+              class="ui-control min-w-[10.25rem] flex-1 border border-border bg-surface text-content shadow-none transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 ease-standard hover:border-border-strong hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:flex-none"
+              data-consent-decline
+              type="button"
+            >
+              {copy.consent.decline}
+            </button>
+            <button
+              class="ui-control min-w-[10.25rem] flex-1 border border-brand bg-brand !text-white shadow-none transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-200 ease-standard hover:border-brand-hover hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 md:flex-none"
+              data-consent-accept
+              type="button"
+            >
+              {copy.consent.accept}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <script
+        is:inline
+        define:vars={{
+          measurementId,
+          analyticsConsentCookieName: ANALYTICS_CONSENT_COOKIE_NAME,
+          analyticsConsentCookieVersion: ANALYTICS_CONSENT_COOKIE_VERSION,
+          analyticsConsentMaxAgeDays: ANALYTICS_CONSENT_MAX_AGE_DAYS,
+        }}
+      >
+        const banner = document.querySelector('[data-analytics-consent]');
+        const acceptButton = banner?.querySelector('[data-consent-accept]');
+        const declineButton = banner?.querySelector('[data-consent-decline]');
+
+        if (
+          banner instanceof HTMLElement &&
+          acceptButton instanceof HTMLButtonElement &&
+          declineButton instanceof HTMLButtonElement
+        ) {
+          const persistedStatuses = new Set(['accepted', 'declined']);
+          const getConsentState = (status) => ({
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            analytics_storage: status === 'accepted' ? 'granted' : 'denied',
+          });
+
+          const readConsent = () => {
+            const encodedName = `${encodeURIComponent(analyticsConsentCookieName)}=`;
+            const entry = document.cookie
+              .split(';')
+              .map((value) => value.trim())
+              .find((value) => value.startsWith(encodedName));
+
+            if (!entry) {
+              return 'unknown';
+            }
+
+            const cookieValue = decodeURIComponent(entry.slice(encodedName.length));
+            const [version, storedStatus = ''] = cookieValue.split(':');
+            if (version !== analyticsConsentCookieVersion || !persistedStatuses.has(storedStatus)) {
+              return 'unknown';
+            }
+
+            return storedStatus;
+          };
+
+          const writeConsent = (status) => {
+            const expiresAt = new Date(
+              Date.now() + analyticsConsentMaxAgeDays * 24 * 60 * 60 * 1000,
+            );
+            const secureAttribute = location.protocol === 'https:' ? '; Secure' : '';
+            const cookieValue = `${analyticsConsentCookieVersion}:${status}`;
+
+            document.cookie = [
+              `${encodeURIComponent(analyticsConsentCookieName)}=${encodeURIComponent(cookieValue)}`,
+              `Expires=${expiresAt.toUTCString()}`,
+              'Path=/',
+              'SameSite=Lax',
+              secureAttribute ? 'Secure' : '',
+            ]
+              .filter(Boolean)
+              .join('; ');
+          };
+
+          const ensureGoogleAnalyticsStub = () => {
+            window.dataLayer = window.dataLayer ?? [];
+            window.gtag =
+              window.gtag ??
+              ((...args) => {
+                window.dataLayer?.push(args);
+              });
+          };
+
+          const updateConsent = (status) => {
+            ensureGoogleAnalyticsStub();
+            window.gtag?.('consent', 'update', getConsentState(status));
+          };
+
+          const loadGoogleAnalytics = () => {
+            if (document.querySelector(`script[data-measurement-id="${measurementId}"]`)) {
+              return;
+            }
+
+            ensureGoogleAnalyticsStub();
+            window.gtag?.('consent', 'default', getConsentState('declined'));
+
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+            script.dataset.measurementId = measurementId;
+            document.head.append(script);
+
+            window.gtag?.('js', new Date());
+            window.gtag?.('config', measurementId);
+          };
+
+          const hideBanner = () => {
+            banner.hidden = true;
+          };
+
+          const showBanner = () => {
+            banner.hidden = false;
+          };
+
+          const handleChoice = (status) => {
+            writeConsent(status);
+            if (status === 'accepted') {
+              loadGoogleAnalytics();
+              updateConsent(status);
+            }
+            hideBanner();
+          };
+
+          const currentStatus = readConsent();
+          if (currentStatus === 'accepted') {
+            loadGoogleAnalytics();
+            updateConsent(currentStatus);
+          } else if (currentStatus === 'unknown') {
+            showBanner();
+          }
+
+          acceptButton.addEventListener('click', () => handleChoice('accepted'));
+          declineButton.addEventListener('click', () => handleChoice('declined'));
+        }
+      </script>
+    </>
+  ) : null
+}

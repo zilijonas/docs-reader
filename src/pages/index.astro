@@ -20,14 +20,16 @@ const howItWorksUrl = `${baseUrl}how-it-works`;
 <Layout seo={SEO.home}>
   <div class="min-h-screen min-h-svh">
     <LandingHeader appUrl={appUrl} baseUrl={baseUrl} />
-    <LandingHero appUrl={appUrl} howItWorksUrl={howItWorksUrl} />
-    <LandingHowSection />
-    <LandingExampleSection baseUrl={baseUrl} />
-    <LandingBrowserExplainerSection />
-    <LandingPrivacySection />
-    <LandingUseCasesSection />
-    <LandingWhySection />
-    <LandingLimitsSection />
+    <main id="main-content">
+      <LandingHero appUrl={appUrl} howItWorksUrl={howItWorksUrl} />
+      <LandingHowSection />
+      <LandingExampleSection />
+      <LandingBrowserExplainerSection />
+      <LandingPrivacySection />
+      <LandingUseCasesSection />
+      <LandingWhySection />
+      <LandingLimitsSection />
+    </main>
     <LandingFooterCta appUrl={appUrl} baseUrl={baseUrl} />
   </div>
 </Layout>

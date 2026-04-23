@@ -1,0 +1,144 @@
+---
+import type { LandingMobileLink } from '../data';
+
+interface Props {
+  links: LandingMobileLink[];
+}
+
+const { links } = Astro.props;
+---
+
+<div class="md:hidden" data-landing-mobile-nav>
+  <button
+    aria-expanded="false"
+    aria-haspopup="dialog"
+    aria-label="Open navigation menu"
+    class="border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted inline-flex size-10 items-center justify-center rounded-full border transition-colors duration-200"
+    data-menu-open
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      class="size-[18px]"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="1.8"
+      viewBox="0 0 24 24"
+    >
+      <path d="M4 5h16"></path>
+      <path d="M4 12h16"></path>
+      <path d="M4 19h16"></path>
+    </svg>
+  </button>
+
+  <div
+    class="z-drawer-backdrop bg-content/45 fixed inset-0 hidden px-4 py-6 backdrop-blur-sm"
+    data-menu-overlay
+    hidden
+  >
+    <aside
+      aria-labelledby="landing-mobile-nav-title"
+      aria-modal="true"
+      class="border-border bg-surface shadow-float ml-auto h-full w-full max-w-sm rounded-(--radius-panel) border p-5"
+      role="dialog"
+    >
+      <div class="grid h-full grid-rows-[auto_1fr] gap-5">
+        <div class="flex items-center justify-between gap-3">
+          <h2
+            class="text-content leading-reading text-lg font-semibold text-pretty"
+            id="landing-mobile-nav-title"
+          >
+            Menu
+          </h2>
+          <button
+            aria-label="Close navigation menu"
+            class="border-border bg-surface text-content hover:border-border-strong hover:bg-surface-muted inline-flex size-10 items-center justify-center rounded-full border transition-colors duration-200"
+            data-menu-close
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="size-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.8"
+              viewBox="0 0 24 24"
+            >
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <nav aria-label="Mobile site navigation" class="grid content-start gap-2">
+          {
+            links.map((link) => (
+              <a
+                class="border-border bg-surface-muted text-content hover:border-border-strong hover:bg-surface flex items-center rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors duration-200"
+                data-menu-link
+                href={link.href}
+              >
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </aside>
+  </div>
+
+  <script is:inline>
+    document.querySelectorAll('[data-landing-mobile-nav]').forEach((root) => {
+      if (!(root instanceof HTMLElement)) {
+        return;
+      }
+
+      const openButton = root.querySelector('[data-menu-open]');
+      const closeButton = root.querySelector('[data-menu-close]');
+      const overlay = root.querySelector('[data-menu-overlay]');
+      const links = root.querySelectorAll('[data-menu-link]');
+      let previousOverflow = document.body.style.overflow;
+
+      if (
+        !(openButton instanceof HTMLButtonElement) ||
+        !(closeButton instanceof HTMLButtonElement) ||
+        !(overlay instanceof HTMLElement)
+      ) {
+        return;
+      }
+
+      const closeMenu = () => {
+        overlay.hidden = true;
+        overlay.classList.add('hidden');
+        openButton.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = previousOverflow;
+      };
+
+      const openMenu = () => {
+        previousOverflow = document.body.style.overflow;
+        overlay.hidden = false;
+        overlay.classList.remove('hidden');
+        openButton.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      };
+
+      openButton.addEventListener('click', openMenu);
+      closeButton.addEventListener('click', closeMenu);
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+          closeMenu();
+        }
+      });
+      links.forEach((link) => link.addEventListener('click', closeMenu));
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !overlay.hidden) {
+          closeMenu();
+        }
+      });
+    });
+  </script>
+</div>

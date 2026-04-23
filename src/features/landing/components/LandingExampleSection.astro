@@ -1,10 +1,12 @@
 ---
+import { Image } from 'astro:assets';
+import exampleImage from '../../../assets/example.png';
+
 interface Props {
-  baseUrl: string;
   variant?: 'landing' | 'marketing';
 }
 
-const { baseUrl, variant = 'landing' } = Astro.props;
+const { variant = 'landing' } = Astro.props;
 
 const notes = [
   {
@@ -45,17 +47,15 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
 
         <div class="mt-8 grid gap-4 xl:grid-cols-(--layout-grid-landing-example)">
           <div class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-3 sm:p-4">
-            <picture>
-              <source srcset={`${baseUrl}example.webp`} type="image/webp" />
-              <img
-                alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
-                class="border-border/70 w-full rounded-2xl border"
-                height="1024"
-                loading="lazy"
-                src={`${baseUrl}example.png`}
-                width="1536"
-              />
-            </picture>
+            <Image
+              alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
+              class="border-border/70 w-full rounded-2xl border"
+              formats={['webp']}
+              loading="lazy"
+              sizes="(min-width: 1280px) 58vw, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2rem)"
+              src={exampleImage}
+              widths={[640, 960, 1280, 1536]}
+            />
           </div>
 
           <div class="grid gap-3" aria-label="Example highlights">
@@ -82,17 +82,15 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
 
       <div class="mt-4 grid gap-4 xl:grid-cols-(--layout-grid-landing-example)">
         <div class="border-border bg-surface-muted rounded-(--radius-panel) border p-3 sm:p-4">
-          <picture>
-            <source srcset={`${baseUrl}example.webp`} type="image/webp" />
-            <img
-              alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
-              class="border-border/70 w-full rounded-2xl border"
-              height="1024"
-              loading="lazy"
-              src={`${baseUrl}example.png`}
-              width="1536"
-            />
-          </picture>
+          <Image
+            alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
+            class="border-border/70 w-full rounded-2xl border"
+            formats={['webp']}
+            loading="lazy"
+            sizes="(min-width: 1280px) 58vw, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2rem)"
+            src={exampleImage}
+            widths={[640, 960, 1280, 1536]}
+          />
         </div>
 
         <div class="grid gap-3" aria-label="Example highlights">

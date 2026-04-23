@@ -8,5 +8,7 @@ import { SEO } from '../lib/seo';
   seo={SEO.redact}
   viewportContent="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
 >
-  <AppShell client:only="react" />
+  <main id="main-content">
+    <AppShell client:only="react" />
+  </main>
 </Layout>

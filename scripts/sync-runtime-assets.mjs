@@ -1,4 +1,4 @@
-import { mkdir, access, copyFile, writeFile } from 'node:fs/promises';
+import { mkdir, access, copyFile, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
@@ -45,6 +45,9 @@ const ensureFilesPresent = async (root, fileNames) => {
   };
 };
 
+const stripSourceMapComment = (content) =>
+  content.replace(/\n?\/\/# sourceMappingURL=.*$/gm, '');
+
 const copyIfNeeded = async (source, destination) => {
   await ensureDir(path.dirname(destination));
 
@@ -53,6 +56,18 @@ const copyIfNeeded = async (source, destination) => {
   }
 
   await copyFile(source, destination);
+};
+
+const syncTextFile = async (source, destination, transform = (value) => value) => {
+  await ensureDir(path.dirname(destination));
+
+  const nextContent = transform(await readFile(source, 'utf8'));
+  const previousContent = (await pathExists(destination)) ? await readFile(destination, 'utf8') : null;
+  if (previousContent === nextContent) {
+    return;
+  }
+
+  await writeFile(destination, nextContent);
 };
 
 const downloadIfNeeded = async (url, destination) => {
@@ -101,9 +116,16 @@ const syncPyodide = async () => {
   const pyodidePackage = require(pyodidePackageJson);
   const pyodideLock = require(path.join(pyodideRoot, 'pyodide-lock.json'));
   await Promise.all(
-    baseFiles.map((fileName) =>
-      copyIfNeeded(path.join(pyodideRoot, fileName), path.join(pyodidePublicRoot, fileName)),
-    ),
+    baseFiles.map((fileName) => {
+      const source = path.join(pyodideRoot, fileName);
+      const destination = path.join(pyodidePublicRoot, fileName);
+
+      if (fileName.endsWith('.js') || fileName.endsWith('.mjs')) {
+        return syncTextFile(source, destination, stripSourceMapComment);
+      }
+
+      return copyIfNeeded(source, destination);
+    }),
   );
 
   const pymupdfWheel = pyodideLock.packages.pymupdf.file_name;
@@ -157,9 +179,10 @@ const syncTesseract = async () => {
   const workerFiles = ['dist/worker.min.js'];
   await Promise.all(
     workerFiles.map((fileName) =>
-      copyIfNeeded(
+      syncTextFile(
         path.join(tesseractRoot, fileName),
         path.join(tesseractPublicRoot, path.basename(fileName)),
+        stripSourceMapComment,
       ),
     ),
   );
@@ -181,9 +204,10 @@ const syncTesseract = async () => {
 
   await Promise.all(
     coreFiles.map((fileName) =>
-      copyIfNeeded(
+      syncTextFile(
         path.join(tesseractCoreRoot, fileName),
         path.join(tesseractPublicRoot, fileName),
+        stripSourceMapComment,
       ),
     ),
   );

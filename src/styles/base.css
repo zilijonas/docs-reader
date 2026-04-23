@@ -7,6 +7,10 @@
     scroll-behavior: smooth;
   }
 
+  body:has(.skip-link:focus-visible) {
+    scroll-behavior: auto;
+  }
+
   html,
   body {
     margin: 0;
@@ -50,6 +54,10 @@
 
   a {
     color: inherit;
+  }
+
+  [id] {
+    scroll-margin-top: calc(var(--landing-header-height) + 1.5rem);
   }
 
   ::selection {
@@ -124,5 +132,17 @@
 
   .marketing-content :where(a) {
     text-decoration-line: underline;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 80;
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
   }
 }

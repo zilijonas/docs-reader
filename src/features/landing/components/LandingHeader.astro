@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react';
 import { BrandLogo } from '../../../components/BrandLogo';
 import { Button } from '../../../components/ui/Button';
 import { landingHero, getLandingMobileLinks, getLandingNavLinks } from '../data';
-import { LandingMobileNav } from './LandingMobileNav';
+import LandingMobileNav from './LandingMobileNav.astro';
 
 interface Props {
   appUrl: string;
@@ -54,7 +54,7 @@ const navLinkClass =
           <Pencil size={16} strokeWidth={1.9} />
         </Button>
 
-        <LandingMobileNav client:idle links={mobileLinks} />
+        <LandingMobileNav links={mobileLinks} />
       </div>
     </div>
   </div>

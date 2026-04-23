@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "node scripts/sync-runtime-assets.mjs",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/verify-build-output.mjs",
     "preview": "astro preview",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
@@ -23,6 +23,9 @@
   "dependencies": {
     "@astrojs/react": "^5.0.3",
     "@astrojs/sitemap": "^3.7.2",
+    "@fontsource/instrument-serif": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@tailwindcss/vite": "^4.2.2",
     "@use-gesture/react": "^10.3.1",
     "astro": "^6.1.7",
@@ -32,6 +35,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "tesseract.js": "^7.0.0",

@@ -210,11 +210,11 @@ export const EXPORT_MODE_META: Record<
 > = {
   'true-redaction': {
     actionLabel: 'Export',
-    filenameSuffix: '-redacted.pdf',
+    filenameSuffix: '.pdf',
   },
   flattened: {
     actionLabel: 'Flattened fallback',
-    filenameSuffix: '-flattened-redacted.pdf',
+    filenameSuffix: '-redacted.pdf',
   },
 };
 
