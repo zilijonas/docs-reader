@@ -45,8 +45,7 @@ const ensureFilesPresent = async (root, fileNames) => {
   };
 };
 
-const stripSourceMapComment = (content) =>
-  content.replace(/\n?\/\/# sourceMappingURL=.*$/gm, '');
+const stripSourceMapComment = (content) => content.replace(/\n?\/\/# sourceMappingURL=.*$/gm, '');
 
 const copyIfNeeded = async (source, destination) => {
   await ensureDir(path.dirname(destination));
@@ -62,7 +61,9 @@ const syncTextFile = async (source, destination, transform = (value) => value) =
   await ensureDir(path.dirname(destination));
 
   const nextContent = transform(await readFile(source, 'utf8'));
-  const previousContent = (await pathExists(destination)) ? await readFile(destination, 'utf8') : null;
+  const previousContent = (await pathExists(destination))
+    ? await readFile(destination, 'utf8')
+    : null;
   if (previousContent === nextContent) {
     return;
   }

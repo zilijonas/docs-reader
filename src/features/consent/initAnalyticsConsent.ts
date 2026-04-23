@@ -85,7 +85,10 @@ export const initAnalyticsConsent = (banner: HTMLElement) => {
   const acceptButton = banner.querySelector('[data-consent-accept]');
   const declineButton = banner.querySelector('[data-consent-decline]');
 
-  if (!(acceptButton instanceof HTMLButtonElement) || !(declineButton instanceof HTMLButtonElement)) {
+  if (
+    !(acceptButton instanceof HTMLButtonElement) ||
+    !(declineButton instanceof HTMLButtonElement)
+  ) {
     return;
   }
 

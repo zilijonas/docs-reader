@@ -1,6 +1,7 @@
 ---
 import { Button } from '@/components/ui';
 import { copy } from '../../../lib/copy';
+import analyticsConsentScript from '../analytics-consent.client.ts?url';
 
 interface Props {
   enabled: boolean;
@@ -21,10 +22,10 @@ const { enabled, measurementId } = Astro.props;
         role="region"
         aria-label={copy.consent.regionLabel}
       >
-        <div class="consent-banner-panel anim-float-in pointer-events-auto mx-auto grid w-full max-w-5xl gap-4 rounded-(--radius-panel) border p-6 shadow-float md:grid-cols-(--layout-grid-landing-footer) md:items-end">
+        <div class="consent-banner-panel anim-float-in shadow-float pointer-events-auto mx-auto grid w-full max-w-5xl gap-4 rounded-(--radius-panel) border p-6 md:grid-cols-(--layout-grid-landing-footer) md:items-end">
           <div class="grid min-w-0 gap-3.5">
             <div class="consent-banner-eyebrow text-content text-note inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 font-mono leading-4 tracking-(--tracking-ui-wide) uppercase">
-              <span class="bg-success inline-flex size-2 rounded-full" aria-hidden="true"></span>
+              <span class="bg-success inline-flex size-2 rounded-full" aria-hidden="true" />
               {copy.consent.eyebrow}
             </div>
 
@@ -36,31 +37,18 @@ const { enabled, measurementId } = Astro.props;
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center justify-stretch gap-3 md:justify-end [&_button]:flex-1 md:[&_button]:flex-none lg:flex-col">
-            <Button
-              data-consent-decline
-              variant="secondary"
-            >
+          <div class="flex flex-wrap items-center justify-stretch gap-3 md:justify-end lg:flex-col [&_button]:flex-1 md:[&_button]:flex-none">
+            <Button data-consent-decline variant="secondary">
               {copy.consent.decline}
             </Button>
-            <Button
-              data-consent-accept
-              variant="primary"
-            >
+            <Button data-consent-accept variant="primary">
               {copy.consent.accept}
             </Button>
           </div>
         </div>
       </div>
 
-      <script>
-        import { initAnalyticsConsent } from '../initAnalyticsConsent';
-
-        const banner = document.querySelector('[data-analytics-consent]');
-        if (banner instanceof HTMLElement) {
-          initAnalyticsConsent(banner);
-        }
-      </script>
+      <script src={analyticsConsentScript} type="module" />
     </>
   ) : null
 }

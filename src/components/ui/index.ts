@@ -1,5 +1,4 @@
 export * from './Alert';
-export * from './Badge';
 export * from './Button';
 export * from './Chip';
 export * from './CircleButton';
@@ -8,9 +7,7 @@ export * from './Dialog';
 export * from './EmptyState';
 export * from './IconButton';
 export * from './Input';
-export * from './Kbd';
 export * from './Panel';
 export * from './ProgressBar';
-export * from './SegmentedButton';
 export * from './StatusDot';
 export * from './StatusPill';
