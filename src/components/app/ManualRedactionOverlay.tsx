@@ -103,7 +103,7 @@ export function ManualRedactionOverlay({
 
       {draftBox ? (
         <div
-          className="border-content bg-brand-soft absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) rounded-sm border-2 border-dashed"
+          className="border-detection-ring bg-detection/[0.18] absolute top-(--box-top) left-(--box-left) h-(--box-height) w-(--box-width) rounded-detection border-2 border-dashed"
           style={getBoxStyle(draftBox)}
         />
       ) : null}
