@@ -18,7 +18,8 @@ const grantedConsentState = {
 
 const isPersistedConsentStatus = (value) => value === 'accepted' || value === 'declined';
 
-const getConsentState = (status) => (status === 'accepted' ? grantedConsentState : deniedConsentState);
+const getConsentState = (status) =>
+  status === 'accepted' ? grantedConsentState : deniedConsentState;
 
 const readAnalyticsConsent = () => {
   const encodedName = `${encodeURIComponent(ANALYTICS_CONSENT_COOKIE_NAME)}=`;
@@ -117,7 +118,10 @@ export const initAnalyticsConsent = (banner) => {
   const acceptButton = banner.querySelector('[data-consent-accept]');
   const declineButton = banner.querySelector('[data-consent-decline]');
 
-  if (!(acceptButton instanceof HTMLButtonElement) || !(declineButton instanceof HTMLButtonElement)) {
+  if (
+    !(acceptButton instanceof HTMLButtonElement) ||
+    !(declineButton instanceof HTMLButtonElement)
+  ) {
     return;
   }
 
