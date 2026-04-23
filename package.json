@@ -16,6 +16,7 @@
     "format:check": "prettier . --check",
     "check": "tsc --noEmit",
     "check:styles": "node scripts/check-inline-styles.mjs",
+    "audit": "pnpm audit --audit-level=high",
     "test": "vitest run",
     "validate": "pnpm run lint && pnpm run format:check && pnpm run check && pnpm run check:styles && pnpm run test && pnpm run build",
     "astro": "astro"
