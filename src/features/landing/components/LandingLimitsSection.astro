@@ -1,4 +1,5 @@
 ---
+import { FileCheckCorner } from 'lucide-react';
 import { limitsSection, limitStats } from '../data';
 
 const eyebrowClass = 'ui-eyebrow-pill';
@@ -8,7 +9,9 @@ const eyebrowClass = 'ui-eyebrow-pill';
   <div class="layout-shell py-16 sm:pb-20">
     <div class="grid gap-6 md:grid-cols-(--layout-grid-landing-limits) md:items-end">
       <div>
-        <div class:list={[eyebrowClass, 'mb-2.5']}>{limitsSection.eyebrow}</div>
+        <div class:list={[eyebrowClass, 'mb-3']}>
+          <FileCheckCorner size={14} strokeWidth={1.7} />{limitsSection.eyebrow}
+        </div>
         <h2 class="max-w-measure-landing-limits text-title-card tracking-tight-card">
           {limitsSection.title}
         </h2>

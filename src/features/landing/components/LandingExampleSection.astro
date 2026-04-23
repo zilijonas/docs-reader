@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import exampleImage from '../../../assets/example.png';
+import { Eye } from 'lucide-react';
 
 interface Props {
   variant?: 'landing' | 'marketing';
@@ -33,7 +34,9 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
       <div class="layout-shell py-16">
         <div class="grid gap-5 md:grid-cols-(--layout-grid-landing-split) md:items-end">
           <div>
-            <div class:list={[eyebrowClass, 'mb-3']}>Example</div>
+            <div class:list={[eyebrowClass, 'mb-3']}>
+              <Eye size={14} strokeWidth={1.7} /> Example
+            </div>
             <h2 class={titleClass}>
               Review workspace. Clear page view. Final decision stays with you.
             </h2>
@@ -49,7 +52,7 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
             <Image
               alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
               class="border-border/70 w-full rounded-2xl border"
-              formats={['webp']}
+              format="webp"
               loading="lazy"
               sizes="(min-width: 1280px) 58vw, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2rem)"
               src={exampleImage}
@@ -84,7 +87,7 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
           <Image
             alt="Example of the hddn redaction review workspace with a PDF preview, highlighted detections, and a review sidebar."
             class="border-border/70 w-full rounded-2xl border"
-            formats={['webp']}
+            format="webp"
             loading="lazy"
             sizes="(min-width: 1280px) 58vw, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2rem)"
             src={exampleImage}

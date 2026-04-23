@@ -1,5 +1,5 @@
 ---
-import { Download, Eye, Search, Upload } from 'lucide-react';
+import { Download, Eye, MonitorCog, Search, Upload } from 'lucide-react';
 import { howSection, howSteps } from '../data';
 
 const eyebrowClass = 'ui-eyebrow-pill';
@@ -10,7 +10,10 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
   <div class="layout-shell py-16">
     <div class="grid gap-5 md:grid-cols-(--layout-grid-landing-split) md:items-end">
       <div>
-        <div class:list={[eyebrowClass, 'mb-3']}>{howSection.eyebrow}</div>
+        <div class:list={[eyebrowClass, 'mb-3']}>
+          <MonitorCog size={14} strokeWidth={1.7} />
+          {howSection.eyebrow}
+        </div>
         <h2 class={titleClass}>{howSection.title}</h2>
       </div>
       <p class="text-content-muted text-body-md leading-copy-relaxed">{howSection.intro}</p>

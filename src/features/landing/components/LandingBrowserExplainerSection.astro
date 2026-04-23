@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, FileText, Globe, Monitor } from 'lucide-react';
+import { ArrowRight, FileText, Globe, GlobeOff, Monitor } from 'lucide-react';
 import { browserExplainer } from '../data';
 
 const eyebrowClass = 'ui-eyebrow-pill';
@@ -10,7 +10,10 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
   <div class="layout-shell py-16">
     <div class="grid gap-4 lg:grid-cols-(--layout-grid-landing-aside)">
       <div class="border-border bg-surface shadow-panel rounded-(--radius-panel) border p-6 sm:p-7">
-        <div class:list={[eyebrowClass, 'mb-3']}>{browserExplainer.eyebrow}</div>
+        <div class:list={[eyebrowClass, 'mb-3']}>
+          <GlobeOff size={14} strokeWidth={1.7} />
+          {browserExplainer.eyebrow}
+        </div>
         <h2 class:list={[titleClass, 'mb-5']}>{browserExplainer.title}</h2>
         <div class="grid gap-3">
           {

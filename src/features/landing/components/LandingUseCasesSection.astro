@@ -1,5 +1,5 @@
 ---
-import { Bot, Files, Send, Shield } from 'lucide-react';
+import { Bot, Check, Files, Send, Shield } from 'lucide-react';
 import { useCasesSection } from '../data';
 
 const eyebrowClass = 'ui-eyebrow-pill';
@@ -9,7 +9,9 @@ const titleClass = 'max-w-measure-landing-section text-display-section tracking-
 <section class="border-border border-t">
   <div class="layout-shell py-16">
     <div class="mb-8">
-      <div class:list={[eyebrowClass, 'mb-3']}>{useCasesSection.eyebrow}</div>
+      <div class:list={[eyebrowClass, 'mb-3']}>
+        <Check size={14} strokeWidth={1.7} />{useCasesSection.eyebrow}
+      </div>
       <h2 class={titleClass}>{useCasesSection.title}</h2>
     </div>
 
