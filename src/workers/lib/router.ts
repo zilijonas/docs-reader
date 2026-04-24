@@ -1,9 +1,13 @@
 import { APP_LIMITS, DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
 import { detectSensitiveData, groupDetections } from '../../lib/detection';
+import { hasLithuanianContext } from '../../lib/detection/lt-context';
+import { detectNames } from '../../lib/detection/names';
+import { loadLithuanianNames } from './lt-names';
 import { planOcrLanguageFlow } from '../../lib/ocr-language-inference';
-import type { ContinueOcrRequest, LoadPdfRequest, WorkerRequest } from '../../types';
+import type { ContinueOcrRequest, Detection, LoadPdfRequest, WorkerRequest } from '../../types';
 import { exportFlattenedPdf } from './export-renderer';
 import { ensurePyodide, runPythonBytes, runPythonJson } from './pyodide';
+import { detectSignatures } from './signatures';
 import {
   postMessageSafe,
   pushWarning,
@@ -166,14 +170,30 @@ const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>)
     message: 'Scanning for sensitive information…',
   });
 
-  const detections = state.pages.flatMap((page) =>
-    detectSensitiveData(
-      page.pageIndex,
-      page.textContent,
-      state.spans.filter((span) => span.pageIndex === page.pageIndex),
-      message.payload.rules.keywords,
-    ),
-  );
+  const detections: Detection[] = [];
+
+  if (state.ltDataset === undefined) {
+    const ltTrigger = hasLithuanianContext(state.spans);
+    state.ltDataset = ltTrigger ? await loadLithuanianNames(state.baseUrl) : null;
+  }
+
+  for (const page of state.pages) {
+    const pageSpans = state.spans.filter((span) => span.pageIndex === page.pageIndex);
+    detections.push(
+      ...detectSensitiveData(
+        page.pageIndex,
+        page.textContent,
+        pageSpans,
+        message.payload.rules.keywords,
+      ),
+    );
+    detections.push(...detectNames(page.pageIndex, pageSpans, page.lane, state.ltDataset));
+    try {
+      detections.push(...(await detectSignatures(page, pageSpans)));
+    } catch (error) {
+      console.warn('Signature detection failed for page', page.pageIndex, error);
+    }
+  }
 
   postMessageSafe({
     requestId: message.requestId,

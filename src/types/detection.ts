@@ -1,5 +1,5 @@
 export type TextSource = 'native' | 'ocr';
-export type DetectionSource = 'rule' | 'manual';
+export type DetectionSource = 'rule' | 'heuristic' | 'manual';
 export type DetectionStatus = 'unconfirmed' | 'confirmed';
 export type DetectionType =
   | 'email'
@@ -14,6 +14,8 @@ export type DetectionType =
   | 'address'
   | 'vat'
   | 'nationalId'
+  | 'name'
+  | 'signature'
   | 'keyword'
   | 'manual';
 export type ManualMode = 'text' | 'box';

@@ -24,8 +24,12 @@ export function useDetectionRunner({
 }) {
   const runDetections = async (
     keywords: string[],
-    existingRuleDetections = detections.filter((detection) => detection.source === 'rule'),
-    existingNonRuleDetections = detections.filter((detection) => detection.source !== 'rule'),
+    existingRuleDetections = detections.filter(
+      (detection) => detection.source === 'rule' || detection.source === 'heuristic',
+    ),
+    existingNonRuleDetections = detections.filter(
+      (detection) => detection.source !== 'rule' && detection.source !== 'heuristic',
+    ),
     hasLoadedDocumentOverride = hasLoadedDocument,
   ) => {
     setCustomKeywords(keywords);
