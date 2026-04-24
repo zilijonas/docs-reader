@@ -60,6 +60,8 @@ export const DETECTION_TYPE_ORDER: DetectionType[] = [
   'iban',
   'card',
   'nationalId',
+  'name',
+  'signature',
   'vat',
   'postal',
   'address',
@@ -83,6 +85,8 @@ export const DETECTION_TYPE_LABELS: Record<DetectionType, string> = {
   address: 'Address',
   vat: 'VAT number',
   nationalId: 'National ID',
+  name: 'Name',
+  signature: 'Signature',
   keyword: 'Custom keyword',
   manual: 'Manual',
 };

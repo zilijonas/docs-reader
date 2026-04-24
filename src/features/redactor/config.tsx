@@ -13,10 +13,12 @@ import {
   MapPin,
   MapPinned,
   Pencil,
+  PenLine,
   Phone,
   Receipt,
   Tag,
   Shield,
+  UserRound,
 } from 'lucide-react';
 
 import {
@@ -135,6 +137,18 @@ const detectionTypeMetas = [
     icon: (props?: IconProps) => <IdCard {...iconProps(props)} />,
   },
   {
+    type: 'name',
+    shortLabel: BASE_DETECTION_TYPE_LABELS.name,
+    pluralLabel: 'Names',
+    icon: (props?: IconProps) => <UserRound {...iconProps(props)} />,
+  },
+  {
+    type: 'signature',
+    shortLabel: BASE_DETECTION_TYPE_LABELS.signature,
+    pluralLabel: 'Signatures',
+    icon: (props?: IconProps) => <PenLine {...iconProps(props)} />,
+  },
+  {
     type: 'keyword',
     shortLabel: BASE_DETECTION_TYPE_LABELS.keyword,
     pluralLabel: 'Custom keywords',
@@ -156,7 +170,7 @@ export const DETECTION_TYPE_META: Record<DetectionType, DetectionTypeMeta> = Obj
 export const DETECTION_TYPE_LABELS = BASE_DETECTION_TYPE_LABELS;
 
 export const REVIEW_STATUS_ORDER: DetectionStatus[] = ['unconfirmed', 'confirmed'];
-export const REVIEW_SOURCE_ORDER: DetectionSource[] = ['rule', 'manual'];
+export const REVIEW_SOURCE_ORDER: DetectionSource[] = ['rule', 'heuristic', 'manual'];
 export const REVIEW_STATUS_LABELS: Record<DetectionStatus, string> = {
   unconfirmed: 'Unconfirmed',
   confirmed: 'Confirmed',

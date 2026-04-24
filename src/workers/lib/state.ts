@@ -10,6 +10,7 @@ import type {
   TextSpan,
 } from '../../types';
 import { DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
+import type { LithuanianNameDataset } from '../../lib/detection/lt-morphology';
 
 type PyodideGlobalsLike = {
   set: (name: string, value: unknown) => void;
@@ -42,6 +43,7 @@ export type WorkerState = {
   spans: TextSpan[];
   warnings: string[];
   ocrLanguages: string[];
+  ltDataset?: LithuanianNameDataset | null;
 };
 
 export const state: WorkerState = {
@@ -99,6 +101,7 @@ export const resetDocumentState = () => {
   state.spans = [];
   state.warnings = [];
   state.ocrLanguages = [...DEFAULT_OCR_LANGUAGES];
+  state.ltDataset = undefined;
 };
 
 export const hashBuffer = (buffer: ArrayBuffer) => {
