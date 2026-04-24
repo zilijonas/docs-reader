@@ -7,6 +7,7 @@ export const CONFIDENCE = {
   url: 0.95,
   iban: 0.97,
   card: 0.9,
+  licensePlate: 0.84,
   date: 0.86,
   id: 0.88,
   number: 0.72,

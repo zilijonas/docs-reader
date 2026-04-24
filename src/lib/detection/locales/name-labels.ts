@@ -43,9 +43,9 @@ export const NAME_LABELS = [
 ];
 
 // Multi-token label phrases that must match as a contiguous sequence of spans.
-export const NAME_LABEL_PHRASES: string[][] = NAME_LABELS.filter((label) => label.includes(' ')).map(
-  (label) => label.split(/\s+/).map((token) => stripTrailingPunctuation(token.toLowerCase())),
-);
+export const NAME_LABEL_PHRASES: string[][] = NAME_LABELS.filter((label) =>
+  label.includes(' '),
+).map((label) => label.split(/\s+/).map((token) => stripTrailingPunctuation(token.toLowerCase())));
 
 export const NAME_LABEL_SINGLE: Set<string> = new Set(
   NAME_LABELS.filter((label) => !label.includes(' ')).map((label) =>
@@ -186,6 +186,30 @@ export const NAME_STOPWORDS: Set<string> = new Set([
   'sąskaita',
   'saskaita',
   'ataskaita',
+  'automobilių',
+  'automobiliu',
+  'civilinio',
+  'eismo',
+  'inspekcijos',
+  'kelių',
+  'keliu',
+  'kodekso',
+  'lietuvos',
+  'pardavimo',
+  'pirkimo',
+  'pirkimo-pardavimo',
+  'prie',
+  'priemonės',
+  'priemones',
+  'respublikos',
+  'saugaus',
+  'susisiekimo',
+  'sutartis',
+  'transporto',
+  'vadovaudamiesi',
+  'vadovaujantis',
+  'valstybinės',
+  'valstybines',
 ]);
 
 function stripTrailingPunctuation(value: string) {

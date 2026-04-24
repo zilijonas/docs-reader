@@ -7,6 +7,7 @@ export type DetectionType =
   | 'url'
   | 'iban'
   | 'card'
+  | 'licensePlate'
   | 'date'
   | 'id'
   | 'number'

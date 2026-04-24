@@ -266,6 +266,29 @@ describe('detectSensitiveData multi-locale', () => {
     expect(invalidDetections.some((detection) => detection.type === 'card')).toBe(false);
   });
 
+  it('detects broad vehicle license plate formats', () => {
+    const examples = [
+      'ABC123',
+      'ABC 123',
+      'AB-123-CD',
+      '123 ABC',
+      'A123BC',
+      'LTU123',
+      'AA 1234',
+      '12 ABC 34',
+      'abc123',
+    ];
+
+    for (const example of examples) {
+      expect(snippetsOfType(detectSingleSpan(example), 'licensePlate')).toContain(example);
+    }
+  });
+
+  it('keeps plate detection from swallowing prose and mileage records', () => {
+    expect(snippetsOfType(detectSingleSpan('20 straipsnyje'), 'licensePlate')).toEqual([]);
+    expect(snippetsOfType(detectSingleSpan('2020-10 15037km'), 'licensePlate')).toEqual([]);
+  });
+
   it('detects an address anchored by a street token', () => {
     const { text, spans } = buildPage(['Sender:', 'Hauptstraße', '42,', '10115', 'Berlin']);
     const detections = detectSensitiveData(0, text, spans);
@@ -418,6 +441,25 @@ describe('detectSensitiveData multi-locale', () => {
     const detections = detectSingleSpan('AB-123-XYZ');
 
     expect(snippetsOfType(detections, 'id')).toEqual([]);
+  });
+
+  it('rejects Lithuanian vehicle ownership prose as sensitive data', () => {
+    const words = [
+      'yra',
+      'deklaravęs',
+      'duomenis',
+      'apie',
+      'registruojamos',
+      'transporto',
+      'priemonės',
+      'nuosavybės',
+      'teisę.',
+    ];
+    const tokenized = buildPage(words);
+    const wideText = words.join(' ');
+
+    expect(detectSensitiveData(0, tokenized.text, tokenized.spans)).toHaveLength(0);
+    expect(detectSingleSpan(wideText)).toHaveLength(0);
   });
 
   it('accepts weekday-prefixed month names across multiple locales', () => {

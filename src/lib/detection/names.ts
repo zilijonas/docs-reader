@@ -57,10 +57,7 @@ const groupSpansIntoLines = (spans: TextSpan[]): LineGroup[] => {
   const lines: LineGroup[] = [];
   sorted.forEach((span) => {
     const currentLine = lines[lines.length - 1];
-    if (
-      currentLine &&
-      Math.abs(currentLine.y - span.box.y) <= READING_ORDER_LINE_THRESHOLD
-    ) {
+    if (currentLine && Math.abs(currentLine.y - span.box.y) <= READING_ORDER_LINE_THRESHOLD) {
       currentLine.spans.push(span);
       currentLine.height = Math.max(currentLine.height, span.box.height);
       return;
@@ -74,6 +71,7 @@ const groupSpansIntoLines = (spans: TextSpan[]): LineGroup[] => {
 const isNameToken = (raw: string) => {
   const token = stripTrailingPunctuation(raw.trim());
   if (!token || HAS_DIGIT_RE.test(token)) return false;
+  if (NAME_STOPWORDS.has(token.toLowerCase())) return false;
   if (NAME_WORD_RE.test(token)) return true;
   if (ALL_CAPS_NAME_RE.test(token) && token.length >= 2) return true;
   return false;
@@ -139,7 +137,11 @@ const buildDetection = (
   confidence: number,
 ): Detection | null => {
   if (nameSpans.length === 0) return null;
-  const text = nameSpans.map((span) => span.text.trim()).join(' ').replace(/\s+/g, ' ').trim();
+  const text = nameSpans
+    .map((span) => span.text.trim())
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!text) return null;
   const box = unionBoxes(nameSpans.map((span) => span.box));
   if (box.width <= 0 || box.height <= 0) return null;
@@ -363,8 +365,9 @@ export const detectNames = (
     detections.push(...detectLithuanian(pageIndex, lines, ltDataset, covered));
   }
 
-  // Capitalized fallback is too noisy on OCR output — restrict to native text.
-  if (lane === 'searchable') {
+  // Capitalized fallback is too noisy on OCR and Lithuanian legal text. In LT
+  // documents, the first-name dataset and explicit labels carry name detection.
+  if (lane === 'searchable' && !ltDataset) {
     detections.push(...detectCapitalizedFallback(pageIndex, lines, covered));
   }
 

@@ -20,6 +20,8 @@ const POSTAL_PREFIX_COUNTRY =
   '(?:LT|LV|EE|AT|BE|CH|DE|FR|IT|ES|PT|PL|SE|FI|DK|NO|NL|HR|SI|SK|CZ|HU|RO|GR|BG|IE)';
 const IBAN_SEPARATOR = '[\\s\\u00A0]?';
 const VEHICLE_UNIT_SUFFIX = '(?:km|kms|kilometers?|kilometres?|mi|miles?)';
+const LICENSE_PLATE_RE =
+  /\b(?=[A-Z0-9 -]{5,11}\b)(?=[A-Z0-9 -]*[A-Z])(?=[A-Z0-9 -]*\d)(?!\d{5,11}\b)[A-Z0-9]{1,3}[ -]?[A-Z0-9]{1,4}[ -]?[A-Z0-9]{1,4}\b/giu;
 
 const normalizeWhitespace = (value: string) => value.replace(/[\s\u00A0]+/gu, ' ').trim();
 
@@ -67,6 +69,43 @@ const isLongPhoneLike = (value: string) => {
 };
 
 const isShortServicePhone = (value: string) => /^[1-9]\d{4,5}$/u.test(value);
+
+const isLikelyLicensePlate = (value: string) => {
+  const trimmed = value.trim();
+  const compact = trimmed.replace(/[ -]+/gu, '');
+
+  if (compact.length < 5 || compact.length > 11) {
+    return false;
+  }
+
+  if (!/^[A-Z0-9]+$/iu.test(compact)) {
+    return false;
+  }
+
+  if (!/[A-Z]/iu.test(compact) || !/\d/u.test(compact)) {
+    return false;
+  }
+
+  if (/^\d+$/u.test(compact)) {
+    return false;
+  }
+
+  if (new RegExp(`^(?:${POSTAL_PREFIX_COUNTRY})\\d{3,5}$`, 'iu').test(compact)) {
+    return false;
+  }
+
+  if (new RegExp(`\\d\\s*${VEHICLE_UNIT_SUFFIX}$`, 'iu').test(trimmed)) {
+    return false;
+  }
+
+  // Case-insensitive matching catches OCR/lowercase plates, but ordinary
+  // lowercase prose across spaces is too noisy for redaction suggestions.
+  if (/[a-ząčęėįšųūž]/u.test(trimmed) && /[ -]/u.test(trimmed)) {
+    return false;
+  }
+
+  return true;
+};
 
 export const POSTAL_RULE: DetectionRule = {
   type: 'postal',
@@ -139,6 +178,13 @@ export const COMPACT_INTERNATIONAL_PHONE_RULE: DetectionRule = {
   },
 };
 
+export const LICENSE_PLATE_RULE: DetectionRule = {
+  type: 'licensePlate',
+  pattern: LICENSE_PLATE_RE,
+  confidence: CONFIDENCE.licensePlate,
+  postFilter: isLikelyLicensePlate,
+};
+
 export const CORE_RULES: DetectionRule[] = [
   {
     type: 'email',
@@ -173,6 +219,7 @@ export const CORE_RULES: DetectionRule[] = [
     confidence: CONFIDENCE.card,
     postFilter: isLuhnValid,
   },
+  LICENSE_PLATE_RULE,
   POSTAL_RULE,
   ADDRESS_RULE,
   DATE_RULE,

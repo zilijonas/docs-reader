@@ -156,9 +156,9 @@ def detect_signature_regions(page_index, text_boxes_json, min_y_ratio=0.0):
     rect = page.rect
     text_boxes = json.loads(text_boxes_json) if text_boxes_json else []
 
-    pix = page.get_pixmap(matrix=pymupdf.Matrix(1.2, 1.2), colorspace=pymupdf.csGRAY, alpha=False)
-    pixels, w, h = _downscale_gray(pix, 360)
-    binary = _binarize(pixels, 190)
+    pix = page.get_pixmap(matrix=pymupdf.Matrix(1.5, 1.5), colorspace=pymupdf.csGRAY, alpha=False)
+    pixels, w, h = _downscale_gray(pix, 540)
+    binary = _binarize(pixels, 210)
 
     # Precompute row ink density to find candidate "ink bands".
     row_ink = [0] * h
@@ -174,7 +174,7 @@ def detect_signature_regions(page_index, text_boxes_json, min_y_ratio=0.0):
     # produce a band 8-40 pixels tall at this scale with moderate density.
     bands = []
     y = 0
-    min_ink_per_row = max(2, w // 80)
+    min_ink_per_row = max(1, w // 120)
     while y < h:
         if row_ink[y] >= min_ink_per_row:
             start = y
@@ -189,7 +189,7 @@ def detect_signature_regions(page_index, text_boxes_json, min_y_ratio=0.0):
     visited = set()
     for band_start, band_end in bands:
         band_height = band_end - band_start
-        if band_height < 4 or band_height > max(8, h // 3):
+        if band_height < 3 or band_height > max(8, h // 3):
             continue
         if band_start / h < min_y_ratio:
             continue
@@ -207,17 +207,25 @@ def detect_signature_regions(page_index, text_boxes_json, min_y_ratio=0.0):
         # Cluster components that are on the same horizontal band and close in x.
         components.sort(key=lambda comp: comp[0])
         clusters = []
+        merge_gap = max(8, w // 35)
+        merge_y_slop = max(3, band_height)
         for comp in components:
             cx0, cy0, cx1, cy1, ink, rowspan = comp
             cw = cx1 - cx0 + 1
             ch = cy1 - cy0 + 1
             # Filter: tiny dots, solid blocks, tall isolated glyphs
-            if ink < 6:
+            if ink < 3:
                 continue
             if cw * ch > 0 and ink / (cw * ch) > 0.6:
                 continue
-            if clusters and (cx0 - clusters[-1][2]) < max(4, w // 80):
+            if clusters:
                 prev = clusters[-1]
+                vertically_close = cy0 <= prev[3] + merge_y_slop and cy1 + merge_y_slop >= prev[1]
+            else:
+                prev = None
+                vertically_close = False
+
+            if prev is not None and (cx0 - prev[2]) < merge_gap and vertically_close:
                 clusters[-1] = (
                     min(prev[0], cx0),
                     min(prev[1], cy0),
@@ -238,29 +246,57 @@ def detect_signature_regions(page_index, text_boxes_json, min_y_ratio=0.0):
                 continue
             density = ink / area
             # Signatures: irregular, not too dense, not too sparse, wide enough
-            if density < 0.03 or density > 0.45:
+            if density < 0.015 or density > 0.45:
                 continue
-            if cw < max(20, w // 12):
+            min_wide_signature = max(20, w // 12)
+            min_tall_signature_width = max(12, w // 22)
+            min_tall_signature_height = max(14, h // 45)
+            if cw < min_wide_signature and not (cw >= min_tall_signature_width and ch >= min_tall_signature_height):
                 continue
             if rowspan < max(3, band_height * 0.5):
                 continue
 
-            norm_x = cx0 / w
-            norm_y = cy0 / h
-            norm_w = cw / w
-            norm_h = ch / h
+            raw_norm_x = cx0 / w
+            raw_norm_y = cy0 / h
+            raw_norm_w = cw / w
+            raw_norm_h = ch / h
+            raw_norm_box = (raw_norm_x, raw_norm_y, raw_norm_x + raw_norm_w, raw_norm_y + raw_norm_h)
+
+            pad_x = max(6, int(cw * 0.35), w // 70)
+            is_narrow_tall = ch > 0 and (cw / ch) < 1.25
+            if is_narrow_tall:
+                pad_y = max(10, min(int(ch * 0.65), h // 28), h // 70)
+            else:
+                pad_y = max(6, min(int(ch * 0.22), h // 70), h // 140)
+            px0 = max(0, cx0 - pad_x)
+            py0 = max(0, cy0 - pad_y)
+            px1 = min(w - 1, cx1 + pad_x)
+            py1 = min(h - 1, cy1 + pad_y)
+
+            norm_x = px0 / w
+            norm_y = py0 / h
+            norm_w = (px1 - px0 + 1) / w
+            norm_h = (py1 - py0 + 1) / h
             norm_box = (norm_x, norm_y, norm_x + norm_w, norm_y + norm_h)
 
-            # Reject regions that heavily overlap existing text words.
+            # Reject regions whose ink overlaps text. Use the raw ink box,
+            # not the padded output box, so nearby labels do not erase a real
+            # signature while prose glyph clusters still get filtered.
             overlap_count = 0
+            overlap_area = 0.0
             for tb in text_boxes:
                 tx0 = tb["x"]
                 ty0 = tb["y"]
                 tx1 = tx0 + tb["width"]
                 ty1 = ty0 + tb["height"]
-                if _overlaps(norm_box, (tx0, ty0, tx1, ty1)):
+                if _overlaps(raw_norm_box, (tx0, ty0, tx1, ty1)):
                     overlap_count += 1
+                    overlap_x = max(0.0, min(raw_norm_x + raw_norm_w, tx1) - max(raw_norm_x, tx0))
+                    overlap_y = max(0.0, min(raw_norm_y + raw_norm_h, ty1) - max(raw_norm_y, ty0))
+                    overlap_area += overlap_x * overlap_y
             if overlap_count >= 4:
+                continue
+            if raw_norm_w * raw_norm_h > 0 and overlap_area / (raw_norm_w * raw_norm_h) > 0.18:
                 continue
 
             results.append({

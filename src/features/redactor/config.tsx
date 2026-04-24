@@ -16,6 +16,7 @@ import {
   PenLine,
   Phone,
   Receipt,
+  RectangleEllipsis,
   Tag,
   Shield,
   UserRound,
@@ -93,6 +94,12 @@ const detectionTypeMetas = [
     shortLabel: BASE_DETECTION_TYPE_LABELS.card,
     pluralLabel: 'Card numbers',
     icon: (props?: IconProps) => <CreditCard {...iconProps(props)} />,
+  },
+  {
+    type: 'licensePlate',
+    shortLabel: BASE_DETECTION_TYPE_LABELS.licensePlate,
+    pluralLabel: 'License plates',
+    icon: (props?: IconProps) => <RectangleEllipsis {...iconProps(props)} />,
   },
   {
     type: 'date',

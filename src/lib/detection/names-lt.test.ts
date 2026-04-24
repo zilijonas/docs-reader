@@ -153,4 +153,20 @@ describe('detectNames (Lithuanian)', () => {
     const ltHits = detections.filter((d) => d.snippet === 'Jonas Jonaitis');
     expect(ltHits).toHaveLength(1);
   });
+
+  it('rejects Lithuanian legal/government phrases as names', () => {
+    const dataset = makeDataset(['jonas', 'linas', 'kestutis']);
+    const samples = [
+      ['vadovaujantis', 'Lietuvos', 'Respublikos', 'civilinio', 'kodekso'],
+      ['Valstybinės', 'kelių', 'transporto', 'inspekcijos', 'prie', 'Susisiekimo'],
+      ['Vadovaudamiesi', 'Lietuvos', 'Respublikos', 'saugaus', 'eismo', 'automobilių'],
+      ['jiems', 'yra', 'žinoma,', 'jog', 'Lietuvos', 'Respublikos', 'kelių'],
+      ['TRANSPORTO', 'PRIEMONĖS', 'PIRKIMO-PARDAVIMO', 'SUTARTIS'],
+    ];
+
+    for (const tokens of samples) {
+      const detections = detectNames(0, line(tokens, 0.2), 'searchable', dataset);
+      expect(detections).toHaveLength(0);
+    }
+  });
 });

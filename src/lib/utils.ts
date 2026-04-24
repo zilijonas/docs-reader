@@ -22,6 +22,7 @@ const DETECTION_TYPE_PRIORITY: Record<Detection['type'], number> = {
   url: 80,
   iban: 100,
   card: 95,
+  licensePlate: 82,
   date: 60,
   id: 85,
   number: 10,
