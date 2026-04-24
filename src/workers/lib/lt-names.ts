@@ -1,4 +1,7 @@
-import { stripLithuanianSuffix, type LithuanianNameDataset } from '../../lib/detection/lt-morphology';
+import {
+  stripLithuanianSuffix,
+  type LithuanianNameDataset,
+} from '../../lib/detection/lt-morphology';
 
 let cache: LithuanianNameDataset | null = null;
 let loadPromise: Promise<LithuanianNameDataset> | null = null;

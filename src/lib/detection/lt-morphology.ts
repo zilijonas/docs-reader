@@ -161,9 +161,7 @@ const MIN_FIRST_NAME_STEM_LENGTH = 4;
 const MIN_SURNAME_LENGTH = 5;
 
 const normalizeToken = (raw: string) =>
-  stripTrailingPunctuation(raw.trim())
-    .normalize('NFC')
-    .toLowerCase();
+  stripTrailingPunctuation(raw.trim()).normalize('NFC').toLowerCase();
 
 export const stripLithuanianSuffix = (token: string): string[] => {
   const stems: string[] = [];
@@ -211,9 +209,7 @@ export const isLikelyLithuanianFirstName = (
   return { match: false, exact: false };
 };
 
-export const isLikelyLithuanianSurname = (
-  token: string,
-): { strong: boolean; medium: boolean } => {
+export const isLikelyLithuanianSurname = (token: string): { strong: boolean; medium: boolean } => {
   const cleaned = normalizeToken(token);
   if (!cleaned || cleaned.length < MIN_SURNAME_LENGTH) return { strong: false, medium: false };
   if (HAS_DIGIT_RE.test(cleaned)) return { strong: false, medium: false };

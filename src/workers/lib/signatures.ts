@@ -1,5 +1,8 @@
 import { DETECTION_TYPE_LABELS } from '../../lib/app-config';
-import { SIGNATURE_LABELS, stripTrailingPunctuation } from '../../lib/detection/locales/name-labels';
+import {
+  SIGNATURE_LABELS,
+  stripTrailingPunctuation,
+} from '../../lib/detection/locales/name-labels';
 import { createId, normalizeSnippet } from '../../lib/utils';
 import type { BoundingBox, Detection, PageAsset, TextSpan } from '../../types';
 import { runPythonJson } from './pyodide';
@@ -17,7 +20,8 @@ const isSignatureLabelToken = (text: string) => {
   return SIGNATURE_LABELS.has(token);
 };
 
-const hasSignatureLabel = (spans: TextSpan[]) => spans.some((span) => isSignatureLabelToken(span.text));
+const hasSignatureLabel = (spans: TextSpan[]) =>
+  spans.some((span) => isSignatureLabelToken(span.text));
 
 const confidenceForDensity = (density: number) => {
   // Peak confidence around 0.08-0.18 ink density (typical handwritten sig).

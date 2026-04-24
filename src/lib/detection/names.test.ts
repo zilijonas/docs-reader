@@ -41,10 +41,7 @@ describe('detectNames', () => {
   });
 
   it('detects German Vorname / Nachname labels', () => {
-    const spans = [
-      ...line(['Vorname:', 'Hans'], 0.4),
-      ...line(['Nachname:', 'Müller'], 0.45),
-    ];
+    const spans = [...line(['Vorname:', 'Hans'], 0.4), ...line(['Nachname:', 'Müller'], 0.45)];
     const detections = detectNames(0, spans, 'searchable');
     const snippets = detections.filter((d) => d.confidence >= 0.9).map((d) => d.snippet);
     expect(snippets).toContain('Hans');
@@ -68,9 +65,7 @@ describe('detectNames', () => {
   it('falls back to capitalized pair on searchable lane', () => {
     const spans = line(['Alice', 'Johnson', 'visited', 'the', 'office'], 0.7);
     const detections = detectNames(0, spans, 'searchable');
-    const capitalized = detections.find(
-      (d) => d.confidence < 0.9 && d.snippet === 'Alice Johnson',
-    );
+    const capitalized = detections.find((d) => d.confidence < 0.9 && d.snippet === 'Alice Johnson');
     expect(capitalized).toBeTruthy();
   });
 
