@@ -100,6 +100,26 @@ describe('detectNames', () => {
     expect(hit).toBeTruthy();
   });
 
+  it('detects OCR invoice issuer names with leading quotes and role text', () => {
+    const spans = line(
+      ['Sąskaitą', 'išrašę;', '„Paulius', 'Mielkaitis,', 'Apple', 'specialistas'],
+      0.62,
+    );
+    const detections = detectNames(0, spans, 'ocr');
+    const hit = detections.find((detection) => detection.confidence >= 0.9);
+    expect(hit?.snippet).toBe('Paulius Mielkaitis');
+  });
+
+  it('detects collapsed OCR invoice issuer names', () => {
+    const spans = line(
+      ['Sąskaitą', 'išrašę;', '„PauliusMielkaitis,', 'Apple', 'specialistas'],
+      0.64,
+    );
+    const detections = detectNames(0, spans, 'ocr');
+    const hit = detections.find((detection) => detection.confidence >= 0.9);
+    expect(hit?.snippet).toBe('Paulius Mielkaitis');
+  });
+
   it('strips trailing punctuation from name snippets', async () => {
     const englishValidator = await buildCompromiseValidator();
     const spans = line(['Andy', 'Galpin,', 'PhD', 'wrote', 'this'], 0.45);

@@ -73,6 +73,8 @@ const TITLE_CASE_NAME_RE = /^\p{Lu}\p{Ll}+(?:[-’'][\p{L}]{1,40})*$/u;
 const LOWER_CONNECTOR_RE = /^[\p{Ll}]{1,4}$/u;
 const HAS_DIGIT_RE = /\d/u;
 const PUNCT_STOP_RE = /[.!?;]$/u;
+const LEADING_NAME_PUNCT_RE = /^[\s"'‘’“”„«»()[\]{}]+/u;
+const TRAILING_NAME_PUNCT_RE = /[,;.:!?\-–—"'‘’“”„«»()[\]{}]+$/u;
 
 const CAPITALIZED_LANE_STOPWORDS = new Set<string>([
   ...NAME_STOPWORDS,
@@ -133,6 +135,14 @@ interface LineGroup {
   spans: TextSpan[];
 }
 
+const stripLeadingNamePunctuation = (token: string) => token.replace(LEADING_NAME_PUNCT_RE, '');
+
+const cleanNameToken = (token: string) =>
+  stripLeadingNamePunctuation(stripTrailingPunctuation(token.trim()));
+
+const cleanSnippetToken = (token: string) =>
+  stripLeadingNamePunctuation(token.trim()).replace(TRAILING_NAME_PUNCT_RE, '');
+
 const tokenize = (span: TextSpan) => stripTrailingPunctuation(span.text.trim().toLowerCase());
 
 const groupSpansIntoLines = (spans: TextSpan[]): LineGroup[] => {
@@ -158,7 +168,7 @@ const groupSpansIntoLines = (spans: TextSpan[]): LineGroup[] => {
 };
 
 const isNameToken = (raw: string) => {
-  const token = stripTrailingPunctuation(raw.trim());
+  const token = cleanNameToken(raw);
   if (!token || HAS_DIGIT_RE.test(token)) return false;
   if (NAME_STOPWORDS.has(token.toLowerCase())) return false;
   if (NAME_WORD_RE.test(token)) return true;
@@ -167,12 +177,13 @@ const isNameToken = (raw: string) => {
 };
 
 const isConnectorToken = (raw: string) => {
-  const token = stripTrailingPunctuation(raw.trim().toLowerCase());
+  const token = cleanNameToken(raw).toLowerCase();
   if (!token) return false;
   return NAME_CONNECTORS.has(token) && LOWER_CONNECTOR_RE.test(token);
 };
 
 const hasSentenceStop = (raw: string) => PUNCT_STOP_RE.test(raw.trim());
+const hasTrailingComma = (raw: string) => /,$/u.test(raw.trim());
 
 const matchesLabelAtIndex = (lineSpans: TextSpan[], index: number): number => {
   const head = tokenize(lineSpans[index]);
@@ -188,7 +199,7 @@ const matchesLabelAtIndex = (lineSpans: TextSpan[], index: number): number => {
   return 0;
 };
 
-const stripColonSuffix = (token: string) => token.replace(/[:;\-–—]+$/u, '').trim();
+const stripColonSuffix = (token: string) => cleanNameToken(token.replace(/[:;\-–—]+$/u, ''));
 
 const collectNameSpans = (candidates: TextSpan[]): TextSpan[] => {
   const collected: TextSpan[] = [];
@@ -202,7 +213,7 @@ const collectNameSpans = (candidates: TextSpan[]): TextSpan[] => {
 
     if (isNameToken(cleaned)) {
       collected.push(span);
-      if (hasSentenceStop(raw)) break;
+      if (hasSentenceStop(raw) || (collected.length >= 2 && hasTrailingComma(raw))) break;
       continue;
     }
 
@@ -220,7 +231,7 @@ const collectNameSpans = (candidates: TextSpan[]): TextSpan[] => {
   return collected;
 };
 
-const TRAILING_PUNCT_RE = /[,;.:!?\-–—]+$/u;
+const TRAILING_PUNCT_RE = TRAILING_NAME_PUNCT_RE;
 
 // Keep snippet text and bounding box flush with the actual name. Pure
 // punctuation tail spans get dropped; a span whose text ends in trailing
@@ -234,7 +245,7 @@ const trimTrailingPunctuation = (
 
   while (out.length > 0) {
     const last = out[out.length - 1];
-    const trimmed = last.text.trim().replace(TRAILING_PUNCT_RE, '');
+    const trimmed = cleanSnippetToken(last.text);
     if (trimmed.length > 0) break;
     out.pop();
   }
@@ -242,7 +253,7 @@ const trimTrailingPunctuation = (
   if (out.length === 0) return { spans: [], boxes: [], texts: [] };
 
   const boxes = out.map((span) => span.box);
-  const texts = out.map((span) => span.text.trim());
+  const texts = out.map((span) => cleanSnippetToken(span.text));
 
   const lastIdx = out.length - 1;
   const lastSpan = out[lastIdx];
@@ -251,7 +262,7 @@ const trimTrailingPunctuation = (
   if (lastTrimmed && lastTrimmed.length < lastRaw.length) {
     const ratio = lastTrimmed.length / lastRaw.length;
     boxes[lastIdx] = { ...lastSpan.box, width: lastSpan.box.width * ratio };
-    texts[lastIdx] = lastTrimmed;
+    texts[lastIdx] = cleanSnippetToken(lastTrimmed);
   }
 
   return { spans: out, boxes, texts };
