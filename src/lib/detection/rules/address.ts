@@ -138,12 +138,21 @@ export const ADDRESS_RULE: DetectionRule = {
   confidence: CONFIDENCE.address,
 };
 
+// Trailing time suffix attached directly to a date — covers "T19:45",
+// " 19:45", and the seconds-bearing variants. Used when the format
+// already ends with a clear day/year token.
+const TRAILING_TIME_SUFFIX = `(?:[ T]\\d{1,2}:\\d{2}(?::\\d{2})?)?`;
+// "Year-or-time" tail used with "<day> <MONTH>" formats — the trailing
+// integer is optional and may carry a ":MM" / ":MM:SS" time suffix
+// attached without a separator (e.g. "18 SEP 19:45").
+const YEAR_OR_TIME_TAIL = `(?:\\s+\\d{1,4}(?::\\d{2}(?::\\d{2})?)?)?`;
+
 export const DATE_RULE: DetectionRule = {
   type: 'date',
   pattern: new RegExp(
-    `(?<![\\p{L}\\p{N}])(?:${OPTIONAL_WEEKDAY_PREFIX}(?:\\d{4}-\\d{2}-\\d{2}(?:[ T]\\d{1,2}:\\d{2}(?::\\d{2})?)?|\\d{1,2}[./\\-]\\d{1,2}[./\\-]\\d{2,4}|` +
-      `\\d{1,2}\\.?\\s+(?:${MONTHS_ALT})\\.?(?:\\s+\\d{2,4})?|` +
-      `(?:${MONTHS_ALT})\\.?\\s+\\d{1,2},?\\s+\\d{2,4}|` +
+    `(?<![\\p{L}\\p{N}])(?:${OPTIONAL_WEEKDAY_PREFIX}(?:\\d{4}-\\d{2}-\\d{2}${TRAILING_TIME_SUFFIX}|\\d{1,2}[./\\-]\\d{1,2}[./\\-]\\d{2,4}${TRAILING_TIME_SUFFIX}|` +
+      `\\d{1,2}\\.?\\s+(?:${MONTHS_ALT})\\.?${YEAR_OR_TIME_TAIL}|` +
+      `(?:${MONTHS_ALT})\\.?\\s+\\d{1,2},?\\s+\\d{2,4}${TRAILING_TIME_SUFFIX}|` +
       `\\d{4}\\s+(?:m\\.?\\s+)?(?:${MONTHS_ALT})\\.?\\s+\\d{1,2}(?:\\s*d\\.?|d\\.?)?))` +
       `(?![\\p{L}\\p{N}])`,
     'giu',

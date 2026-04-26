@@ -5,7 +5,9 @@ export const APP_LIMITS = {
   maxFileSizeMb: 25,
   previewScale: 1.35,
   exportScale: 2,
-  ocrScale: 2,
+  // Higher OCR scale catches small footer / signature text that 2x
+  // misses (e.g. "Paulius Mielkaitis" row on Lithuanian PDF invoices).
+  ocrScale: 3,
   minTextSpanCountForNativeText: 8,
   minTextCharactersForNativeText: 64,
   // Garbled-text fallback thresholds. A page that meets the basic span /
