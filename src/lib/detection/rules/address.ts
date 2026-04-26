@@ -120,7 +120,9 @@ const TOKEN_ADDRESS_BODY =
   `${STREET_TOKEN_CLAUSE}\\s+(?:(?:${CONNECTOR_ALT})\\s+)*${NAME_CHAIN}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
 
 const SAINT_ADDRESS_BODY = `${SAINT_PREFIX}${NAME_CHAIN}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
+const SPACED_SHORT_ADDRESS_BODY = `${INITIALS}${NAME_CHAIN}\\s+${STREET_TOKEN_CLAUSE}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
 const UPPERCASE_SHORT_ADDRESS_BODY = `${UPPERCASE_NAME_CHAIN}\\s+${UPPERCASE_SHORT_STREET_CLAUSE}(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}`;
+const COLLAPSED_SHORT_ADDRESS_BODY = `${INITIALS}${NAME_WORD}(?:${SHORT_STREET_ALT})\\.\\s*${NUMBER_CLAUSE}`;
 const OPTIONAL_WEEKDAY_PREFIX = `(?:(?:${WEEKDAYS_ALT})\\.?\\s+)?`;
 
 export const ADDRESS_RULE: DetectionRule = {
@@ -131,7 +133,11 @@ export const ADDRESS_RULE: DetectionRule = {
       `|` +
       `(?:${SAINT_ADDRESS_BODY})(?:${POSTAL_SEGMENT}(?:${CITY_SEGMENT})?|${CITY_SEGMENT})?` +
       `|` +
+      `(?:${SPACED_SHORT_ADDRESS_BODY})(?:${POSTAL_SEGMENT}(?:${CITY_SEGMENT})?|${CITY_SEGMENT})?` +
+      `|` +
       `(?:${UPPERCASE_SHORT_ADDRESS_BODY})(?:${POSTAL_SEGMENT}(?:${CITY_SEGMENT})?|${CITY_SEGMENT})?` +
+      `|` +
+      `(?:${COLLAPSED_SHORT_ADDRESS_BODY})(?:${POSTAL_SEGMENT}(?:${CITY_SEGMENT})?|${CITY_SEGMENT})?` +
       `)`,
     'gu',
   ),

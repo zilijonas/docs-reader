@@ -356,6 +356,19 @@ describe('detectSensitiveData multi-locale', () => {
     );
   });
 
+  it('detects collapsed short street tokens from garbled PDF text extraction', () => {
+    const detections = detectSingleSpan('Kriviųg.27-17');
+
+    expect(snippetsOfType(detections, 'address')).toContain('Kriviųg.27-17');
+  });
+
+  it('detects standalone Lithuanian short street addresses without a city suffix', () => {
+    const { text, spans } = buildPage(['Krivių', 'g.', '27', '-', '17']);
+    const detections = detectSensitiveData(0, text, spans);
+
+    expect(snippetsOfType(detections, 'address')).toContain('Krivių g. 27 - 17');
+  });
+
   it('detects uppercase Lithuanian short street abbreviations without dots when address-like', () => {
     const detections = detectSingleSpan('KONSITUCIJOS PR 12');
 
