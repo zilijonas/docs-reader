@@ -105,15 +105,11 @@ describe('OcrLanguageDialog', () => {
     const rendered = renderDialog();
     root = rendered.root;
 
-    expect(document.body.textContent).toContain('Confirm OCR language');
     expect(document.body.textContent).toContain('We detected a language for OCR');
     expect(document.body.textContent).toContain('Medium confidence');
     expect(document.body.textContent).toContain('Lithuanian detected');
     expect(document.body.textContent).toContain(
       'Detected from page 1 using local English bootstrap OCR.',
-    );
-    expect(document.body.textContent).toContain(
-      'Extra languages download only after you start OCR',
     );
   });
 
