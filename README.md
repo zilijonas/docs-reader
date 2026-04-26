@@ -3,7 +3,7 @@
 Document Redactor is a privacy-first PDF redaction prototype that runs directly in the browser. It now uses a worker-first two-lane pipeline:
 
 - Searchable pages stay on a native PDF text lane powered by Pyodide + PyMuPDF.
-- Scanned or image-heavy pages fall back to OCR with Tesseract.js.
+- Scanned or image-heavy pages fall back to OCR with Tesseract.js. When a PDF has no searchable text, the app uses a small local English OCR pass on the first queued scan pages to suggest OCR languages before asking the user to confirm.
 
 The review UI stays responsive because the heavy extraction, OCR, preview rendering, and export work happen off the main thread.
 
@@ -70,7 +70,7 @@ The project includes a GitHub Pages workflow in `.github/workflows/deploy.yml`.
 - PDF only for ingestion
 - 25 MB max file size
 - 30 page max document size
-- English OCR assets ship with the app; extra OCR languages can be auto-selected from searchable text and fetched on demand when needed
+- English OCR assets ship with the app; extra OCR languages can be auto-selected from searchable text or local bootstrap OCR and fetched only after the user confirms OCR
 - Review-first workflow with no auto-export
 
 ## UI styling

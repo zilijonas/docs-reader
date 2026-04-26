@@ -18,7 +18,7 @@ import {
   hashBuffer,
   filterExportBoxes,
 } from './state';
-import { runQueuedOcr } from './tesseract';
+import { detectQueuedOcrLanguages, runQueuedOcr } from './tesseract';
 
 type HandlerMap = {
   [K in WorkerRequest['type']]: (message: Extract<WorkerRequest, { type: K }>) => Promise<void>;
@@ -34,6 +34,7 @@ const buildPdfLoadedPayload = (options: {
   spans: state.spans,
   warnings: state.warnings,
   ocrLanguages: options.ocrLanguages ?? state.ocrLanguages,
+  ocrLanguageDetection: state.ocrLanguageDetection,
   needsOcrLanguageSelection: options.needsOcrLanguageSelection,
   ocrCompleted: options.ocrCompleted,
 });
@@ -122,8 +123,11 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
   const ocrPlan = planOcrLanguageFlow(state.pages);
   state.ocrLanguages =
     ocrPlan.resolvedLanguages.length > 0 ? ocrPlan.resolvedLanguages : [...DEFAULT_OCR_LANGUAGES];
+  state.ocrLanguageDetection = ocrPlan.ocrLanguageDetection;
 
   if (ocrPlan.needsLanguageSelection) {
+    state.ocrLanguageDetection = await detectQueuedOcrLanguages(message.requestId);
+    state.ocrLanguages = state.ocrLanguageDetection.languages;
     postPdfLoaded(message.requestId, {
       ocrLanguages: state.ocrLanguages,
       needsOcrLanguageSelection: true,

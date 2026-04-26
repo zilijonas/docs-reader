@@ -44,6 +44,12 @@ class FakeWorker {
               spans: [],
               warnings: [],
               ocrLanguages: ['eng'],
+              ocrLanguageDetection: {
+                method: 'default',
+                languages: ['eng'],
+                confidence: 'low',
+                detectedLanguage: 'eng',
+              },
               needsOcrLanguageSelection: false,
               ocrCompleted: true,
             },

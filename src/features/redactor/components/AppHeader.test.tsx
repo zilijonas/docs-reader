@@ -43,6 +43,7 @@ function createWorkflowContext(): WorkflowContextValue {
     isProcessing: false,
     isSidebarOpen: false,
     keywordDraft: '',
+    ocrLanguageDetection: null,
     openConfirmAllExportModal: vi.fn(),
     openResetConfirmModal: vi.fn(),
     progress: null,

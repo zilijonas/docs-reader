@@ -2,6 +2,7 @@ import { useMemo, useReducer } from 'react';
 
 import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
 import { REDACTOR_UI } from '../config';
+import type { OcrLanguageDetection } from '../../../types';
 
 interface WorkflowUiState {
   appHeaderHeight: number;
@@ -10,6 +11,7 @@ interface WorkflowUiState {
   isOcrLanguageModalOpen: boolean;
   isSidebarOpen: boolean;
   keywordDraft: string;
+  ocrLanguageDetection: OcrLanguageDetection | null;
   selectedOcrLanguages: string[];
   showConfirmAllExportModal: boolean;
   showResetConfirmModal: boolean;
@@ -30,6 +32,7 @@ type WorkflowUiAction =
   | { type: 'set-desktop-sidebar-open'; value: boolean }
   | { type: 'set-keyword-draft'; value: string }
   | { type: 'set-mobile-viewport'; value: boolean }
+  | { type: 'set-ocr-language-detection'; value: OcrLanguageDetection | null }
   | { type: 'set-ocr-language-modal-open'; value: boolean }
   | { type: 'set-review-panel-open'; value: boolean }
   | { type: 'set-selected-ocr-languages'; value: string[] }
@@ -44,6 +47,7 @@ const createInitialState = (): WorkflowUiState => ({
   isOcrLanguageModalOpen: false,
   isSidebarOpen: false,
   keywordDraft: '',
+  ocrLanguageDetection: null,
   selectedOcrLanguages: [...DEFAULT_OCR_LANGUAGES],
   showConfirmAllExportModal: false,
   showResetConfirmModal: false,
@@ -94,6 +98,7 @@ const workflowUiReducer = (state: WorkflowUiState, action: WorkflowUiAction): Wo
         !state.isOcrLanguageModalOpen &&
         !state.isSidebarOpen &&
         state.keywordDraft === '' &&
+        state.ocrLanguageDetection === null &&
         state.selectedOcrLanguages.join(',') === DEFAULT_OCR_LANGUAGES.join(',') &&
         !state.showConfirmAllExportModal &&
         !state.showResetConfirmModal &&
@@ -107,6 +112,7 @@ const workflowUiReducer = (state: WorkflowUiState, action: WorkflowUiAction): Wo
         isOcrLanguageModalOpen: false,
         isSidebarOpen: false,
         keywordDraft: '',
+        ocrLanguageDetection: null,
         selectedOcrLanguages: [...DEFAULT_OCR_LANGUAGES],
         showConfirmAllExportModal: false,
         showResetConfirmModal: false,
@@ -137,6 +143,11 @@ const workflowUiReducer = (state: WorkflowUiState, action: WorkflowUiAction): Wo
         // Never keep drawer-overlay state across viewport mode changes.
         isSidebarOpen: false,
       };
+    case 'set-ocr-language-detection':
+      if (state.ocrLanguageDetection === action.value) {
+        return state;
+      }
+      return { ...state, ocrLanguageDetection: action.value };
     case 'set-ocr-language-modal-open':
       if (state.isOcrLanguageModalOpen === action.value) {
         return state;
@@ -198,6 +209,8 @@ export function useUiState() {
         dispatch({ type: 'set-desktop-sidebar-open', value }),
       setKeywordDraft: (value: string) => dispatch({ type: 'set-keyword-draft', value }),
       setMobileViewport: (value: boolean) => dispatch({ type: 'set-mobile-viewport', value }),
+      setOcrLanguageDetection: (value: OcrLanguageDetection | null) =>
+        dispatch({ type: 'set-ocr-language-detection', value }),
       setOcrLanguageModalOpen: (value: boolean) =>
         dispatch({ type: 'set-ocr-language-modal-open', value }),
       setReviewPanelOpen: (value: boolean) => dispatch({ type: 'set-review-panel-open', value }),

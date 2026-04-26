@@ -6,7 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/cn';
 import { Panel } from './Panel';
 
-const dialogPanelVariants = cva('w-full', {
+const dialogPanelVariants = cva('w-full my-auto', {
   variants: {
     size: {
       sm: 'max-w-sm',
@@ -53,7 +53,7 @@ export function Dialog({ children, className, labelledBy, onClose, open, size, t
       aria-labelledby={labelledBy}
       aria-modal="true"
       className={cn(
-        'bg-content/35 fixed inset-0 flex justify-center px-4 backdrop-blur-sm',
+        'bg-content/35 fixed inset-0 flex max-h-screen justify-center overflow-y-auto px-4 pb-4 backdrop-blur-sm',
         top
           ? 'z-modal-top items-start pt-[calc(env(safe-area-inset-top)+1rem)]'
           : 'z-modal items-center',

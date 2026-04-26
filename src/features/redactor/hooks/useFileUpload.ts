@@ -2,7 +2,7 @@ import type { ChangeEvent, DragEvent, MutableRefObject } from 'react';
 import { useRef } from 'react';
 
 import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
-import type { ExportJob, ProcessingProgress, TextSpan } from '../../../types';
+import type { ExportJob, OcrLanguageDetection, ProcessingProgress, TextSpan } from '../../../types';
 import type { RedactorWorkerClient } from '../../../lib/worker-client';
 import { validateSelectedFile } from '../fileValidation';
 
@@ -19,6 +19,7 @@ export function useFileUpload({
   setFallbackExportReady,
   setIsProcessing,
   setProgress,
+  setOcrLanguageDetection,
   setSelectedOcrLanguages,
   setSpans,
 }: {
@@ -44,6 +45,7 @@ export function useFileUpload({
   setFallbackExportReady: (enabled: boolean) => void;
   setIsProcessing: (value: boolean) => void;
   setProgress: (progress: ProcessingProgress | null) => void;
+  setOcrLanguageDetection: (detection: OcrLanguageDetection | null) => void;
   setSelectedOcrLanguages: (languages: string[]) => void;
   setSpans: (spans: TextSpan[]) => void;
 }) {
@@ -82,6 +84,7 @@ export function useFileUpload({
         : [];
 
       setSelectedOcrLanguages(nextOcrLanguages);
+      setOcrLanguageDetection(response.payload.ocrLanguageDetection);
 
       if (response.payload.needsOcrLanguageSelection) {
         setProgress(null);

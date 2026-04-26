@@ -2,8 +2,9 @@ import { createWorker as createTesseractWorker, OEM } from 'tesseract.js';
 
 import { APP_LIMITS, DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
 import { TESSDATA_CDN } from '../../lib/detection/config';
+import { detectOcrLanguagesFromBootstrapText } from '../../lib/ocr-language-inference';
 import { extractOcrWords } from '../../lib/ocr';
-import type { PageAsset, TextSpan } from '../../types';
+import type { OcrLanguageDetection, PageAsset, TextSpan } from '../../types';
 import { runPythonBytes } from './pyodide';
 import { state, toOwnedArrayBuffer, updateProgress, pushWarning } from './state';
 
@@ -130,6 +131,8 @@ export const applyOcrLayer = (page: PageAsset, ocrLayer: { text: string; spans: 
 export const runQueuedOcr = async (languages: string[], requestId: number) => {
   const normalizedLanguages = normalizeLanguages(languages);
   const ocrPages = state.pages.filter((page) => page.lane === 'ocr' && page.ocrStatus === 'queued');
+  const canReuseBootstrap =
+    normalizedLanguages.length === 1 && normalizedLanguages[0] === DEFAULT_OCR_LANGUAGES[0];
 
   state.ocrLanguages = normalizedLanguages;
 
@@ -144,7 +147,8 @@ export const runQueuedOcr = async (languages: string[], requestId: number) => {
     });
 
     try {
-      const ocrLayer = await runPageOcr(page, normalizedLanguages, requestId);
+      const cachedLayer = canReuseBootstrap ? state.bootstrapOcrLayers[page.pageIndex] : undefined;
+      const ocrLayer = cachedLayer ?? (await runPageOcr(page, normalizedLanguages, requestId));
       applyOcrLayer(page, ocrLayer);
     } catch (error) {
       state.pages = state.pages.map((candidate) =>
@@ -156,4 +160,51 @@ export const runQueuedOcr = async (languages: string[], requestId: number) => {
       );
     }
   }
+};
+
+export const detectQueuedOcrLanguages = async (
+  requestId: number,
+): Promise<OcrLanguageDetection> => {
+  // Tesseract OSD can improve non-Latin script routing later, but it needs
+  // legacy core/lang assets that the current fast LSTM OCR path avoids.
+  const samplePages = state.pages
+    .filter((page) => page.lane === 'ocr' && page.ocrStatus === 'queued')
+    .slice(0, 2);
+
+  if (samplePages.length === 0) {
+    return {
+      method: 'default',
+      languages: [...DEFAULT_OCR_LANGUAGES],
+      confidence: 'low',
+      detectedLanguage: DEFAULT_OCR_LANGUAGES[0],
+    };
+  }
+
+  const sampleTexts: string[] = [];
+  const samplePageIndexes: number[] = [];
+
+  for (let index = 0; index < samplePages.length; index += 1) {
+    const page = samplePages[index];
+
+    updateProgress(requestId, {
+      phase: 'ocr',
+      progress: 0.28 + (index / Math.max(1, samplePages.length)) * 0.08,
+      pageIndex: page.pageIndex,
+      message: `Detecting OCR language from page ${page.pageIndex + 1}…`,
+    });
+
+    try {
+      const ocrLayer = await runPageOcr(page, DEFAULT_OCR_LANGUAGES, requestId);
+      state.bootstrapOcrLayers[page.pageIndex] = ocrLayer;
+      sampleTexts.push(ocrLayer.text);
+      samplePageIndexes.push(page.pageIndex);
+    } catch (error) {
+      pushWarning(
+        requestId,
+        `Could not auto-detect OCR language on page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  return detectOcrLanguagesFromBootstrapText(sampleTexts.join(' '), samplePageIndexes);
 };

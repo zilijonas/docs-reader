@@ -81,12 +81,15 @@ export const copy = {
     ],
   },
   ocr: {
-    eyebrow: 'Choose OCR languages',
-    heading: 'This PDF needs a language hint before OCR',
-    body: 'No searchable text was available for auto-detection. Pick the languages visible in this document, then start OCR.',
-    note: 'Extra languages are fetched on demand and cached by your browser.',
+    eyebrow: 'Confirm OCR language',
+    heading: 'We detected a language for OCR',
+    body: 'Review the selected language before OCR starts. You can change it if the scan looks different.',
+    fallbackHeading: 'Choose languages for PDF text',
+    fallbackBody:
+      'Due to the garbled text, no reliable language was detected. Pick the languages visible in this document to start fallback scanning.',
+    note: 'Your document is not being uploaded anywhere. We are just getting additional context to improve accuracy.',
     cancel: 'Cancel',
-    start: 'Start OCR',
+    start: 'Continue',
   },
   confirmAllExport: {
     title: 'Nothing confirmed yet',

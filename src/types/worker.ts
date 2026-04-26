@@ -25,6 +25,22 @@ export interface OcrLanguageConfig {
   languages: string[];
 }
 
+export type OcrLanguageDetectionConfidence = 'high' | 'medium' | 'low';
+
+export interface OcrLanguageDetectionCandidate {
+  language: string;
+  score: number;
+}
+
+export interface OcrLanguageDetection {
+  method: 'searchable-text' | 'bootstrap-ocr' | 'default';
+  languages: string[];
+  confidence: OcrLanguageDetectionConfidence;
+  detectedLanguage?: string;
+  samplePageIndexes?: number[];
+  candidates?: OcrLanguageDetectionCandidate[];
+}
+
 export interface PagePreviewPayload {
   pageIndex: number;
   mimeType: 'image/png';
@@ -86,6 +102,7 @@ export type WorkerResponse =
         spans: TextSpan[];
         warnings: string[];
         ocrLanguages: string[];
+        ocrLanguageDetection: OcrLanguageDetection;
         needsOcrLanguageSelection: boolean;
         ocrCompleted: boolean;
       };

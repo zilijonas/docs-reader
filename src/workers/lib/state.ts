@@ -8,6 +8,7 @@ import type {
   ProcessingProgress,
   SourceDocument,
   TextSpan,
+  OcrLanguageDetection,
 } from '../../types';
 import { DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
 import type { LithuanianNameDataset } from '../../lib/detection/lt-morphology';
@@ -43,6 +44,8 @@ export type WorkerState = {
   spans: TextSpan[];
   warnings: string[];
   ocrLanguages: string[];
+  ocrLanguageDetection: OcrLanguageDetection;
+  bootstrapOcrLayers: Record<number, { text: string; spans: TextSpan[] }>;
   ltDataset?: LithuanianNameDataset | null;
 };
 
@@ -53,6 +56,13 @@ export const state: WorkerState = {
   spans: [],
   warnings: [],
   ocrLanguages: [...DEFAULT_OCR_LANGUAGES],
+  ocrLanguageDetection: {
+    method: 'default',
+    languages: [...DEFAULT_OCR_LANGUAGES],
+    confidence: 'low',
+    detectedLanguage: DEFAULT_OCR_LANGUAGES[0],
+  },
+  bootstrapOcrLayers: {},
 };
 
 let pythonTaskQueue = Promise.resolve();
@@ -101,6 +111,13 @@ export const resetDocumentState = () => {
   state.spans = [];
   state.warnings = [];
   state.ocrLanguages = [...DEFAULT_OCR_LANGUAGES];
+  state.ocrLanguageDetection = {
+    method: 'default',
+    languages: [...DEFAULT_OCR_LANGUAGES],
+    confidence: 'low',
+    detectedLanguage: DEFAULT_OCR_LANGUAGES[0],
+  };
+  state.bootstrapOcrLayers = {};
   state.ltDataset = undefined;
 };
 

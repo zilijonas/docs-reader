@@ -2,7 +2,13 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, DragEvent, PropsWithChildren, RefObject } from 'react';
 
 import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
-import type { ExportMode, ProcessingProgress, TextSpan, WorkflowPhase } from '../../../types';
+import type {
+  ExportMode,
+  OcrLanguageDetection,
+  ProcessingProgress,
+  TextSpan,
+  WorkflowPhase,
+} from '../../../types';
 import { useReviewStore } from '../../../store/reviewStore';
 import { useDetectionRunner } from '../hooks/useDetectionRunner';
 import { useExportRunner } from '../hooks/useExportRunner';
@@ -37,6 +43,7 @@ interface WorkflowContextValue {
   isProcessing: boolean;
   isSidebarOpen: boolean;
   keywordDraft: string;
+  ocrLanguageDetection: OcrLanguageDetection | null;
   openConfirmAllExportModal: () => void;
   openResetConfirmModal: () => void;
   progress: ProcessingProgress | null;
@@ -98,6 +105,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setAppHeaderHeight,
     setDesktopSidebarOpen,
     setKeywordDraft,
+    setOcrLanguageDetection,
     setMobileViewport,
     setReviewPanelOpen,
     setSelectedOcrLanguages,
@@ -137,6 +145,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setExportJob,
     setFallbackExportReady,
     setIsProcessing,
+    setOcrLanguageDetection,
     setProgress,
     setSelectedOcrLanguages,
     setSpans,
@@ -261,6 +270,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
         warnings: nextWarnings,
       });
       setSelectedOcrLanguages(nextOcrLanguages);
+      setOcrLanguageDetection(response.payload.ocrLanguageDetection);
 
       await runDetections(customKeywords, [], [], true);
     } catch (caughtError) {
@@ -309,6 +319,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
       isProcessing,
       isSidebarOpen: state.isSidebarOpen,
       keywordDraft: state.keywordDraft,
+      ocrLanguageDetection: state.ocrLanguageDetection,
       openConfirmAllExportModal,
       openResetConfirmModal,
       progress,
@@ -365,6 +376,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
       state.isOcrLanguageModalOpen,
       state.isSidebarOpen,
       state.keywordDraft,
+      state.ocrLanguageDetection,
       state.selectedOcrLanguages,
       state.showConfirmAllExportModal,
       state.showResetConfirmModal,
