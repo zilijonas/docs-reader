@@ -125,7 +125,7 @@ def load_document_from_bytes(
         )
         if garbled:
             warnings.append(
-                f"Page {page_index + 1} has a broken text layer — falling back to OCR."
+                f"Page {page_index + 1} has some scanned or garbled text. Some sensitive content may be missed."
             )
         lane = "searchable" if meets_thresholds and not garbled else "ocr"
 
