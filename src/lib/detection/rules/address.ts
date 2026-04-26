@@ -11,11 +11,50 @@ import {
 } from '../locales/street-tokens';
 import type { DetectionRule } from '../rule';
 
-const NAME_WORD = `\\p{Lu}[\\p{L}\\-'’]{1,40}`;
-const UPPERCASE_NAME_WORD = `\\p{Lu}{2,}[\\p{L}\\-'’]{0,40}`;
+// Words that frequently precede an address (form labels, country names that
+// front the next line) — we must not let NAME_CHAIN swallow them, otherwise
+// the highlight bleeds into surrounding context.
+const ADDRESS_PREFIX_BLOCKLIST = [
+  'Adresas',
+  'Adres',
+  'Address',
+  'Adresse',
+  'Adrese',
+  'Direccion',
+  'Dirección',
+  'Latvija',
+  'Latvia',
+  'Lietuva',
+  'Liettua',
+  'Estija',
+  'Estonia',
+  'Lenkija',
+  'Vokietija',
+  'Date',
+  'Data',
+  'Tel',
+  'Phone',
+  'Insurance',
+  'INSURANCE',
+  'BPC',
+  'Travel',
+  'TRAVEL',
+  'RA',
+  'Įmonės',
+  'Imones',
+  'Įmonė',
+  'Imone',
+  'Kodas',
+  'Reg',
+];
+const ADDRESS_BLOCK_ALT = ADDRESS_PREFIX_BLOCKLIST.join('|');
+const NAME_WORD = `(?!(?:${ADDRESS_BLOCK_ALT})\\b)\\p{Lu}[\\p{L}\\-'’]{1,40}`;
+const UPPERCASE_NAME_WORD = `(?!(?:${ADDRESS_BLOCK_ALT})\\b)\\p{Lu}{2,}[\\p{L}\\-'’]{0,40}`;
 const NAME_CHAIN = `${NAME_WORD}(?:\\s+(?:(?:${CONNECTOR_ALT})\\s+)?${NAME_WORD}){0,4}`;
 const UPPERCASE_NAME_CHAIN = `${UPPERCASE_NAME_WORD}(?:\\s+${UPPERCASE_NAME_WORD}){0,4}`;
-const INITIALS = `(?:\\p{Lu}\\.\\s*){0,3}`;
+// Allow 1-3 letter abbreviations like "J.", "Kr.", "Sv.", "St." so the
+// match captures full street prefixes such as "Kr. Valdemāra iela".
+const INITIALS = `(?:\\p{Lu}\\p{Ll}{0,2}\\.\\s*){0,3}`;
 const SAINT_PREFIX = `(?:[ŠšSs]v\\.?\\s*)`;
 const NUMBER_CLAUSE = `\\d{1,4}[\\p{L}]?(?:\\s*[-–/]\\s*\\d{1,4}[\\p{L}]?)?`;
 const UPPERCASE_SHORT_STREET_CLAUSE = `(?:${SHORT_STREET_ALT})\\.?`;
@@ -31,8 +70,12 @@ const POSTAL_SEGMENT =
   `|\\d{4,6}` +
   `)`;
 
+// City segment must be committed: either by a leading separator (",", ";")
+// or by a trailing city-suffix token (e.g. "m.", "miestas"). Without this,
+// the rule swallows arbitrary capitalized words that follow the address.
 const CITY_SEGMENT =
-  `\\s*[,;]?\\s*${NAME_CHAIN}` + `(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?`;
+  `(?:\\s*[,;]\\s*${NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?` +
+  `|\\s+${NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?))`;
 
 const TOKEN_ADDRESS_BODY =
   `\\p{Lu}[\\p{L}\\-'’]{0,40}(?:${LONG_STREET_ALT})(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}` +

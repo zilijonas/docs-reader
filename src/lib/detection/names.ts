@@ -20,6 +20,7 @@ import {
 
 const NAME_WORD_RE = /^\p{Lu}[\p{L}\-'’]{1,40}$/u;
 const ALL_CAPS_NAME_RE = /^\p{Lu}{2,}[\p{L}\-'’]{0,40}$/u;
+const TITLE_CASE_NAME_RE = /^\p{Lu}\p{Ll}+(?:[-’'][\p{L}]{1,40})*$/u;
 const LOWER_CONNECTOR_RE = /^[\p{Ll}]{1,4}$/u;
 const HAS_DIGIT_RE = /\d/u;
 const PUNCT_STOP_RE = /[.!?;]$/u;
@@ -31,12 +32,51 @@ const CAPITALIZED_LANE_STOPWORDS = new Set<string>([
 ]);
 
 const LABEL_NAME_CONFIDENCE = 0.9;
+const HONORIFIC_NAME_CONFIDENCE = 0.88;
 const CAPITALIZED_NAME_CONFIDENCE = 0.55;
 const LT_NAME_CONFIDENCE_EXACT = 0.85;
 const LT_NAME_CONFIDENCE_INFLECTED = 0.8;
 const MAX_NAME_TOKENS = 4;
+const HONORIFIC_NAME_MAX_TOKENS = 4;
 const LT_MAX_WINDOW = 4;
 const LT_MAX_MIDDLE_TOKENS = 2;
+
+const HONORIFICS = new Set<string>([
+  'mr',
+  'mr.',
+  'mrs',
+  'mrs.',
+  'ms',
+  'ms.',
+  'miss',
+  'dr',
+  'dr.',
+  'sir',
+  'madam',
+  'mister',
+  'mistress',
+  'pon',
+  'pon.',
+  'p',
+  'p.',
+  'herr',
+  'frau',
+  'don',
+  'doña',
+  'dona',
+  'sr',
+  'sr.',
+  'sra',
+  'sra.',
+  'srta',
+  'srta.',
+]);
+
+const isHonorificToken = (raw: string) => {
+  const cleaned = raw.trim().toLowerCase();
+  if (!cleaned) return false;
+  return HONORIFICS.has(cleaned) || HONORIFICS.has(stripTrailingPunctuation(cleaned));
+};
 
 interface LineGroup {
   y: number;
@@ -171,6 +211,7 @@ const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] =>
 
       const afterLabelSameLine = line.spans.slice(spanIndex + labelWidth);
       let nameSpans = collectNameSpans(afterLabelSameLine);
+      let fromNextLine = false;
 
       // Fallback: name appears on the next line close below.
       if (nameSpans.length === 0) {
@@ -179,13 +220,30 @@ const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] =>
           const verticalGap = nextLine.y - (line.y + line.height);
           if (verticalGap >= -line.height && verticalGap < 2 * line.height) {
             nameSpans = collectNameSpans(nextLine.spans);
+            fromNextLine = true;
           }
         }
       }
 
-      const detection = buildDetection(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE);
-      if (detection) {
-        detections.push(detection);
+      // For same-line collection, a single-token name is fine ("Vorname: Hans").
+      // For next-line fallback, require ≥2 tokens — single-token next-line
+      // collection frequently picks up adjacent label cells in wide tables
+      // (e.g. "Gimimo", "Имя", "Name,") rather than an actual person name.
+      const meetsTokenCount = fromNextLine ? nameSpans.length >= 2 : nameSpans.length >= 1;
+      if (meetsTokenCount) {
+        const tokens = nameSpans.map((span) => stripColonSuffix(span.text.trim()).toLowerCase());
+        const allTokensAreLabels = tokens.every(
+          (token) =>
+            NAME_LABEL_SINGLE.has(token) ||
+            NAME_STOPWORDS.has(token) ||
+            NAME_LABEL_PHRASES.some((phrase) => phrase.includes(token)),
+        );
+        if (!allTokensAreLabels) {
+          const detection = buildDetection(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE);
+          if (detection) {
+            detections.push(detection);
+          }
+        }
       }
 
       // Skip past the label to avoid re-triggering on the same tokens.
@@ -273,6 +331,98 @@ const detectLithuanian = (
   return detections;
 };
 
+// Detect personal names anchored to a "Mr"/"Mrs"/"Ms"/"Miss"/"Dr"
+// honorific. Catches three common ticket / letter shapes:
+//   1. "MR FIRSTNAME [MIDDLE] LASTNAME"
+//   2. "FIRSTNAME [MIDDLE] LASTNAME MR"
+//   3. "LASTNAME/FIRSTNAME [MIDDLE] MR"  (airline ticket / PNR style)
+// Names may be Title-Case or ALL-CAPS — the honorific anchor lets us
+// be confident about ALL-CAPS sequences that the bare capitalized
+// fallback rightly avoids.
+const splitSlashNamePart = (raw: string): string[] => {
+  if (!raw.includes('/')) return [raw];
+  return raw
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+};
+
+const isHonorificNameToken = (raw: string) => {
+  const token = stripTrailingPunctuation(raw.trim());
+  if (!token || HAS_DIGIT_RE.test(token)) return false;
+  if (NAME_STOPWORDS.has(token.toLowerCase())) return false;
+  if (isHonorificToken(token)) return false;
+  return NAME_WORD_RE.test(token) || ALL_CAPS_NAME_RE.test(token);
+};
+
+const collectHonorificName = (spans: TextSpan[], startIdx: number, dir: 1 | -1): TextSpan[] => {
+  const collected: TextSpan[] = [];
+  let i = startIdx;
+  while (i >= 0 && i < spans.length && collected.length < HONORIFIC_NAME_MAX_TOKENS) {
+    const span = spans[i];
+    const raw = span.text.trim();
+    const cleaned = stripColonSuffix(raw);
+    if (!cleaned || HAS_DIGIT_RE.test(cleaned)) break;
+    if (isHonorificToken(cleaned)) break;
+    const parts = splitSlashNamePart(cleaned);
+    if (!parts.every(isHonorificNameToken)) break;
+    if (dir === 1) collected.push(span);
+    else collected.unshift(span);
+    if (hasSentenceStop(raw) && dir === 1) break;
+    i += dir;
+  }
+  return collected;
+};
+
+const detectHonorificNames = (
+  pageIndex: number,
+  lines: LineGroup[],
+  covered: Set<TextSpan>,
+): Detection[] => {
+  const detections: Detection[] = [];
+
+  for (const line of lines) {
+    const spans = line.spans;
+    for (let i = 0; i < spans.length; i += 1) {
+      const span = spans[i];
+      const cleaned = stripColonSuffix(span.text.trim());
+      if (!isHonorificToken(cleaned)) continue;
+
+      // Try forward (honorific precedes name).
+      const forward = collectHonorificName(spans, i + 1, 1);
+      // Try backward (honorific trails name).
+      const backward = collectHonorificName(spans, i - 1, -1);
+
+      const useForward = forward.length >= backward.length;
+      const nameWindow = useForward ? forward : backward;
+      if (nameWindow.length < 1) continue;
+      const fullWindow = useForward ? [span, ...nameWindow] : [...nameWindow, span];
+      if (fullWindow.some((s) => covered.has(s))) continue;
+
+      const detection = buildDetection(pageIndex, fullWindow, HONORIFIC_NAME_CONFIDENCE);
+      if (!detection) continue;
+
+      detections.push(detection);
+      for (const s of fullWindow) covered.add(s);
+    }
+  }
+
+  return detections;
+};
+
+// Capitalized fallback only fires on Title-Case tokens (Lu followed by
+// Ll). All-caps pairs in headers ("FLIGHT BOOKING", "TO BILBAO",
+// currency rows) generate too many false positives to be useful as a
+// redaction suggestion. The label-based detector and the LT morphology
+// dataset still cover both casings.
+const isTitleCaseNameToken = (raw: string) => {
+  const token = stripTrailingPunctuation(raw.trim());
+  if (!token || HAS_DIGIT_RE.test(token)) return false;
+  if (NAME_STOPWORDS.has(token.toLowerCase())) return false;
+  if (token.length < 2) return false;
+  return TITLE_CASE_NAME_RE.test(token);
+};
+
 const detectCapitalizedFallback = (
   pageIndex: number,
   lines: LineGroup[],
@@ -290,7 +440,7 @@ const detectCapitalizedFallback = (
         continue;
       }
       const cleaned = stripColonSuffix(span.text.trim());
-      if (!isNameToken(cleaned)) {
+      if (!isTitleCaseNameToken(cleaned)) {
         i += 1;
         continue;
       }
@@ -303,15 +453,10 @@ const detectCapitalizedFallback = (
 
       const window: TextSpan[] = [span];
       let j = i + 1;
-      let stoppedByHit = false;
       while (j < spans.length && window.length < 3) {
         const nextCleaned = stripColonSuffix(spans[j].text.trim());
-        if (isNameToken(nextCleaned)) {
-          const nextLower = nextCleaned.toLowerCase();
-          if (CAPITALIZED_LANE_STOPWORDS.has(nextLower)) {
-            stoppedByHit = true;
-            break;
-          }
+        if (isTitleCaseNameToken(nextCleaned)) {
+          if (CAPITALIZED_LANE_STOPWORDS.has(nextCleaned.toLowerCase())) break;
           window.push(spans[j]);
           if (hasSentenceStop(spans[j].text.trim())) {
             j += 1;
@@ -322,7 +467,7 @@ const detectCapitalizedFallback = (
         }
         if (window.length > 1 && isConnectorToken(nextCleaned)) {
           const lookahead = spans[j + 1];
-          if (lookahead && isNameToken(stripColonSuffix(lookahead.text.trim()))) {
+          if (lookahead && isTitleCaseNameToken(stripColonSuffix(lookahead.text.trim()))) {
             window.push(spans[j]);
             j += 1;
             continue;
@@ -331,8 +476,7 @@ const detectCapitalizedFallback = (
         break;
       }
 
-      if (window.length >= 2 && !stoppedByHit) {
-        // Avoid overlap with legal-entity prefix: skip window preceded by stopword on same line.
+      if (window.length >= 2) {
         const prev = spans[i - 1];
         const prevLower = prev ? stripColonSuffix(prev.text.trim()).toLowerCase() : '';
         if (!prevLower || !CAPITALIZED_LANE_STOPWORDS.has(prevLower)) {
@@ -360,6 +504,7 @@ export const detectNames = (
 
   const detections: Detection[] = [];
   detections.push(...detectLabelBased(pageIndex, lines));
+  detections.push(...detectHonorificNames(pageIndex, lines, covered));
 
   if (ltDataset && ltDataset.firstNames.size > 0) {
     detections.push(...detectLithuanian(pageIndex, lines, ltDataset, covered));

@@ -9,7 +9,7 @@ const POSTAL_PATTERNS = [
   '\\b\\d{2}-\\d{3}\\b',
   '\\b\\d{4}-\\d{3}\\b',
   '\\b0\\d{4}\\b',
-  '\\b(?:LT|LV|AT|BE|CH|DE|FR|IT|ES|PT|PL|SE|FI|DK|NO|NL|HR|SI|SK|CZ|HU|RO|GR|BG|EE|IE)-?\\s?\\d{3,5}\\b',
+  '(?<!(?:Nr\\.|No\\.|Nº|Reg\\.)\\s?)\\b(?:LT|LV|AT|BE|CH|DE|FR|IT|ES|PT|PL|SE|FI|DK|NO|NL|HR|SI|SK|CZ|HU|RO|GR|BG|EE|IE)-\\d{4,5}\\b|\\b(?:LT|LV|EE)\\d{4,5}\\b',
   '(?:\\b(?:PLZ|CAP|CP|ZIP|post(?:al)?\\s*code|postcode|pašto\\s*kodas|kod\\s*pocztowy|PSČ|ирис|postnummer)\\b[^\\d]{0,6})\\d{3,5}(?:-\\d{3,4})?',
   '\\b[AC-FHKNPRTV-Y]\\d{2}\\s?[AC-FHKNPRTV-Y0-9]{4}\\b',
 ];
@@ -20,8 +20,98 @@ const POSTAL_PREFIX_COUNTRY =
   '(?:LT|LV|EE|AT|BE|CH|DE|FR|IT|ES|PT|PL|SE|FI|DK|NO|NL|HR|SI|SK|CZ|HU|RO|GR|BG|IE)';
 const IBAN_SEPARATOR = '[\\s\\u00A0]?';
 const VEHICLE_UNIT_SUFFIX = '(?:km|kms|kilometers?|kilometres?|mi|miles?)';
+// Plate token must be one of the well-known compact country layouts.
+// Any free-form 2-3 segment alphanumeric run produces too many false
+// positives in invoices/itineraries (currency amounts, flight numbers,
+// booking refs, table cells).
+// Plate layouts: letters-digits, digits-letters, or letter-digit-letter
+// triplets. We rely on the postFilter to drop the noisier matches.
 const LICENSE_PLATE_RE =
-  /\b(?=[A-Z0-9 -]{5,11}\b)(?=[A-Z0-9 -]*[A-Z])(?=[A-Z0-9 -]*\d)(?!\d{5,11}\b)[A-Z0-9]{1,3}[ -]?[A-Z0-9]{1,4}[ -]?[A-Z0-9]{1,4}\b/giu;
+  /(?<![\p{L}\p{N}])(?:[A-Z]{1,3}[ -]?\d{2,5}[ -]?[A-Z]{0,3}|\d{1,4}[ -]?[A-Z]{1,3}[ -]?\d{0,4}|[A-Z]{2}\d{2}[ -]?[A-Z]{3})(?![\p{L}\p{N}])/giu;
+const PLATE_WORD_BLOCKLIST = new Set([
+  'EUR',
+  'USD',
+  'GBP',
+  'CHF',
+  'PLN',
+  'SEK',
+  'NOK',
+  'DKK',
+  'CZK',
+  'HUF',
+  'RON',
+  'BGN',
+  'JPY',
+  'CNY',
+  'KM',
+  'KMS',
+  'MILE',
+  'MILES',
+  'IBAN',
+  'SWIFT',
+  'BIC',
+  'NON',
+  'STOP',
+  'ETKT',
+  'PCS',
+  'PC',
+  'BB',
+  'HB',
+  'AI',
+  'ETK',
+  'TRAVEL',
+  'FLIGHT',
+  'BOOKING',
+  // Common 2-letter IATA airline codes — collide with 2-letter plate +
+  // 3-4 digit flight numbers ("BT 685", "IB 440").
+  'BT',
+  'IB',
+  'IS',
+  'AY',
+  'AF',
+  'BA',
+  'KL',
+  'LH',
+  'LO',
+  'SK',
+  'AZ',
+  'TK',
+  'OS',
+  'FR',
+  'U2',
+  'EW',
+  'KM',
+  'MS',
+  'OK',
+  'RO',
+  'SN',
+  'TP',
+  // Month / weekday abbreviations — collide with day-month-year date
+  // shorthand ("18 SEP 19", "MON 18").
+  'JAN',
+  'FEB',
+  'MAR',
+  'APR',
+  'MAY',
+  'JUN',
+  'JUL',
+  'AUG',
+  'SEP',
+  'SEPT',
+  'OCT',
+  'NOV',
+  'DEC',
+  'MON',
+  'TUE',
+  'TUES',
+  'WED',
+  'THU',
+  'THUR',
+  'THURS',
+  'FRI',
+  'SAT',
+  'SUN',
+]);
 
 const normalizeWhitespace = (value: string) => value.replace(/[\s\u00A0]+/gu, ' ').trim();
 
@@ -61,8 +151,43 @@ const isLongPhoneLike = (value: string) => {
     return false;
   }
 
+  if (/^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/u.test(normalized)) {
+    return false;
+  }
+
+  // Reject numbered list rows like "3. 1995.11.25" or "1. 100 000": the
+  // phone rule otherwise grabs a row index plus the next column.
+  if (/^\d{1,3}\.\s/u.test(normalized)) {
+    return false;
+  }
+
+  // Reject anything containing a date in YYYY.MM.DD or YYYY-MM-DD form.
+  if (/\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2}/u.test(normalized)) {
+    return false;
+  }
+
+  if (/^\+?\d{1,3}(?:\s\d{3}){2,}$/u.test(normalized)) {
+    return false;
+  }
+
   if (new RegExp(`\\b${VEHICLE_UNIT_SUFFIX}\\b`, 'iu').test(normalized)) {
     return false;
+  }
+
+  const hasPhoneMarker = /[+()\-–—]/.test(normalized);
+
+  // Without a phone marker, reject shapes that aren't phone-like:
+  //   - first group ≥ 4 digits (e.g. "2023 09308", "0501 2222")
+  //   - more than 4 groups total ("10 10 000 6 000", table cells)
+  if (!hasPhoneMarker) {
+    const groups = normalized.split(/\s+/u).filter(Boolean);
+    if (groups.length > 4) {
+      return false;
+    }
+    const firstGroup = groups[0] ?? '';
+    if (/^\d+$/u.test(firstGroup) && firstGroup.length >= 4) {
+      return false;
+    }
   }
 
   return /[+\s().-]/.test(normalized);
@@ -70,27 +195,40 @@ const isLongPhoneLike = (value: string) => {
 
 const isShortServicePhone = (value: string) => /^[1-9]\d{4,5}$/u.test(value);
 
+const isCardLikeFormat = (value: string) => {
+  const compact = value.replace(/[ -]+/g, '');
+  if (!/^\d{13,19}$/.test(compact)) return false;
+  if (!/[ -]/.test(value)) return true;
+  const groups = value.trim().split(/[ -]+/);
+  if (groups.length === 4 && groups.every((group) => /^\d{4}$/.test(group))) return true;
+  if (
+    groups.length === 3 &&
+    /^\d{4}$/.test(groups[0]) &&
+    /^\d{6}$/.test(groups[1]) &&
+    /^\d{5}$/.test(groups[2])
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const isLikelyLicensePlate = (value: string) => {
   const trimmed = value.trim();
-  const compact = trimmed.replace(/[ -]+/gu, '');
+  const compact = trimmed.replace(/[ -]+/gu, '').toUpperCase();
 
-  if (compact.length < 5 || compact.length > 11) {
+  if (compact.length < 5 || compact.length > 9) {
     return false;
   }
 
-  if (!/^[A-Z0-9]+$/iu.test(compact)) {
+  if (!/^[A-Z0-9]+$/u.test(compact)) {
     return false;
   }
 
-  if (!/[A-Z]/iu.test(compact) || !/\d/u.test(compact)) {
+  if (!/[A-Z]/u.test(compact) || !/\d/u.test(compact)) {
     return false;
   }
 
-  if (/^\d+$/u.test(compact)) {
-    return false;
-  }
-
-  if (new RegExp(`^(?:${POSTAL_PREFIX_COUNTRY})\\d{3,5}$`, 'iu').test(compact)) {
+  if (new RegExp(`^(?:${POSTAL_PREFIX_COUNTRY})\\d{3,5}$`, 'u').test(compact)) {
     return false;
   }
 
@@ -98,10 +236,14 @@ const isLikelyLicensePlate = (value: string) => {
     return false;
   }
 
-  // Case-insensitive matching catches OCR/lowercase plates, but ordinary
-  // lowercase prose across spaces is too noisy for redaction suggestions.
   if (/[a-ząčęėįšųūž]/u.test(trimmed) && /[ -]/u.test(trimmed)) {
     return false;
+  }
+
+  for (const segment of trimmed.toUpperCase().split(/[ -]+/u)) {
+    if (PLATE_WORD_BLOCKLIST.has(segment)) {
+      return false;
+    }
   }
 
   return true;
@@ -132,7 +274,7 @@ export const ID_RULE: DetectionRule = {
   pattern: new RegExp(
     `(?<![\\p{L}\\p{N}])(?:` +
       `(?:Nr\\.?|No\\.?|Nº)\\s*[A-Z0-9]{1,4}-[A-Z0-9]{2,6}` +
-      `|\\d{3}[- ]?\\d{2}[- ]?\\d{4}` +
+      `|\\d{3}-\\d{2}-\\d{4}` +
       `|(?!${POSTAL_PREFIX_COUNTRY}\\d{3,5}(?!\\d))[A-Z]{1,3}\\d{5,10}` +
       `|\\d{2}[A-Z]{2}\\d{6,}` +
       `)(?![\\p{L}\\p{N}])`,
@@ -217,7 +359,10 @@ export const CORE_RULES: DetectionRule[] = [
     type: 'card',
     pattern: /(?<![\d\w])(?:\d[ -]?){12,18}\d(?![\d\w])/g,
     confidence: CONFIDENCE.card,
-    postFilter: isLuhnValid,
+    postFilter: (match) => {
+      if (!isCardLikeFormat(match)) return false;
+      return isLuhnValid(match);
+    },
   },
   LICENSE_PLATE_RULE,
   POSTAL_RULE,
