@@ -8,6 +8,18 @@ export const APP_LIMITS = {
   ocrScale: 2,
   minTextSpanCountForNativeText: 8,
   minTextCharactersForNativeText: 64,
+  // Garbled-text fallback thresholds. A page that meets the basic span /
+  // char counts but produces letter sequences with too few lowercase
+  // letters and too few vowel-bearing tokens is treated as a corrupt
+  // text layer and routed through OCR instead. See pyodide.ts.
+  // A page is treated as garbled when *both* the lowercase-letter ratio
+  // and the vowel-bearing-token ratio are below their thresholds. The
+  // numbers below are tuned against the real test corpus: legitimate
+  // ALL-CAPS itinerary pages have low lowercase but still high vowel
+  // ratio (>0.85), while broken-CMap PDFs collapse on both signals.
+  nativeTextMinLowercaseRatio: 0.1,
+  nativeTextMinVowelTokenRatio: 0.7,
+  nativeTextGarbledMinLetters: 40,
 } as const;
 
 export const PRIVACY_PROMISE = [

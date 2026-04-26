@@ -24,6 +24,13 @@ const ADDRESS_PREFIX_BLOCKLIST = [
   'Dirección',
   'Latvija',
   'Latvia',
+  'Latvijas',
+  'Latvijai',
+  'Lietuvos',
+  'Republikos',
+  'Republika',
+  'Republikas',
+  'Republikai',
   'Lietuva',
   'Liettua',
   'Estija',
@@ -46,12 +53,40 @@ const ADDRESS_PREFIX_BLOCKLIST = [
   'Imone',
   'Kodas',
   'Reg',
+  'Administravimas',
+  'Administravimo',
+  'ADMINISTRAVIMAS',
+  'Apmokėjimas',
+  'Apmokejimas',
+  'Apmokėjimo',
+  'Apmokejimo',
+  'Mokestis',
+  'Mokestį',
+  'Mokesti',
+  'Mokesčiai',
+  'Mokesciai',
+  'Objektas',
+  'Objekto',
+  'Pirkėjas',
+  'Pirkejas',
+  'Pardavėjas',
+  'Pardavejas',
+  'Suma',
+  'Sumos',
+  'Suma:',
+  'Kaina',
+  'Kainos',
+  'Kiekis',
 ];
 const ADDRESS_BLOCK_ALT = ADDRESS_PREFIX_BLOCKLIST.join('|');
 const NAME_WORD = `(?!(?:${ADDRESS_BLOCK_ALT})\\b)\\p{Lu}[\\p{L}\\-'’]{1,40}`;
 const UPPERCASE_NAME_WORD = `(?!(?:${ADDRESS_BLOCK_ALT})\\b)\\p{Lu}{2,}[\\p{L}\\-'’]{0,40}`;
 const NAME_CHAIN = `${NAME_WORD}(?:\\s+(?:(?:${CONNECTOR_ALT})\\s+)?${NAME_WORD}){0,4}`;
 const UPPERCASE_NAME_CHAIN = `${UPPERCASE_NAME_WORD}(?:\\s+${UPPERCASE_NAME_WORD}){0,4}`;
+// Cities are short — at most one extra token (e.g. "New York", "Vilniaus
+// m."). Keeping CITY_NAME_CHAIN tight prevents the rule from absorbing
+// trailing context words that follow the address line.
+const CITY_NAME_CHAIN = `${NAME_WORD}(?:\\s+${NAME_WORD})?`;
 // Allow 1-3 letter abbreviations like "J.", "Kr.", "Sv.", "St." so the
 // match captures full street prefixes such as "Kr. Valdemāra iela".
 const INITIALS = `(?:\\p{Lu}\\p{Ll}{0,2}\\.\\s*){0,3}`;
@@ -74,8 +109,8 @@ const POSTAL_SEGMENT =
 // or by a trailing city-suffix token (e.g. "m.", "miestas"). Without this,
 // the rule swallows arbitrary capitalized words that follow the address.
 const CITY_SEGMENT =
-  `(?:\\s*[,;]\\s*${NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?` +
-  `|\\s+${NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?))`;
+  `(?:\\s*[,;]\\s*${CITY_NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?)?` +
+  `|\\s+${CITY_NAME_CHAIN}(?:\\s+(?:${SHORT_CITY_ALT})\\.|\\s+(?:${LONG_CITY_ALT})\\.?))`;
 
 const TOKEN_ADDRESS_BODY =
   `\\p{Lu}[\\p{L}\\-'’]{0,40}(?:${LONG_STREET_ALT})(?:[,;]?\\s+|\\s*[-–]\\s*)${NUMBER_CLAUSE}` +

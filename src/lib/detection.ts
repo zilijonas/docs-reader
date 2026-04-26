@@ -1,9 +1,42 @@
 import { DETECTION_TYPE_LABELS } from './app-config';
+import { READING_ORDER_LINE_THRESHOLD } from './detection/config';
 import { DETECTION_RULES, buildKeywordPattern } from './detection/rules';
 import type { DetectionRule } from './detection/rule';
-import type { Detection, DetectionType, TextSpan } from '../types';
+import type { BoundingBox, Detection, DetectionType, TextSpan } from '../types';
 import { clipBoxToRange, unionBoxes } from './geometry';
 import { createId, dedupeDetections, findSpansInRange, normalizeSnippet } from './utils';
+
+// Group covered spans into visual lines so a multi-line match is emitted
+// as one detection per line instead of a single rectangle that swallows
+// everything in between. Each entry is a tight box for the spans that
+// fall on the same y row.
+const groupBoxesByLine = (
+  spans: TextSpan[],
+  start: number,
+  end: number,
+): BoundingBox[] => {
+  const sorted = [...spans].sort((a, b) => {
+    if (Math.abs(a.box.y - b.box.y) > READING_ORDER_LINE_THRESHOLD) return a.box.y - b.box.y;
+    return a.box.x - b.box.x;
+  });
+  const lines: { y: number; spans: TextSpan[] }[] = [];
+  for (const span of sorted) {
+    const last = lines[lines.length - 1];
+    if (last && Math.abs(span.box.y - last.y) <= READING_ORDER_LINE_THRESHOLD) {
+      last.spans.push(span);
+    } else {
+      lines.push({ y: span.box.y, spans: [span] });
+    }
+  }
+  return lines
+    .map((line) => {
+      const clipped = line.spans
+        .map((span) => clipBoxToRange(span, start, end))
+        .filter((box) => box.width > 0 && box.height > 0);
+      return clipped.length ? unionBoxes(clipped) : null;
+    })
+    .filter((box): box is BoundingBox => box !== null);
+};
 
 const getJoinedSpanText = (spans: TextSpan[]) =>
   normalizeSnippet(spans.map((span) => span.text.trim()).join(' '));
@@ -56,46 +89,47 @@ const refineCoveredSpans = (coveredSpans: TextSpan[], snippet: string) => {
   return bestMatch;
 };
 
-const matchToDetection = (
+const matchToDetections = (
   match: RegExpExecArray,
   type: DetectionType,
   confidence: number,
   pageIndex: number,
   pageText: string,
   spans: TextSpan[],
-): Detection | null => {
+): Detection[] => {
   const start = match.index;
   const end = start + match[0].length;
   const coveredSpans = refineCoveredSpans(findSpansInRange(spans, start, end), match[0]);
 
   if (!coveredSpans.length) {
-    return null;
+    return [];
   }
 
-  // Clip every covered span to the actual match range — otherwise a single
-  // wide span that happens to contain the match (plus unrelated leading or
-  // trailing text) would push the bounding box out to the whole span.
-  const clippedBoxes = coveredSpans
-    .map((span) => clipBoxToRange(span, start, end))
-    .filter((box) => box.width > 0 && box.height > 0);
-
-  if (!clippedBoxes.length) {
-    return null;
+  // Split into per-line boxes so a match that crosses a row boundary
+  // (table cell wrap, address that spans two lines) becomes one
+  // detection per line — never a single rectangle that swallows the
+  // whitespace gutter.
+  const lineBoxes = groupBoxesByLine(coveredSpans, start, end);
+  if (!lineBoxes.length) {
+    return [];
   }
 
   const snippet = pageText.slice(start, end).trim();
-  return {
+  const normalized = normalizeSnippet(snippet);
+  const baseLabel = DETECTION_TYPE_LABELS[type];
+
+  return lineBoxes.map((box) => ({
     id: createId('rule'),
     type,
-    label: DETECTION_TYPE_LABELS[type],
+    label: baseLabel,
     pageIndex,
-    box: unionBoxes(clippedBoxes),
+    box,
     snippet,
-    normalizedSnippet: normalizeSnippet(snippet),
+    normalizedSnippet: normalized,
     source: 'rule',
     confidence,
     status: 'unconfirmed',
-  };
+  }));
 };
 
 const runRule = (
@@ -116,17 +150,9 @@ const runRule = (
     if (rule.postFilter && !rule.postFilter(match[0])) {
       continue;
     }
-    const detection = matchToDetection(
-      match,
-      rule.type,
-      rule.confidence,
-      pageIndex,
-      pageText,
-      spans,
+    detections.push(
+      ...matchToDetections(match, rule.type, rule.confidence, pageIndex, pageText, spans),
     );
-    if (detection) {
-      detections.push(detection);
-    }
   }
 };
 

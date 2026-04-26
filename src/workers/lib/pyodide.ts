@@ -20,13 +20,70 @@ def _normalize_box(x0, y0, x1, y1, width, height):
         "height": bottom - top,
     }
 
-def load_document_from_bytes(pdf_bytes, preview_scale, min_text_spans, min_text_chars):
+_VOWEL_CHARS = set("aeiouyąęėįųūœ")
+_REPLACEMENT_CHAR = "\ufffd"
+
+def _is_native_text_garbled(text_content, min_lowercase_ratio, min_vowel_token_ratio, min_letters):
+    """Detect a broken ToUnicode CMap that produces letter-shaped junk.
+
+    Real prose has a substantial run of lowercase letters and most word
+    tokens contain at least one vowel. PDFs with a corrupt encoding emit
+    short runs of uppercase consonant clusters that look plausible at a
+    glance but contain almost no lowercase / no vowels.
+    """
+    if not text_content:
+        return False
+
+    letters = 0
+    lowercase = 0
+    replacement_chars = 0
+    for ch in text_content:
+        if ch == _REPLACEMENT_CHAR:
+            replacement_chars += 1
+        if ch.isalpha():
+            letters += 1
+            if ch.islower():
+                lowercase += 1
+
+    if letters < min_letters:
+        return False
+
+    lowercase_ratio = lowercase / letters if letters else 0.0
+
+    tokens = [tok for tok in text_content.split() if any(c.isalpha() for c in tok)]
+    if not tokens:
+        return False
+
+    vowel_tokens = 0
+    for tok in tokens:
+        lowered = tok.lower()
+        if any(c in _VOWEL_CHARS for c in lowered):
+            vowel_tokens += 1
+    vowel_ratio = vowel_tokens / len(tokens) if tokens else 0.0
+
+    if replacement_chars > 2:
+        return True
+    if lowercase_ratio < min_lowercase_ratio and vowel_ratio < min_vowel_token_ratio:
+        return True
+    return False
+
+
+def load_document_from_bytes(
+    pdf_bytes,
+    preview_scale,
+    min_text_spans,
+    min_text_chars,
+    min_lowercase_ratio=0.20,
+    min_vowel_token_ratio=0.25,
+    garbled_min_letters=40,
+):
     global current_doc, current_bytes
     current_bytes = bytes(pdf_bytes)
     current_doc = pymupdf.open(stream=current_bytes, filetype="pdf")
 
     pages = []
     spans = []
+    warnings = []
     for page_index in range(current_doc.page_count):
         page = current_doc[page_index]
         rect = page.rect
@@ -57,7 +114,20 @@ def load_document_from_bytes(pdf_bytes, preview_scale, min_text_spans, min_text_
             })
 
         text_content = " ".join(text_parts)
-        lane = "searchable" if len(page_spans) >= min_text_spans and len(text_content) >= min_text_chars else "ocr"
+        meets_thresholds = (
+            len(page_spans) >= min_text_spans and len(text_content) >= min_text_chars
+        )
+        garbled = meets_thresholds and _is_native_text_garbled(
+            text_content,
+            min_lowercase_ratio,
+            min_vowel_token_ratio,
+            garbled_min_letters,
+        )
+        if garbled:
+            warnings.append(
+                f"Page {page_index + 1} has a broken text layer — falling back to OCR."
+            )
+        lane = "searchable" if meets_thresholds and not garbled else "ocr"
 
         pages.append({
             "pageIndex": page_index,
@@ -79,6 +149,7 @@ def load_document_from_bytes(pdf_bytes, preview_scale, min_text_spans, min_text_
         "pageCount": current_doc.page_count,
         "pages": pages,
         "spans": spans,
+        "warnings": warnings,
     })
 
 def render_page_png(page_index, scale):

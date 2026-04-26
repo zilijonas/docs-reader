@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { detectNames } from './names';
+import { buildCompromiseValidator, detectNames } from './names';
 import { stripLithuanianSuffix, type LithuanianNameDataset } from './lt-morphology';
 import type { TextSpan } from '../../types';
 
@@ -102,9 +102,10 @@ describe('detectNames (Lithuanian)', () => {
     expect(strong).toBeUndefined();
   });
 
-  it('preserves prior behavior with null dataset (English pair fallback)', () => {
+  it('preserves prior behavior with null dataset (English pair fallback)', async () => {
+    const englishValidator = await buildCompromiseValidator();
     const spans = line(['Alice', 'Johnson', 'visited', 'the', 'office'], 0.2);
-    const detections = detectNames(0, spans, 'searchable', null);
+    const detections = detectNames(0, spans, 'searchable', { englishValidator });
     const capitalized = detections.find((d) => d.snippet === 'Alice Johnson');
     expect(capitalized).toBeTruthy();
     expect(capitalized!.confidence).toBeLessThan(0.85);

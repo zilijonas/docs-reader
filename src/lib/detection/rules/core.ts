@@ -26,8 +26,10 @@ const VEHICLE_UNIT_SUFFIX = '(?:km|kms|kilometers?|kilometres?|mi|miles?)';
 // booking refs, table cells).
 // Plate layouts: letters-digits, digits-letters, or letter-digit-letter
 // triplets. We rely on the postFilter to drop the noisier matches.
+// Reject contexts wrapped in "/" (product codes like "MXP93ZM/A") or "."
+// (filenames, version strings, e.g. "v1.2") at the boundaries.
 const LICENSE_PLATE_RE =
-  /(?<![\p{L}\p{N}])(?:[A-Z]{1,3}[ -]?\d{2,5}[ -]?[A-Z]{0,3}|\d{1,4}[ -]?[A-Z]{1,3}[ -]?\d{0,4}|[A-Z]{2}\d{2}[ -]?[A-Z]{3})(?![\p{L}\p{N}])/giu;
+  /(?<![\p{L}\p{N}/.])(?:[A-Z]{1,3}[ -]?\d{2,5}[ -]?[A-Z]{0,3}|\d{1,4}[ -]?[A-Z]{1,3}[ -]?\d{0,4}|[A-Z]{2}\d{2}[ -]?[A-Z]{3})(?![\p{L}\p{N}/.])/giu;
 const PLATE_WORD_BLOCKLIST = new Set([
   'EUR',
   'USD',
@@ -62,6 +64,21 @@ const PLATE_WORD_BLOCKLIST = new Set([
   'TRAVEL',
   'FLIGHT',
   'BOOKING',
+  // Tax / accounting acronyms — collide with "<digits> <ACRONYM>" plate
+  // shape on invoice rows ("27 PVM", "PVM 164").
+  'PVM',
+  'PVMI',
+  'GST',
+  'VAT',
+  'TAX',
+  'NET',
+  'GROSS',
+  'FEE',
+  'TVA',
+  'IVA',
+  'MOMS',
+  'BTW',
+  'ALV',
   // Common 2-letter IATA airline codes — collide with 2-letter plate +
   // 3-4 digit flight numbers ("BT 685", "IB 440").
   'BT',
@@ -144,6 +161,13 @@ const isLongPhoneLike = (value: string) => {
   const digits = extractDigits(normalized);
 
   if (digits.length < 7 || digits.length > 15) {
+    return false;
+  }
+
+  // Phone numbers do not use "." or "," as separators in our reference
+  // formats. Reject anything containing them to keep invoice amounts
+  // ("1.000 164.460 164", "1,234.56") out of phone matches.
+  if (/[.,]/.test(normalized)) {
     return false;
   }
 
@@ -289,12 +313,15 @@ export const NUMBER_RULE: DetectionRule = {
   confidence: CONFIDENCE.number,
 };
 
+// Phone separators are spaces, hyphens, parens — explicitly NOT dots /
+// commas, since those are decimal / thousand separators in invoice tables
+// ("1.000 164.460 164" is not a phone).
 export const PHONE_RULE: DetectionRule = {
   type: 'phone',
   pattern: new RegExp(
     `(?<![\\w\\d])` +
       `(?!\\d{4}-\\d{2}(?:-\\d{2})?(?:[ T]\\d{1,2}:\\d{2}(?::\\d{2})?)?)` +
-      `(?:\\+\\d{1,3}[\\s.\\-()]*)?(?:\\(?\\d{1,4}\\)?(?:[\\s.\\-()]+)){1,4}\\d{2,8}` +
+      `(?:\\+\\d{1,3}[\\s\\-()]*)?(?:\\(?\\d{1,4}\\)?(?:[\\s\\-()]+)){1,4}\\d{2,8}` +
       `(?![\\w\\d])` +
       `(?!\\s*${VEHICLE_UNIT_SUFFIX}\\b)`,
     'gu',
@@ -342,9 +369,13 @@ export const CORE_RULES: DetectionRule[] = [
   SHORT_SERVICE_PHONE_RULE,
   COMPACT_INTERNATIONAL_PHONE_RULE,
   {
+    // Use Unicode-aware boundaries — JS \b uses ASCII word chars, so an
+    // IBAN followed by a non-ASCII Lithuanian letter ("…87252 Pirkėjas")
+    // would otherwise satisfy \b mid-name and the postFilter would reject
+    // the over-grown match.
     type: 'iban',
     pattern: new RegExp(
-      `\\b[A-Z]{2}\\d{2}(?:${IBAN_SEPARATOR}[A-Z0-9]{2,4}){2,7}(?:${IBAN_SEPARATOR}[A-Z0-9]{1,4})?\\b`,
+      `(?<![\\p{L}\\p{N}])[A-Z]{2}\\d{2}(?:${IBAN_SEPARATOR}[A-Z0-9]{2,4}){2,7}(?:${IBAN_SEPARATOR}[A-Z0-9]{1,4})?(?![\\p{L}\\p{N}])`,
       'giu',
     ),
     confidence: CONFIDENCE.iban,

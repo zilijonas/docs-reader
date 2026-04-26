@@ -1,7 +1,7 @@
 import { APP_LIMITS, DEFAULT_OCR_LANGUAGES } from '../../lib/app-config';
 import { detectSensitiveData, groupDetections } from '../../lib/detection';
 import { hasLithuanianContext } from '../../lib/detection/lt-context';
-import { detectNames } from '../../lib/detection/names';
+import { buildCompromiseValidator, detectNames } from '../../lib/detection/names';
 import { loadLithuanianNames } from './lt-names';
 import { planOcrLanguageFlow } from '../../lib/ocr-language-inference';
 import type { ContinueOcrRequest, Detection, LoadPdfRequest, WorkerRequest } from '../../types';
@@ -82,18 +82,25 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
     pageCount: number;
     pages: typeof state.pages;
     spans: typeof state.spans;
+    warnings?: string[];
   }>(
     `load_document_from_bytes(
       bytes(document_bytes_js),
       preview_scale_js,
       min_text_spans_js,
-      min_text_chars_js
+      min_text_chars_js,
+      min_lowercase_ratio_js,
+      min_vowel_token_ratio_js,
+      garbled_min_letters_js
     )`,
     {
       document_bytes_js: bytes,
       preview_scale_js: APP_LIMITS.previewScale,
       min_text_spans_js: APP_LIMITS.minTextSpanCountForNativeText,
       min_text_chars_js: APP_LIMITS.minTextCharactersForNativeText,
+      min_lowercase_ratio_js: APP_LIMITS.nativeTextMinLowercaseRatio,
+      min_vowel_token_ratio_js: APP_LIMITS.nativeTextMinVowelTokenRatio,
+      garbled_min_letters_js: APP_LIMITS.nativeTextGarbledMinLetters,
     },
   );
 
@@ -110,7 +117,7 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
   };
   state.pages = summary.pages;
   state.spans = summary.spans;
-  state.warnings = [];
+  state.warnings = summary.warnings ? [...summary.warnings] : [];
 
   const ocrPlan = planOcrLanguageFlow(state.pages);
   state.ocrLanguages =
@@ -177,6 +184,16 @@ const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>)
     state.ltDataset = ltTrigger ? await loadLithuanianNames(state.baseUrl) : null;
   }
 
+  // Lazy-load compromise once per detect run for English Title-Case
+  // validation. Skip the load entirely if the document is Lithuanian or
+  // the only pages are OCR (no fallback fires there).
+  let englishValidator: Awaited<ReturnType<typeof buildCompromiseValidator>> = null;
+  const needsEnglishValidator =
+    !state.ltDataset && state.pages.some((page) => page.lane === 'searchable');
+  if (needsEnglishValidator) {
+    englishValidator = await buildCompromiseValidator();
+  }
+
   for (const page of state.pages) {
     const pageSpans = state.spans.filter((span) => span.pageIndex === page.pageIndex);
     detections.push(
@@ -187,7 +204,12 @@ const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>)
         message.payload.rules.keywords,
       ),
     );
-    detections.push(...detectNames(page.pageIndex, pageSpans, page.lane, state.ltDataset));
+    detections.push(
+      ...detectNames(page.pageIndex, pageSpans, page.lane, {
+        ltDataset: state.ltDataset,
+        englishValidator,
+      }),
+    );
     try {
       detections.push(...(await detectSignatures(page, pageSpans)));
     } catch (error) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { detectNames } from './names';
+import { buildCompromiseValidator, detectNames } from './names';
 import type { TextSpan } from '../../types';
 
 let spanCounter = 0;
@@ -62,18 +62,53 @@ describe('detectNames', () => {
     expect(hit?.snippet).toBe('Jānis Bērziņš');
   });
 
-  it('falls back to capitalized pair on searchable lane', () => {
+  it('falls back to capitalized pair on searchable lane (compromise-validated)', async () => {
+    const englishValidator = await buildCompromiseValidator();
     const spans = line(['Alice', 'Johnson', 'visited', 'the', 'office'], 0.7);
-    const detections = detectNames(0, spans, 'searchable');
+    const detections = detectNames(0, spans, 'searchable', { englishValidator });
     const capitalized = detections.find((d) => d.confidence < 0.9 && d.snippet === 'Alice Johnson');
     expect(capitalized).toBeTruthy();
   });
 
-  it('does not run capitalized fallback on OCR lane', () => {
+  it('does not run capitalized fallback on OCR lane', async () => {
+    const englishValidator = await buildCompromiseValidator();
     const spans = line(['Alice', 'Johnson', 'visited', 'the', 'office'], 0.8);
-    const detections = detectNames(0, spans, 'ocr');
+    const detections = detectNames(0, spans, 'ocr', { englishValidator });
     const capitalized = detections.find((d) => d.confidence < 0.9);
     expect(capitalized).toBeUndefined();
+  });
+
+  it('rejects English Title-Case bigrams that compromise does not classify as a person', async () => {
+    const englishValidator = await buildCompromiseValidator();
+    // Headings like "Training Program" or "Strength Coach" are common
+    // English Title-Case bigrams that are not personal names.
+    const spans = line(['Training', 'Program', 'overview'], 0.55);
+    const detections = detectNames(0, spans, 'searchable', { englishValidator });
+    expect(detections).toHaveLength(0);
+  });
+
+  it('splits camelCase tokens before LT name detection', async () => {
+    // Garbled PDFs sometimes drop the space between first and last name.
+    const spans = [
+      ...line(['PauliusMielkaitis,', 'Apple', 'specialistas'], 0.6),
+    ];
+    // Lithuanian dataset variant — Paulius is in the LT first-name list.
+    const dataset = {
+      firstNames: new Set<string>(['paulius']),
+      firstNameStems: new Set<string>([]),
+    };
+    const detections = detectNames(0, spans, 'searchable', { ltDataset: dataset });
+    const hit = detections.find((d) => d.snippet.includes('Mielkaitis'));
+    expect(hit).toBeTruthy();
+  });
+
+  it('strips trailing punctuation from name snippets', async () => {
+    const englishValidator = await buildCompromiseValidator();
+    const spans = line(['Andy', 'Galpin,', 'PhD', 'wrote', 'this'], 0.45);
+    const detections = detectNames(0, spans, 'searchable', { englishValidator });
+    const hit = detections.find((d) => d.snippet.startsWith('Andy'));
+    expect(hit).toBeTruthy();
+    expect(hit!.snippet).toBe('Andy Galpin');
   });
 
   it('rejects legal-entity tokens as names', () => {

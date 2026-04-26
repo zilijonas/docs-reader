@@ -1,8 +1,9 @@
-import type { Detection, PageLane, TextSpan } from '../../types';
+import type { BoundingBox, Detection, PageLane, TextSpan } from '../../types';
 import { DETECTION_TYPE_LABELS } from '../app-config';
 import { clamp, unionBoxes } from '../geometry';
 import { createId, normalizeSnippet } from '../utils';
 import { READING_ORDER_LINE_THRESHOLD } from './config';
+import { isEnglishLikePage } from './english-context';
 import { MONTHS } from './locales/months';
 import {
   NAME_CONNECTORS,
@@ -17,6 +18,54 @@ import {
   isLikelyLithuanianSurname,
   type LithuanianNameDataset,
 } from './lt-morphology';
+
+type CompromiseValidator = (snippet: string) => boolean;
+
+// Split camelCase / PascalCase tokens into separate sub-spans before
+// running name detection. Garbled or no-space PDF extraction sometimes
+// produces "PauliusMielkaitis" as a single token; without splitting
+// neither the LT morphology pass nor compromise has a chance to match.
+//
+// Conservative: only split at lowercase→Uppercase+lowercase boundaries,
+// and only when both halves are at least 3 letters long. This keeps
+// real brand/product names ("AirPods", "iDeal") intact since their
+// segments are too short to qualify.
+const CAMEL_SPLIT_RE = /(?<=\p{Ll})(?=\p{Lu}\p{Ll})/u;
+
+const splitCamelCaseSpans = (spans: TextSpan[]): TextSpan[] => {
+  const out: TextSpan[] = [];
+  for (const span of spans) {
+    const trimmedText = span.text.trim();
+    if (!CAMEL_SPLIT_RE.test(trimmedText)) {
+      out.push(span);
+      continue;
+    }
+    const parts = trimmedText.split(CAMEL_SPLIT_RE);
+    if (parts.length < 2 || parts.some((part) => part.length < 3)) {
+      out.push(span);
+      continue;
+    }
+    const totalLen = trimmedText.length;
+    let cursor = 0;
+    parts.forEach((part, idx) => {
+      const widthRatio = part.length / totalLen;
+      const xOffset = cursor / totalLen;
+      out.push({
+        ...span,
+        id: `${span.id}_camel${idx}`,
+        text: part,
+        box: {
+          x: span.box.x + span.box.width * xOffset,
+          y: span.box.y,
+          width: span.box.width * widthRatio,
+          height: span.box.height,
+        },
+      });
+      cursor += part.length;
+    });
+  }
+  return out;
+};
 
 const NAME_WORD_RE = /^\p{Lu}[\p{L}\-'’]{1,40}$/u;
 const ALL_CAPS_NAME_RE = /^\p{Lu}{2,}[\p{L}\-'’]{0,40}$/u;
@@ -171,33 +220,84 @@ const collectNameSpans = (candidates: TextSpan[]): TextSpan[] => {
   return collected;
 };
 
-const buildDetection = (
+const TRAILING_PUNCT_RE = /[,;.:!?\-–—]+$/u;
+
+// Keep snippet text and bounding box flush with the actual name. Pure
+// punctuation tail spans get dropped; a span whose text ends in trailing
+// punctuation has its box width clipped proportionally so the redaction
+// rectangle stops at the last letter.
+const trimTrailingPunctuation = (
+  spans: TextSpan[],
+): { spans: TextSpan[]; boxes: BoundingBox[]; texts: string[] } => {
+  if (spans.length === 0) return { spans: [], boxes: [], texts: [] };
+  const out: TextSpan[] = [...spans];
+
+  while (out.length > 0) {
+    const last = out[out.length - 1];
+    const trimmed = last.text.trim().replace(TRAILING_PUNCT_RE, '');
+    if (trimmed.length > 0) break;
+    out.pop();
+  }
+
+  if (out.length === 0) return { spans: [], boxes: [], texts: [] };
+
+  const boxes = out.map((span) => span.box);
+  const texts = out.map((span) => span.text.trim());
+
+  const lastIdx = out.length - 1;
+  const lastSpan = out[lastIdx];
+  const lastRaw = lastSpan.text.trim();
+  const lastTrimmed = lastRaw.replace(TRAILING_PUNCT_RE, '');
+  if (lastTrimmed && lastTrimmed.length < lastRaw.length) {
+    const ratio = lastTrimmed.length / lastRaw.length;
+    boxes[lastIdx] = { ...lastSpan.box, width: lastSpan.box.width * ratio };
+    texts[lastIdx] = lastTrimmed;
+  }
+
+  return { spans: out, boxes, texts };
+};
+
+const buildDetections = (
   pageIndex: number,
   nameSpans: TextSpan[],
   confidence: number,
-): Detection | null => {
-  if (nameSpans.length === 0) return null;
-  const text = nameSpans
-    .map((span) => span.text.trim())
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!text) return null;
-  const box = unionBoxes(nameSpans.map((span) => span.box));
-  if (box.width <= 0 || box.height <= 0) return null;
+): Detection[] => {
+  if (nameSpans.length === 0) return [];
 
-  return {
-    id: createId('name'),
-    type: 'name',
-    label: DETECTION_TYPE_LABELS.name,
-    pageIndex,
-    box,
-    snippet: text,
-    normalizedSnippet: normalizeSnippet(text),
-    source: 'heuristic',
-    confidence: clamp(confidence, 0, 1),
-    status: 'unconfirmed',
-  };
+  const trimmed = trimTrailingPunctuation(nameSpans);
+  if (trimmed.spans.length === 0) return [];
+
+  const text = trimmed.texts.join(' ').replace(/\s+/g, ' ').trim();
+  if (!text) return [];
+
+  const lineGroups: BoundingBox[][] = [];
+  for (let i = 0; i < trimmed.spans.length; i += 1) {
+    const span = trimmed.spans[i];
+    const box = trimmed.boxes[i];
+    const last = lineGroups[lineGroups.length - 1];
+    const lastY = last && last.length > 0 ? last[0].y : null;
+    if (lastY !== null && Math.abs(span.box.y - lastY) <= READING_ORDER_LINE_THRESHOLD) {
+      last.push(box);
+    } else {
+      lineGroups.push([box]);
+    }
+  }
+
+  return lineGroups
+    .map((group) => unionBoxes(group))
+    .filter((box) => box.width > 0 && box.height > 0)
+    .map((box) => ({
+      id: createId('name'),
+      type: 'name' as const,
+      label: DETECTION_TYPE_LABELS.name,
+      pageIndex,
+      box,
+      snippet: text,
+      normalizedSnippet: normalizeSnippet(text),
+      source: 'heuristic' as const,
+      confidence: clamp(confidence, 0, 1),
+      status: 'unconfirmed' as const,
+    }));
 };
 
 const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] => {
@@ -239,10 +339,9 @@ const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] =>
             NAME_LABEL_PHRASES.some((phrase) => phrase.includes(token)),
         );
         if (!allTokensAreLabels) {
-          const detection = buildDetection(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE);
-          if (detection) {
-            detections.push(detection);
-          }
+          detections.push(
+            ...buildDetections(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE),
+          );
         }
       }
 
@@ -318,9 +417,9 @@ const detectLithuanian = (
 
       const confidence =
         surname.strong && allExact ? LT_NAME_CONFIDENCE_EXACT : LT_NAME_CONFIDENCE_INFLECTED;
-      const detection = buildDetection(pageIndex, window, confidence);
-      if (detection) {
-        detections.push(detection);
+      const built = buildDetections(pageIndex, window, confidence);
+      if (built.length > 0) {
+        detections.push(...built);
         for (const span of window) covered.add(span);
       }
 
@@ -399,10 +498,10 @@ const detectHonorificNames = (
       const fullWindow = useForward ? [span, ...nameWindow] : [...nameWindow, span];
       if (fullWindow.some((s) => covered.has(s))) continue;
 
-      const detection = buildDetection(pageIndex, fullWindow, HONORIFIC_NAME_CONFIDENCE);
-      if (!detection) continue;
+      const built = buildDetections(pageIndex, fullWindow, HONORIFIC_NAME_CONFIDENCE);
+      if (built.length === 0) continue;
 
-      detections.push(detection);
+      detections.push(...built);
       for (const s of fullWindow) covered.add(s);
     }
   }
@@ -410,11 +509,9 @@ const detectHonorificNames = (
   return detections;
 };
 
-// Capitalized fallback only fires on Title-Case tokens (Lu followed by
-// Ll). All-caps pairs in headers ("FLIGHT BOOKING", "TO BILBAO",
-// currency rows) generate too many false positives to be useful as a
-// redaction suggestion. The label-based detector and the LT morphology
-// dataset still cover both casings.
+// Title-Case proper-noun heuristic. Used for English candidate gathering;
+// the compromise NLP validator decides whether a candidate is actually a
+// person name.
 const isTitleCaseNameToken = (raw: string) => {
   const token = stripTrailingPunctuation(raw.trim());
   if (!token || HAS_DIGIT_RE.test(token)) return false;
@@ -423,83 +520,154 @@ const isTitleCaseNameToken = (raw: string) => {
   return TITLE_CASE_NAME_RE.test(token);
 };
 
-const detectCapitalizedFallback = (
-  pageIndex: number,
-  lines: LineGroup[],
+// Walk a line collecting Title-Case bigrams / trigrams as candidate names.
+// Yields the spans plus the joined snippet so an external validator (e.g.
+// compromise) can decide whether to emit a detection.
+const collectTitleCaseCandidates = (
+  spans: TextSpan[],
   covered: Set<TextSpan>,
-): Detection[] => {
-  const detections: Detection[] = [];
+): Array<{ window: TextSpan[]; snippet: string }> => {
+  const out: Array<{ window: TextSpan[]; snippet: string }> = [];
+  let i = 0;
+  while (i < spans.length) {
+    const span = spans[i];
+    if (covered.has(span)) {
+      i += 1;
+      continue;
+    }
+    const cleaned = stripColonSuffix(span.text.trim());
+    if (!isTitleCaseNameToken(cleaned)) {
+      i += 1;
+      continue;
+    }
+    if (CAPITALIZED_LANE_STOPWORDS.has(cleaned.toLowerCase())) {
+      i += 1;
+      continue;
+    }
 
-  for (const line of lines) {
-    const spans = line.spans;
-    let i = 0;
-    while (i < spans.length) {
-      const span = spans[i];
-      if (covered.has(span)) {
-        i += 1;
+    const window: TextSpan[] = [span];
+    let j = i + 1;
+    while (j < spans.length && window.length < 3) {
+      const nextCleaned = stripColonSuffix(spans[j].text.trim());
+      if (isTitleCaseNameToken(nextCleaned)) {
+        if (CAPITALIZED_LANE_STOPWORDS.has(nextCleaned.toLowerCase())) break;
+        window.push(spans[j]);
+        if (hasSentenceStop(spans[j].text.trim())) {
+          j += 1;
+          break;
+        }
+        j += 1;
         continue;
       }
-      const cleaned = stripColonSuffix(span.text.trim());
-      if (!isTitleCaseNameToken(cleaned)) {
-        i += 1;
-        continue;
-      }
-
-      const lowered = cleaned.toLowerCase();
-      if (CAPITALIZED_LANE_STOPWORDS.has(lowered)) {
-        i += 1;
-        continue;
-      }
-
-      const window: TextSpan[] = [span];
-      let j = i + 1;
-      while (j < spans.length && window.length < 3) {
-        const nextCleaned = stripColonSuffix(spans[j].text.trim());
-        if (isTitleCaseNameToken(nextCleaned)) {
-          if (CAPITALIZED_LANE_STOPWORDS.has(nextCleaned.toLowerCase())) break;
+      if (window.length > 1 && isConnectorToken(nextCleaned)) {
+        const lookahead = spans[j + 1];
+        if (lookahead && isTitleCaseNameToken(stripColonSuffix(lookahead.text.trim()))) {
           window.push(spans[j]);
-          if (hasSentenceStop(spans[j].text.trim())) {
-            j += 1;
-            break;
-          }
           j += 1;
           continue;
         }
-        if (window.length > 1 && isConnectorToken(nextCleaned)) {
-          const lookahead = spans[j + 1];
-          if (lookahead && isTitleCaseNameToken(stripColonSuffix(lookahead.text.trim()))) {
-            window.push(spans[j]);
-            j += 1;
-            continue;
-          }
-        }
-        break;
       }
+      break;
+    }
 
-      if (window.length >= 2) {
-        const prev = spans[i - 1];
-        const prevLower = prev ? stripColonSuffix(prev.text.trim()).toLowerCase() : '';
-        if (!prevLower || !CAPITALIZED_LANE_STOPWORDS.has(prevLower)) {
-          const detection = buildDetection(pageIndex, window, CAPITALIZED_NAME_CONFIDENCE);
-          if (detection) detections.push(detection);
-        }
+    if (window.length >= 2) {
+      const prev = spans[i - 1];
+      const prevLower = prev ? stripColonSuffix(prev.text.trim()).toLowerCase() : '';
+      if (!prevLower || !CAPITALIZED_LANE_STOPWORDS.has(prevLower)) {
+        const snippet = window
+          .map((s) => stripColonSuffix(s.text.trim()).replace(TRAILING_PUNCT_RE, ''))
+          .join(' ');
+        out.push({ window, snippet });
       }
+    }
 
-      i = Math.max(i + 1, j);
+    i = Math.max(i + 1, j);
+  }
+  return out;
+};
+
+const detectEnglishNamesViaCompromise = (
+  pageIndex: number,
+  lines: LineGroup[],
+  covered: Set<TextSpan>,
+  validator: CompromiseValidator,
+): Detection[] => {
+  const detections: Detection[] = [];
+  for (const line of lines) {
+    const candidates = collectTitleCaseCandidates(line.spans, covered);
+    for (const { window, snippet } of candidates) {
+      if (!validator(snippet)) continue;
+      const built = buildDetections(pageIndex, window, CAPITALIZED_NAME_CONFIDENCE);
+      if (built.length > 0) {
+        detections.push(...built);
+        for (const span of window) covered.add(span);
+      }
     }
   }
-
   return detections;
 };
+
+type Nlp = (text: string) => { people(): { out(format: string): string[] } };
+
+let cachedNlp: Nlp | null = null;
+let nlpLoadPromise: Promise<Nlp | null> | null = null;
+
+const loadCompromise = async (): Promise<Nlp | null> => {
+  if (cachedNlp) return cachedNlp;
+  if (!nlpLoadPromise) {
+    nlpLoadPromise = import('compromise')
+      .then((mod) => {
+        const fn = ((mod as { default?: Nlp }).default ?? (mod as unknown as Nlp)) as Nlp;
+        cachedNlp = fn;
+        return fn;
+      })
+      .catch(() => null);
+  }
+  return nlpLoadPromise;
+};
+
+export const buildCompromiseValidator = async (): Promise<CompromiseValidator | null> => {
+  const nlp = await loadCompromise();
+  if (!nlp) return null;
+  return (snippet: string) => {
+    if (!snippet || snippet.length < 3) return false;
+    try {
+      const people = nlp(snippet).people().out('array');
+      if (!Array.isArray(people) || people.length === 0) return false;
+      const target = snippet.toLowerCase();
+      return people.some((person) => {
+        const lower = String(person).toLowerCase();
+        return target.includes(lower) || lower.includes(target);
+      });
+    } catch {
+      return false;
+    }
+  };
+};
+
+export interface DetectNamesOptions {
+  ltDataset?: LithuanianNameDataset | null;
+  /** Pre-built compromise validator (use {@link buildCompromiseValidator}). */
+  englishValidator?: CompromiseValidator | null;
+}
 
 export const detectNames = (
   pageIndex: number,
   spans: TextSpan[],
   lane: PageLane,
-  ltDataset: LithuanianNameDataset | null = null,
+  ltDatasetOrOptions: LithuanianNameDataset | DetectNamesOptions | null = null,
 ): Detection[] => {
   if (spans.length === 0) return [];
-  const lines = groupSpansIntoLines(spans);
+
+  const options: DetectNamesOptions =
+    ltDatasetOrOptions && 'firstNames' in (ltDatasetOrOptions as LithuanianNameDataset)
+      ? { ltDataset: ltDatasetOrOptions as LithuanianNameDataset }
+      : (ltDatasetOrOptions as DetectNamesOptions | null) ?? {};
+  const ltDataset = options.ltDataset ?? null;
+  const englishValidator = options.englishValidator ?? null;
+
+  const preparedSpans = splitCamelCaseSpans(spans);
+  const lines = groupSpansIntoLines(preparedSpans);
   const covered = new Set<TextSpan>();
 
   const detections: Detection[] = [];
@@ -510,10 +678,15 @@ export const detectNames = (
     detections.push(...detectLithuanian(pageIndex, lines, ltDataset, covered));
   }
 
-  // Capitalized fallback is too noisy on OCR and Lithuanian legal text. In LT
-  // documents, the first-name dataset and explicit labels carry name detection.
-  if (lane === 'searchable' && !ltDataset) {
-    detections.push(...detectCapitalizedFallback(pageIndex, lines, covered));
+  // English Title-Case fallback only fires on searchable, non-LT pages
+  // that look English-like, and only when a compromise.js validator is
+  // supplied. Without compromise we accept the recall hit — false
+  // positives from a bare Title-Case heuristic on English prose
+  // outweigh the value of a guessed match.
+  if (lane === 'searchable' && !ltDataset && englishValidator && isEnglishLikePage(spans)) {
+    detections.push(
+      ...detectEnglishNamesViaCompromise(pageIndex, lines, covered, englishValidator),
+    );
   }
 
   return detections;
