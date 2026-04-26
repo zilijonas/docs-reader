@@ -67,6 +67,9 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
+    worker: {
+      format: 'es',
+    },
     resolve: {
       alias: {
         '@': path.resolve('./src'),

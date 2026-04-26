@@ -339,9 +339,7 @@ const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] =>
             NAME_LABEL_PHRASES.some((phrase) => phrase.includes(token)),
         );
         if (!allTokensAreLabels) {
-          detections.push(
-            ...buildDetections(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE),
-          );
+          detections.push(...buildDetections(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE));
         }
       }
 
@@ -662,7 +660,7 @@ export const detectNames = (
   const options: DetectNamesOptions =
     ltDatasetOrOptions && 'firstNames' in (ltDatasetOrOptions as LithuanianNameDataset)
       ? { ltDataset: ltDatasetOrOptions as LithuanianNameDataset }
-      : (ltDatasetOrOptions as DetectNamesOptions | null) ?? {};
+      : ((ltDatasetOrOptions as DetectNamesOptions | null) ?? {});
   const ltDataset = options.ltDataset ?? null;
   const englishValidator = options.englishValidator ?? null;
 

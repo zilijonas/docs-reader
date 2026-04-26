@@ -10,11 +10,7 @@ import { createId, dedupeDetections, findSpansInRange, normalizeSnippet } from '
 // as one detection per line instead of a single rectangle that swallows
 // everything in between. Each entry is a tight box for the spans that
 // fall on the same y row.
-const groupBoxesByLine = (
-  spans: TextSpan[],
-  start: number,
-  end: number,
-): BoundingBox[] => {
+const groupBoxesByLine = (spans: TextSpan[], start: number, end: number): BoundingBox[] => {
   const sorted = [...spans].sort((a, b) => {
     if (Math.abs(a.box.y - b.box.y) > READING_ORDER_LINE_THRESHOLD) return a.box.y - b.box.y;
     return a.box.x - b.box.x;

@@ -89,9 +89,7 @@ describe('detectNames', () => {
 
   it('splits camelCase tokens before LT name detection', async () => {
     // Garbled PDFs sometimes drop the space between first and last name.
-    const spans = [
-      ...line(['PauliusMielkaitis,', 'Apple', 'specialistas'], 0.6),
-    ];
+    const spans = [...line(['PauliusMielkaitis,', 'Apple', 'specialistas'], 0.6)];
     // Lithuanian dataset variant — Paulius is in the LT first-name list.
     const dataset = {
       firstNames: new Set<string>(['paulius']),
