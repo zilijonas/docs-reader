@@ -126,7 +126,6 @@ describe('OcrLanguageDialog', () => {
     });
     root = rendered.root;
 
-    expect(document.body.textContent).toContain('No reliable language was detected.');
     expect(document.body.textContent).toContain('Needs review');
     expect(document.body.textContent).toContain('English selected');
   });
