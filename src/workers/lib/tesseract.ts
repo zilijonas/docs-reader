@@ -59,7 +59,10 @@ export const resetOcrProgressFloor = () => {
   ocrProgressContext = null;
 };
 
-export const ensureTesseractWorker = async (languages: string[] | undefined, _requestId: number) => {
+export const ensureTesseractWorker = async (
+  languages: string[] | undefined,
+  _requestId: number,
+) => {
   const langs = normalizeLanguages(languages);
   const langKey = langs.join('+');
 
@@ -178,7 +181,7 @@ export const runQueuedOcr = async (languages: string[], requestId: number) => {
 
     ocrProgressContext = {
       requestId,
-      base: 0.20,
+      base: 0.2,
       range: 0.55,
       index,
       total: ocrPages.length,
@@ -233,8 +236,8 @@ export const detectQueuedOcrLanguages = async (
 
     ocrProgressContext = {
       requestId,
-      base: 0.10,
-      range: 0.10,
+      base: 0.1,
+      range: 0.1,
       index,
       total: samplePages.length,
       pageIndex: page.pageIndex,

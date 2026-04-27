@@ -209,6 +209,27 @@ If changing deployment base path:
 
 - Update `astro.config.mjs`
 
+## Pre-Commit Validation
+
+After finalizing any change, run the same checks CI runs before committing:
+
+```
+pnpm validate
+```
+
+This expands to: `pnpm run lint && pnpm run format:check && pnpm run check && pnpm run check:styles && pnpm run test && pnpm run build`. All must pass — the GitHub Actions workflow runs the same chain, so a green local `pnpm validate` is the prerequisite for green CI and a successful Pages deploy.
+
+Common fixes:
+
+- `format:check` fails → run `pnpm format` to auto-fix Prettier issues.
+- `lint` fails → try `pnpm lint:fix` for auto-fixable rules.
+- `check` fails → fix TypeScript errors surfaced by `tsc --noEmit`.
+- `check:styles` fails → remove the disallowed inline style or add a justified exception in `scripts/check-inline-styles.mjs`.
+- `test` fails → fix the failing spec; do not skip or weaken assertions to make CI pass.
+- `build` fails → resolve the Astro/Vite build error.
+
+Do not commit changes until `pnpm validate` exits 0.
+
 ## Current Known Limitations
 
 - OCR language is not yet multilingual
