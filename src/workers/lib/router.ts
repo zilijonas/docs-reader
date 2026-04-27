@@ -18,7 +18,7 @@ import {
   hashBuffer,
   filterExportBoxes,
 } from './state';
-import { detectQueuedOcrLanguages, runQueuedOcr } from './tesseract';
+import { detectQueuedOcrLanguages, resetOcrProgressFloor, runQueuedOcr } from './tesseract';
 
 type HandlerMap = {
   [K in WorkerRequest['type']]: (message: Extract<WorkerRequest, { type: K }>) => Promise<void>;
@@ -71,11 +71,12 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
   }
 
   resetDocumentState();
+  resetOcrProgressFloor();
   await ensurePyodide();
 
   updateProgress(message.requestId, {
     phase: 'loading',
-    progress: 0.24,
+    progress: 0.05,
     message: 'Opening document…',
   });
 
@@ -141,9 +142,9 @@ const handleLoadPdf = async (message: Extract<WorkerRequest, { type: 'LOAD_PDF' 
   }
 
   updateProgress(message.requestId, {
-    phase: 'complete',
-    progress: 1,
-    message: 'Document ready.',
+    phase: 'extracting',
+    progress: 0.78,
+    message: 'Preparing document…',
   });
 
   postPdfLoaded(message.requestId, {
@@ -159,12 +160,13 @@ const handleContinueOcr = async (message: Extract<WorkerRequest, { type: 'CONTIN
     throw new Error('Load a PDF before continuing OCR.');
   }
 
+  resetOcrProgressFloor();
   await runQueuedOcr(payload.ocrLanguages, message.requestId);
 
   updateProgress(message.requestId, {
-    phase: 'complete',
-    progress: 1,
-    message: 'Document ready.',
+    phase: 'extracting',
+    progress: 0.78,
+    message: 'Preparing document…',
   });
 
   postPdfLoaded(message.requestId, {
@@ -177,7 +179,7 @@ const handleContinueOcr = async (message: Extract<WorkerRequest, { type: 'CONTIN
 const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>) => {
   updateProgress(message.requestId, {
     phase: 'rules',
-    progress: 0.82,
+    progress: 0.85,
     message: 'Scanning for sensitive information…',
   });
 
@@ -220,6 +222,12 @@ const handleDetect = async (message: Extract<WorkerRequest, { type: 'DETECT' }>)
       console.warn('Signature detection failed for page', page.pageIndex, error);
     }
   }
+
+  updateProgress(message.requestId, {
+    phase: 'complete',
+    progress: 1,
+    message: 'Document ready.',
+  });
 
   postMessageSafe({
     requestId: message.requestId,

@@ -22,7 +22,44 @@ const normalizeLanguages = (languages: string[] | undefined) => {
 const bytesToBlob = (bytes: Uint8Array, mimeType: string) =>
   new Blob([toOwnedArrayBuffer(bytes)], { type: mimeType });
 
-export const ensureTesseractWorker = async (languages: string[] | undefined, requestId: number) => {
+type OcrProgressContext = {
+  requestId: number;
+  base: number;
+  range: number;
+  index: number;
+  total: number;
+  pageIndex: number;
+  message: string;
+};
+
+let ocrProgressContext: OcrProgressContext | null = null;
+let lastOcrProgress = 0;
+
+const clamp01 = (value: number) => (value < 0 ? 0 : value > 1 ? 1 : value);
+
+const emitOcrProgress = (subProgress: number) => {
+  const ctx = ocrProgressContext;
+  if (!ctx) return;
+  const fraction = clamp01((ctx.index + clamp01(subProgress)) / Math.max(1, ctx.total));
+  const next = ctx.base + fraction * ctx.range;
+  if (next <= lastOcrProgress) {
+    return;
+  }
+  lastOcrProgress = next;
+  updateProgress(ctx.requestId, {
+    phase: 'ocr',
+    progress: next,
+    pageIndex: ctx.pageIndex,
+    message: ctx.message,
+  });
+};
+
+export const resetOcrProgressFloor = () => {
+  lastOcrProgress = 0;
+  ocrProgressContext = null;
+};
+
+export const ensureTesseractWorker = async (languages: string[] | undefined, _requestId: number) => {
   const langs = normalizeLanguages(languages);
   const langKey = langs.join('+');
 
@@ -47,12 +84,7 @@ export const ensureTesseractWorker = async (languages: string[] | undefined, req
     langPath,
     corePath: new URL(`${state.baseUrl}tesseract/`, self.location.origin).toString(),
     logger: (message) => {
-      updateProgress(requestId, {
-        phase: 'ocr',
-        progress: 0.55 + (message.progress ?? 0) * 0.15,
-        message:
-          langs.length > 1 ? `Reading text from scans (${langKey})…` : 'Reading text from scans…',
-      });
+      emitOcrProgress(message.progress ?? 0);
     },
   });
   state.tesseractLangKey = langKey;
@@ -133,23 +165,33 @@ export const runQueuedOcr = async (languages: string[], requestId: number) => {
   const ocrPages = state.pages.filter((page) => page.lane === 'ocr' && page.ocrStatus === 'queued');
   const canReuseBootstrap =
     normalizedLanguages.length === 1 && normalizedLanguages[0] === DEFAULT_OCR_LANGUAGES[0];
+  const langKey = normalizedLanguages.join('+');
+  const baseMessage =
+    normalizedLanguages.length > 1
+      ? `Reading text from scans (${langKey})…`
+      : 'Reading text from scans…';
 
   state.ocrLanguages = normalizedLanguages;
 
   for (let index = 0; index < ocrPages.length; index += 1) {
     const page = ocrPages[index];
 
-    updateProgress(requestId, {
-      phase: 'ocr',
-      progress: 0.38 + (index / Math.max(1, ocrPages.length)) * 0.3,
+    ocrProgressContext = {
+      requestId,
+      base: 0.20,
+      range: 0.55,
+      index,
+      total: ocrPages.length,
       pageIndex: page.pageIndex,
-      message: `Reading page ${page.pageIndex + 1}…`,
-    });
+      message: `Reading page ${page.pageIndex + 1} of ${ocrPages.length}… (${baseMessage})`,
+    };
+    emitOcrProgress(0);
 
     try {
       const cachedLayer = canReuseBootstrap ? state.bootstrapOcrLayers[page.pageIndex] : undefined;
       const ocrLayer = cachedLayer ?? (await runPageOcr(page, normalizedLanguages, requestId));
       applyOcrLayer(page, ocrLayer);
+      emitOcrProgress(1);
     } catch (error) {
       state.pages = state.pages.map((candidate) =>
         candidate.pageIndex === page.pageIndex ? { ...candidate, ocrStatus: 'error' } : candidate,
@@ -158,8 +200,11 @@ export const runQueuedOcr = async (languages: string[], requestId: number) => {
         requestId,
         `Could not read page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
+      emitOcrProgress(1);
     }
   }
+
+  ocrProgressContext = null;
 };
 
 export const detectQueuedOcrLanguages = async (
@@ -186,25 +231,33 @@ export const detectQueuedOcrLanguages = async (
   for (let index = 0; index < samplePages.length; index += 1) {
     const page = samplePages[index];
 
-    updateProgress(requestId, {
-      phase: 'ocr',
-      progress: 0.28 + (index / Math.max(1, samplePages.length)) * 0.08,
+    ocrProgressContext = {
+      requestId,
+      base: 0.10,
+      range: 0.10,
+      index,
+      total: samplePages.length,
       pageIndex: page.pageIndex,
       message: `Detecting OCR language from page ${page.pageIndex + 1}…`,
-    });
+    };
+    emitOcrProgress(0);
 
     try {
       const ocrLayer = await runPageOcr(page, DEFAULT_OCR_LANGUAGES, requestId);
       state.bootstrapOcrLayers[page.pageIndex] = ocrLayer;
       sampleTexts.push(ocrLayer.text);
       samplePageIndexes.push(page.pageIndex);
+      emitOcrProgress(1);
     } catch (error) {
       pushWarning(
         requestId,
         `Could not auto-detect OCR language on page ${page.pageIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
+      emitOcrProgress(1);
     }
   }
+
+  ocrProgressContext = null;
 
   return detectOcrLanguagesFromBootstrapText(sampleTexts.join(' '), samplePageIndexes);
 };

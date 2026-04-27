@@ -2,7 +2,6 @@ import type { ProcessingProgress } from '../../../types';
 
 export const DROPZONE_SECTION_HEIGHT_CLASS = 'h-[24rem] sm:h-[25rem]';
 export const DROPZONE_REASSURANCE_INTERVAL_MS = 2100;
-export const DROPZONE_NEW_SESSION_DROP = 0.25;
 
 export function getDropzoneReassuranceMessages(progress: ProcessingProgress | null) {
   switch (progress?.phase) {

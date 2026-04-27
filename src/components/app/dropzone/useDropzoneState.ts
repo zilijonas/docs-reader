@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { copy } from '@/lib/copy';
 import type { ProcessingProgress } from '../../../types';
 import {
-  DROPZONE_NEW_SESSION_DROP,
   DROPZONE_REASSURANCE_INTERVAL_MS,
   getDropzoneReassuranceMessages,
 } from './dropzoneMessaging';
@@ -14,6 +13,8 @@ function useSmoothProgress(progress: ProcessingProgress | null) {
 
   useEffect(() => {
     if (!progress) {
+      realRef.current = 0;
+      setSmoothed(0);
       return;
     }
 
@@ -24,11 +25,7 @@ function useSmoothProgress(progress: ProcessingProgress | null) {
       return;
     }
 
-    setSmoothed((prev) =>
-      progress.progress < prev - DROPZONE_NEW_SESSION_DROP
-        ? progress.progress
-        : Math.max(prev, progress.progress),
-    );
+    setSmoothed((prev) => Math.max(prev, progress.progress));
   }, [progress]);
 
   useEffect(() => {

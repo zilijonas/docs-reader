@@ -3,6 +3,7 @@ import type { ChangeEvent, DragEvent, PropsWithChildren, RefObject } from 'react
 
 import { DEFAULT_OCR_LANGUAGES } from '../../../lib/app-config';
 import type {
+  Detection,
   ExportMode,
   OcrLanguageDetection,
   ProcessingProgress,
@@ -123,7 +124,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     onWarning: appendWarning,
   });
 
-  const { runDetections, syncKeywords } = useDetectionRunner({
+  const { syncKeywords } = useDetectionRunner({
     clientRef,
     detections,
     hasLoadedDocument: pages.length > 0,
@@ -139,7 +140,6 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     openOcrLanguageModal,
     resetReviewStore: reset,
     resetWorkflowUi,
-    runDetections,
     setDocument,
     setError,
     setExportJob,
@@ -245,7 +245,7 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
     setError(null);
     closeOcrLanguageModal();
     setIsProcessing(true);
-    setProgress({ phase: 'ocr', progress: 0.3, message: 'Starting OCR…' });
+    setProgress({ phase: 'ocr', progress: 0.2, message: 'Starting OCR…' });
 
     try {
       const response = await clientRef.current.continueOcr({
@@ -263,16 +263,26 @@ export function WorkflowProvider({ children }: PropsWithChildren) {
           : [...DEFAULT_OCR_LANGUAGES];
 
       setSpans(nextSpans);
-      setDocument({
-        sourceDocument: response.payload.source,
-        pages: nextPages,
-        detections: [],
-        warnings: nextWarnings,
-      });
       setSelectedOcrLanguages(nextOcrLanguages);
       setOcrLanguageDetection(response.payload.ocrLanguageDetection);
 
-      await runDetections(customKeywords, [], [], true);
+      let initialDetections: Detection[] = [];
+      try {
+        const detectResponse = await clientRef.current.detect({
+          rules: { keywords: customKeywords },
+        });
+        initialDetections = detectResponse.payload.items;
+      } catch (detectError) {
+        console.warn('Initial detection failed after OCR.', detectError);
+      }
+
+      setDocument({
+        sourceDocument: response.payload.source,
+        pages: nextPages,
+        detections: initialDetections,
+        warnings: nextWarnings,
+      });
+      setProgress(null);
     } catch (caughtError) {
       setProgress(null);
       setError(caughtError instanceof Error ? caughtError.message : 'Could not finish OCR.');

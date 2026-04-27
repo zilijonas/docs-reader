@@ -43,6 +43,7 @@ vi.mock('./lib/tesseract', () => ({
     detectedLanguage: 'eng',
   })),
   runQueuedOcr: vi.fn(async () => undefined),
+  resetOcrProgressFloor: vi.fn(),
 }));
 
 vi.mock('../lib/detection', () => ({

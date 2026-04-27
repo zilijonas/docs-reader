@@ -12,7 +12,6 @@ export function useFileUpload({
   openOcrLanguageModal,
   resetReviewStore,
   resetWorkflowUi,
-  runDetections,
   setDocument,
   setError,
   setExportJob,
@@ -28,12 +27,6 @@ export function useFileUpload({
   openOcrLanguageModal: () => void;
   resetReviewStore: () => void;
   resetWorkflowUi: () => void;
-  runDetections: (
-    keywords: string[],
-    existingRuleDetections?: import('../../../types').Detection[],
-    existingNonRuleDetections?: import('../../../types').Detection[],
-    hasLoadedDocumentOverride?: boolean,
-  ) => Promise<void>;
   setDocument: (payload: {
     sourceDocument: import('../../../types').SourceDocument;
     pages: import('../../../types').PageAsset[];
@@ -91,16 +84,26 @@ export function useFileUpload({
         openOcrLanguageModal();
       } else {
         setSpans(nextSpans);
+
+        let initialDetections: import('../../../types').Detection[] = [];
+        if (response.payload.ocrCompleted) {
+          try {
+            const detectResponse = await clientRef.current.detect({
+              rules: { keywords: customKeywords },
+            });
+            initialDetections = detectResponse.payload.items;
+          } catch (detectError) {
+            console.warn('Initial detection failed.', detectError);
+          }
+        }
+
         setDocument({
           sourceDocument: response.payload.source,
           pages: nextPages,
-          detections: [],
+          detections: initialDetections,
           warnings: nextWarnings,
         });
-
-        if (response.payload.ocrCompleted) {
-          await runDetections(customKeywords, [], [], true);
-        }
+        setProgress(null);
       }
     } catch (caughtError) {
       fileRef.current = null;
