@@ -37,8 +37,8 @@ const resolvedOgTitle = seo?.ogTitle ?? ogTitle ?? resolvedTitle;
 const resolvedOgDescription = seo?.ogDescription ?? ogDescription ?? resolvedDescription;
 const resolvedCanonicalPath = seo?.canonicalPath ?? canonicalPath ?? Astro.url.pathname;
 const pageUrl = new URL(resolvedCanonicalPath, siteUrl);
-const ogImageWebpUrl = new URL(`${baseUrl}og-image.webp`, siteUrl);
-const ogImageUrl = new URL(`${baseUrl}og-image.png`, siteUrl);
+const ogImageWebpUrl = new URL(`${baseUrl}og-image-2.webp`, siteUrl);
+const ogImageUrl = new URL(`${baseUrl}og-image-2.png`, siteUrl);
 const resolvedStructuredData = seo?.structuredData ?? structuredData;
 const structuredDataEntries = Array.isArray(resolvedStructuredData)
   ? resolvedStructuredData
