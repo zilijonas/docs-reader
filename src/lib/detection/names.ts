@@ -67,8 +67,13 @@ const splitCamelCaseSpans = (spans: TextSpan[]): TextSpan[] => {
   return out;
 };
 
-const NAME_WORD_RE = /^\p{Lu}[\p{L}\-'’]{1,40}$/u;
-const ALL_CAPS_NAME_RE = /^\p{Lu}{2,}[\p{L}\-'’]{0,40}$/u;
+// Require at least 3 letters total — 2-letter tokens are overwhelmingly
+// abbreviations or initials ("El.", "Mr", "II", country codes) rather
+// than personal names. Real short names ("Li", "An") are too rare to
+// justify the false-positive volume from headers and contact rows.
+const NAME_WORD_RE = /^\p{Lu}[\p{L}\-'’]{2,40}$/u;
+const ALL_CAPS_NAME_RE = /^\p{Lu}{3,}[\p{L}\-'’]{0,40}$/u;
+const INTERNAL_DOT_RE = /\./u;
 const TITLE_CASE_NAME_RE = /^\p{Lu}\p{Ll}+(?:[-’'][\p{L}]{1,40})*$/u;
 const LOWER_CONNECTOR_RE = /^[\p{Ll}]{1,4}$/u;
 const HAS_DIGIT_RE = /\d/u;
@@ -170,9 +175,12 @@ const groupSpansIntoLines = (spans: TextSpan[]): LineGroup[] => {
 const isNameToken = (raw: string) => {
   const token = cleanNameToken(raw);
   if (!token || HAS_DIGIT_RE.test(token)) return false;
+  // Internal "." marks an abbreviation that survived the trailing-punct
+  // strip (e.g. "El.p", "Co.Ltd"); never a personal name token.
+  if (INTERNAL_DOT_RE.test(token)) return false;
   if (NAME_STOPWORDS.has(token.toLowerCase())) return false;
   if (NAME_WORD_RE.test(token)) return true;
-  if (ALL_CAPS_NAME_RE.test(token) && token.length >= 2) return true;
+  if (ALL_CAPS_NAME_RE.test(token)) return true;
   return false;
 };
 
@@ -311,7 +319,11 @@ const buildDetections = (
     }));
 };
 
-const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] => {
+const detectLabelBased = (
+  pageIndex: number,
+  lines: LineGroup[],
+  ltDataset: LithuanianNameDataset | null,
+): Detection[] => {
   const detections: Detection[] = [];
 
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
@@ -349,7 +361,20 @@ const detectLabelBased = (pageIndex: number, lines: LineGroup[]): Detection[] =>
             NAME_STOPWORDS.has(token) ||
             NAME_LABEL_PHRASES.some((phrase) => phrase.includes(token)),
         );
-        if (!allTokensAreLabels) {
+        // For LT pages: every label-anchored candidate must contain at
+        // least one token confirmed by the dataset or a strong family
+        // suffix. Otherwise the label "Atstovas" greedily eats common
+        // nouns like "Projektų koordinatorė" before the actual name.
+        const passesLtCheck =
+          !ltDataset || ltDataset.firstNames.size === 0
+            ? true
+            : nameSpans.some((span) => {
+                const cleaned = stripColonSuffix(span.text.trim());
+                if (isLikelyLithuanianFirstName(cleaned, ltDataset).match) return true;
+                if (isLikelyLithuanianSurname(cleaned).strong) return true;
+                return false;
+              });
+        if (!allTokensAreLabels && passesLtCheck) {
           detections.push(...buildDetections(pageIndex, nameSpans, LABEL_NAME_CONFIDENCE));
         }
       }
@@ -416,7 +441,13 @@ const detectLithuanian = (
       }
 
       const surname = isLikelyLithuanianSurname(surnameCleaned);
-      if (!surname.strong && !surname.medium) {
+      // Medium suffix alone (-as/-is/-ys/-us/-os/-ės) matches almost any
+      // LT noun; pair with a non-exact first-name stem hit and you catch
+      // legal/contract phrases like "SAULĖS ELEKTRINĖS" or "ELEKTROS
+      // GAMYBOS". Require either a strong (patronymic / -auskas /
+      // -evičius / -ienė family) suffix, or an exact first-name dataset
+      // hit on the anchor.
+      if (!surname.strong && !(surname.medium && allExact)) {
         i = Math.max(i + 1, j);
         continue;
       }
@@ -680,7 +711,7 @@ export const detectNames = (
   const covered = new Set<TextSpan>();
 
   const detections: Detection[] = [];
-  detections.push(...detectLabelBased(pageIndex, lines));
+  detections.push(...detectLabelBased(pageIndex, lines, ltDataset));
   detections.push(...detectHonorificNames(pageIndex, lines, covered));
 
   if (ltDataset && ltDataset.firstNames.size > 0) {

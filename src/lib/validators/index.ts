@@ -10,3 +10,4 @@ export * from './nir';
 export * from './nino';
 export * from './pesel';
 export * from './shared';
+export * from './vat';

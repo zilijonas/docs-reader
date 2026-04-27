@@ -1,6 +1,6 @@
 import { CONFIDENCE } from '../config';
 import type { DetectionRule } from '../rule';
-import { isIbanValid, isLuhnValid } from '../../validators';
+import { isIbanValid, isLuhnValid, isVatNumberValid } from '../../validators';
 import { ADDRESS_RULE, DATE_RULE } from './address';
 
 const POSTAL_PATTERNS = [
@@ -382,9 +382,16 @@ export const CORE_RULES: DetectionRule[] = [
     postFilter: isIbanValid,
   },
   {
+    // Unicode-aware boundaries: ASCII \b treats Lithuanian Į/Š/etc. as
+    // non-word, so a country prefix like "SI" can otherwise latch onto
+    // the inside of an LT word (e.g. "ĮSIGALIOJIMAS" → "SI"+"GALIOJIMAS").
     type: 'vat',
-    pattern: new RegExp(`\\b${EU_VAT_COUNTRY}[\\s-]?[A-Z0-9]{8,14}\\b`, 'gu'),
+    pattern: new RegExp(
+      `(?<![\\p{L}\\p{N}])${EU_VAT_COUNTRY}[\\s\\-\\u00A0]?[A-Z0-9]{2,14}(?![\\p{L}\\p{N}])`,
+      'gu',
+    ),
     confidence: CONFIDENCE.vat,
+    postFilter: isVatNumberValid,
   },
   {
     type: 'card',

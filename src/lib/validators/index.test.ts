@@ -12,6 +12,7 @@ import {
   isNinoValid,
   isNirValid,
   isPeselValid,
+  isVatNumberValid,
 } from './index';
 
 describe('isLuhnValid', () => {
@@ -137,6 +138,32 @@ describe('isNinoValid', () => {
   it('rejects NINO with forbidden prefixes', () => {
     expect(isNinoValid('BG123456A')).toBe(false);
     expect(isNinoValid('NK123456A')).toBe(false);
+  });
+});
+
+describe('isVatNumberValid', () => {
+  it('accepts well-formed EU VAT numbers', () => {
+    expect(isVatNumberValid('LT100012345678')).toBe(true);
+    expect(isVatNumberValid('LT 100012345678')).toBe(true);
+    expect(isVatNumberValid('LT123456789')).toBe(true);
+    expect(isVatNumberValid('DE123456789')).toBe(true);
+    expect(isVatNumberValid('ATU12345678')).toBe(true);
+    expect(isVatNumberValid('SI12345678')).toBe(true);
+    expect(isVatNumberValid('NL123456789B01')).toBe(true);
+  });
+
+  it('rejects letter-only matches that slipped past ASCII word boundaries', () => {
+    expect(isVatNumberValid('SIPAREIGOJIMAI')).toBe(false);
+    expect(isVatNumberValid('SIGALIOJIMAS')).toBe(false);
+    expect(isVatNumberValid('ATSISKAITYMO')).toBe(false);
+    expect(isVatNumberValid('LTABCDEFGHIJ')).toBe(false);
+  });
+
+  it('rejects wrong-shape bodies for known countries', () => {
+    expect(isVatNumberValid('DE12345678')).toBe(false);
+    expect(isVatNumberValid('LT12345')).toBe(false);
+    expect(isVatNumberValid('AT12345678')).toBe(false);
+    expect(isVatNumberValid('SI1234567')).toBe(false);
   });
 });
 

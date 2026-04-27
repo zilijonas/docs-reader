@@ -155,6 +155,44 @@ describe('detectNames (Lithuanian)', () => {
     expect(ltHits).toHaveLength(1);
   });
 
+  it('rejects domain noun phrases from solar contract documents', () => {
+    // Saulė is a real LT first name, but "SAULĖS ELEKTRINĖS" /
+    // "ELEKTROS GAMYBOS" are legal/contract noun phrases — the medium
+    // surname suffix path used to flag both. Require strong suffix or
+    // exact dataset hit on the anchor to keep them out.
+    const dataset = makeDataset(['saulė', 'elektra', 'gamta', 'gintė']);
+    const samples = [
+      ['SAULĖS', 'ELEKTRINĖS'],
+      ['Saulės', 'elektrinės'],
+      ['ELEKTROS', 'GAMYBOS'],
+      ['Elektros', 'gamybos'],
+      ['Šalys'],
+      ['Projektų', 'koordinatorė'],
+      ['El.', 'p.'],
+      ['El.', 'p.', 'info@example.lt'],
+    ];
+    for (const tokens of samples) {
+      const detections = detectNames(0, line(tokens, 0.2), 'searchable', dataset);
+      expect(detections, tokens.join(' ')).toHaveLength(0);
+    }
+  });
+
+  it('still detects label-prefixed real LT name "Atstovas Gintė Kaminskienė"', () => {
+    const dataset = makeDataset(['gintė']);
+    const spans = line(['Atstovas', 'Gintė', 'Kaminskienė'], 0.2);
+    const detections = detectNames(0, spans, 'searchable', dataset);
+    expect(detections.some((d) => d.snippet.includes('Kaminskienė'))).toBe(true);
+  });
+
+  it('rejects label-prefixed common-noun runs in LT pages', () => {
+    const dataset = makeDataset(['gintė']);
+    // "Atstovas" is a name label in LT, but the tokens that follow are
+    // generic role words — no dataset hit, no strong family suffix.
+    const spans = line(['Atstovas', 'Projektų', 'koordinatorė'], 0.2);
+    const detections = detectNames(0, spans, 'searchable', dataset);
+    expect(detections).toHaveLength(0);
+  });
+
   it('rejects Lithuanian legal/government phrases as names', () => {
     const dataset = makeDataset(['jonas', 'linas', 'kestutis']);
     const samples = [
