@@ -34,17 +34,17 @@ const { links } = Astro.props;
   </button>
 
   <div
-    class="z-drawer-backdrop bg-content/45 fixed inset-0 hidden px-4 py-6 backdrop-blur-sm"
+    class="z-modal bg-content/45 fixed inset-0 hidden overflow-y-auto px-4 py-4 [padding-top:calc(1rem+env(safe-area-inset-top,0px))] [padding-bottom:calc(1rem+env(safe-area-inset-bottom,0px))] backdrop-blur-sm"
     data-menu-overlay
     hidden
   >
     <aside
       aria-labelledby="landing-mobile-nav-title"
       aria-modal="true"
-      class="border-border bg-surface shadow-float ml-auto h-full w-full max-w-sm rounded-(--radius-panel) border p-5"
+      class="border-border bg-surface shadow-float ml-auto flex max-h-full min-h-0 w-full max-w-sm flex-col overflow-hidden rounded-(--radius-panel) border p-5"
       role="dialog"
     >
-      <div class="grid h-full grid-rows-[auto_1fr] gap-5">
+      <div class="grid min-h-0 flex-1 grid-rows-[auto_1fr] gap-5">
         <div class="flex items-center justify-between gap-3">
           <h2
             class="text-content leading-reading text-lg font-semibold text-pretty"
@@ -74,7 +74,10 @@ const { links } = Astro.props;
           </button>
         </div>
 
-        <nav aria-label="Mobile site navigation" class="grid content-start gap-2">
+        <nav
+          aria-label="Mobile site navigation"
+          class="grid min-h-0 content-start gap-2 overflow-y-auto"
+        >
           {
             links.map((link) => (
               <a
@@ -110,6 +113,8 @@ const { links } = Astro.props;
       ) {
         return;
       }
+
+      document.body.append(overlay);
 
       const closeMenu = () => {
         overlay.hidden = true;
