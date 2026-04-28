@@ -1,4 +1,13 @@
 ---
+import {
+  CircleHelp,
+  FilePen,
+  ListChecks,
+  LockKeyhole,
+  Mail,
+  ScrollText,
+  Shield,
+} from 'lucide-react';
 import type { LandingMobileLink } from '../data';
 
 interface Props {
@@ -6,6 +15,15 @@ interface Props {
 }
 
 const { links } = Astro.props;
+const mobileIconMap = {
+  app: FilePen,
+  how: ListChecks,
+  privacy: Shield,
+  faq: CircleHelp,
+  terms: ScrollText,
+  security: LockKeyhole,
+  contact: Mail,
+};
 ---
 
 <div class="md:hidden" data-landing-mobile-nav>
@@ -79,15 +97,25 @@ const { links } = Astro.props;
           class="grid min-h-0 content-start gap-2 overflow-y-auto"
         >
           {
-            links.map((link) => (
-              <a
-                class="border-border bg-surface-muted text-content hover:border-border-strong hover:bg-surface flex items-center rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors duration-200"
-                data-menu-link
-                href={link.href}
-              >
-                {link.label}
-              </a>
-            ))
+            links.map((link) => {
+              const Icon = mobileIconMap[link.icon];
+
+              return (
+                <a
+                  class="border-border bg-surface-muted text-content hover:border-border-strong hover:bg-surface flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors duration-200"
+                  data-menu-link
+                  href={link.href}
+                >
+                  <span
+                    aria-hidden="true"
+                    class="border-border bg-surface text-content-muted flex size-8 shrink-0 items-center justify-center rounded-full border"
+                  >
+                    <Icon size={16} strokeWidth={1.9} />
+                  </span>
+                  <span class="min-w-0">{link.label}</span>
+                </a>
+              );
+            })
           }
         </nav>
       </div>
